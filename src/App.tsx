@@ -3,10 +3,10 @@ import { Search, Scale, Building2, Trees, FileText, Menu, X, Lightbulb, Briefcas
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useParams } from 'react-router-dom';
 import { format, parse, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSameMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { supabase } from './lib/supabase';
-import { AdminPanel } from './components/AdminPanel';
-import { FloatingHelpWidget } from './components/FloatingHelpWidget';
-import { ErrorBoundary } from './components/ErrorBoundary';
+import { supabase } from './supabase';
+import { AdminPanel } from './AdminPanel';
+import { FloatingHelpWidget } from './FloatingHelpWidget';
+import { ErrorBoundary } from './ErrorBoundary';
 
 
 interface Article {

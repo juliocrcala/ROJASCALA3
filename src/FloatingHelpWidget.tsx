@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { MessageCircle, X, Send, User, Mail, MessageSquare, CheckCircle, AlertCircle } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { supabase } from './supabase';
 
 interface FormData {
   name: string;

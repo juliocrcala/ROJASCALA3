@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from './supabase';
 import { MessageSquare, Trash2, Eye, EyeOff, RefreshCw, AlertCircle, CheckCircle, Clock, Reply, Search, Filter, Calendar, User, Mail, X } from 'lucide-react';
 
 interface Consultation {

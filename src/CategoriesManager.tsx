@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from './supabase';
 import { Plus, Edit, Trash2, Save, X, AlertCircle, Tag, FileText, RefreshCw, ArrowUp, ArrowDown } from 'lucide-react';
 
 interface Category {

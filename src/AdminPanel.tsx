@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from './supabase';
 import { Plus, CreditCard as Edit, Trash2, Save, X, AlertCircle, Image, Users, FileText, Star, Eye, EyeOff, MessageSquare, LogOut, Shield } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from './useAuth';
 import { AdminLogin } from './AdminLogin';
 import { ContactsManager } from './ContactsManager';
 import { ConsultationsManager } from './ConsultationsManager';
