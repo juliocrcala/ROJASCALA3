@@ -411,8 +411,7 @@ const ArticleDetail = () => {
               </div>
               <div>
                 <h4 className="font-semibold text-gray-900">{article.author}</h4>
-                <p className="text-gray-600">Especialista en análisis de normas legales</p>
-                <Link 
+                <Link
                   to={`/contacto/${article.author_contact_id}`}
                   className="text-red-900 hover:text-red-700 font-medium"
                 >
