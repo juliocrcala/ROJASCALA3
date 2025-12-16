@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Scale, Building2, Trees, FileText, Menu, X, Lightbulb, Briefcase, Zap, Droplets, Home, Book, Gavel, ScrollText, Mail, MapPin, User, Calendar, BookOpen, Linkedin, Instagram, Settings, Shield, Users, Globe, Landmark, Car, Plane, Ship, Wifi, Database, Heart, ShoppingCart, Factory, GraduationCap, Stethoscope, Palette, Baby, Accessibility, Mountain, PawPrint as Paw, Trophy, HardHat, Eye, DollarSign, Truck, Fish, Camera, AlertTriangle, Handshake, ExternalLink, Filter, Import as SortAsc, Dessert as SortDesc, Copy, CheckCircle } from 'lucide-react';
+import { Search, Scale, Building2, Trees, FileText, Menu, X, Lightbulb, Briefcase, Zap, Droplets, Home, Book, Gavel, ScrollText, Mail, MapPin, User, Calendar, BookOpen, Linkedin, Instagram, Shield, Users, Globe, Landmark, Car, Plane, Ship, Wifi, Database, Heart, ShoppingCart, Factory, GraduationCap, Stethoscope, Palette, Baby, Accessibility, Mountain, PawPrint as Paw, Trophy, HardHat, Eye, DollarSign, Truck, Fish, Camera, AlertTriangle, Handshake, ExternalLink, Filter, Import as SortAsc, Dessert as SortDesc, Copy, CheckCircle } from 'lucide-react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useParams } from 'react-router-dom';
 import { format, parse, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSameMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -193,9 +193,6 @@ const Header = ({ isMenuOpen, setIsMenuOpen }) => {
             <Link to="/categorias" className={`hover:text-red-200 ${location.pathname === '/categorias' ? 'text-red-200' : ''}`}>Categorías</Link>
             <Link to="/especiales" className={`hover:text-red-200 ${location.pathname === '/especiales' ? 'text-red-200' : ''}`}>Especiales</Link>
             <Link to="/contacto" className={`hover:text-red-200 ${location.pathname === '/contacto' ? 'text-red-200' : ''}`}>Contacto</Link>
-            <Link to="/admin" className={`hover:text-red-200 ${location.pathname === '/admin' ? 'text-red-200' : ''}`}>
-              <Settings className="w-5 h-5" />
-            </Link>
           </nav>
           
           <button 
@@ -212,7 +209,7 @@ const Header = ({ isMenuOpen, setIsMenuOpen }) => {
 
 const MobileMenu = ({ isMenuOpen }) => {
   if (!isMenuOpen) return null;
-  
+
   return (
     <div className="md:hidden bg-red-800 text-white">
       <div className="container mx-auto px-4 py-2">
@@ -223,7 +220,6 @@ const MobileMenu = ({ isMenuOpen }) => {
           <Link to="/categorias" className="py-2 hover:text-red-200">Categorías</Link>
           <Link to="/especiales" className="py-2 hover:text-red-200">Especiales</Link>
           <Link to="/contacto" className="py-2 hover:text-red-200">Contacto</Link>
-          <Link to="/admin" className="py-2 hover:text-red-200">Admin</Link>
         </nav>
       </div>
     </div>
