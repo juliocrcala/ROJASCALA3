@@ -384,35 +384,35 @@ Email: julio.cesar@rojascala.org`);
             {filteredConsultations.map((consultation) => (
               <div key={consultation.id} className="p-6 hover:bg-gray-50 transition-colors">
                 <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">{consultation.name}</h3>
+                  <div className="flex-1 min-w-0 pr-4">
+                    <div className="flex items-center flex-wrap gap-3 mb-2">
+                      <h3 className="text-lg font-semibold text-gray-900 break-words">{consultation.name}</h3>
                       <select
                         value={consultation.status}
                         onChange={(e) => updateConsultationStatus(consultation.id, e.target.value as 'pending' | 'read' | 'replied')}
-                        className={`text-xs font-medium rounded-full border-0 focus:ring-2 focus:ring-red-500 ${statusConfig[consultation.status].color}`}
+                        className={`text-xs font-medium rounded-full border-0 focus:ring-2 focus:ring-red-500 flex-shrink-0 ${statusConfig[consultation.status].color}`}
                       >
                         <option value="pending">Pendiente</option>
                         <option value="read">Leída</option>
                         <option value="replied">Respondida</option>
                       </select>
                     </div>
-                    
-                    <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
+
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600 mb-3">
                       <div className="flex items-center space-x-1">
-                        <Mail className="w-4 h-4" />
-                        <span>{consultation.email}</span>
+                        <Mail className="w-4 h-4 flex-shrink-0" />
+                        <span className="break-all">{consultation.email}</span>
                       </div>
-                      <div className="flex items-center space-x-1">
+                      <div className="flex items-center space-x-1 flex-shrink-0">
                         <Calendar className="w-4 h-4" />
-                        <span>{formatDate(consultation.created_at)}</span>
+                        <span className="whitespace-nowrap">{formatDate(consultation.created_at)}</span>
                       </div>
                     </div>
-                    
-                    <p className="text-gray-700 line-clamp-2 mb-3">{consultation.message}</p>
+
+                    <p className="text-gray-700 line-clamp-2 mb-3 break-words">{consultation.message}</p>
                   </div>
-                  
-                  <div className="flex items-center space-x-2 ml-4">
+
+                  <div className="flex items-center space-x-2 ml-4 flex-shrink-0">
                     <button
                       onClick={() => openConsultationModal(consultation)}
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"

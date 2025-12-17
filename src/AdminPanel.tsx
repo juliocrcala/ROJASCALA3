@@ -1010,7 +1010,8 @@ export function AdminPanel() {
 
           {/* Tabla de contenido */}
           <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -1058,9 +1059,9 @@ export function AdminPanel() {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{item.title}</div>
-                      <div className="text-sm text-gray-500">
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-gray-900 max-w-md break-words">{item.title}</div>
+                      <div className="text-sm text-gray-500 break-words">
                         {item.author}
                         {item.author_contact_id && (
                           <span className="ml-1 text-blue-600">📧</span>
@@ -1091,7 +1092,7 @@ export function AdminPanel() {
                         )}
                       </td>
                     )}
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 max-w-xs">
                       <div className="flex flex-wrap gap-1">
                         {(Array.isArray(item.category) ? item.category : [item.category]).filter(Boolean).map(cat => (
                           <span key={cat} className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">
@@ -1103,8 +1104,8 @@ export function AdminPanel() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {formatDateSafe(item.published_date)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center space-x-2">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium w-32">
+                      <div className="flex items-center space-x-2 flex-shrink-0">
                         <button
                           onClick={() => toggleVisibility(item.id, activeTab, item.is_hidden || false)}
                           className={`p-1 rounded hover:bg-gray-100 ${
@@ -1134,6 +1135,7 @@ export function AdminPanel() {
                 ))}
               </tbody>
             </table>
+            </div>
 
             {currentArticles.length === 0 && (
               <div className="text-center py-12">
