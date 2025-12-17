@@ -533,7 +533,7 @@ export function AdminPanel() {
       </div>
 
       {/* Maintenance Mode Toggle */}
-      <div className="mb-6 bg-amber-50 border-2 border-amber-300 rounded-lg p-4">
+      <div className="mb-6 bg-amber-50 border-2 border-amber-300 rounded-lg p-4" style={{ position: 'relative', zIndex: 10 }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Wrench className="w-6 h-6 text-amber-600" />
@@ -547,12 +547,22 @@ export function AdminPanel() {
             </div>
           </div>
           <button
+            data-testid="maintenance-toggle"
+            onMouseEnter={() => console.log('🖱️ MOUSE ENTRO AL BOTON')}
+            onMouseLeave={() => console.log('🖱️ MOUSE SALIO DEL BOTON')}
+            onMouseDown={() => console.log('🖱️ MOUSE DOWN')}
+            onMouseUp={() => console.log('🖱️ MOUSE UP')}
             onClick={(e) => {
               console.log('🚀 CLICK EN BOTON DE MANTENIMIENTO');
+              console.log('🚀 Event:', e);
+              console.log('🚀 Target:', e.target);
+              console.log('🚀 CurrentTarget:', e.currentTarget);
               e.preventDefault();
+              e.stopPropagation();
               toggleMaintenanceMode();
             }}
             type="button"
+            style={{ position: 'relative', zIndex: 20, cursor: 'pointer' }}
             className={`px-6 py-3 rounded-lg font-medium transition-colors ${
               maintenanceMode
                 ? 'bg-green-600 hover:bg-green-700 text-white'
