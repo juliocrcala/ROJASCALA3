@@ -200,34 +200,41 @@ export function AdminPanel() {
   const toggleMaintenanceMode = async () => {
     try {
       const newMode = !maintenanceMode;
+      console.log('Toggling maintenance mode to:', newMode);
 
       const { data: existingSettings } = await supabase
         .from('site_settings')
         .select('id')
         .maybeSingle();
 
+      console.log('Existing settings:', existingSettings);
+
       if (existingSettings) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('site_settings')
           .update({
             maintenance_mode: newMode,
             updated_at: new Date().toISOString()
           })
-          .eq('id', existingSettings.id);
+          .eq('id', existingSettings.id)
+          .select();
+
+        console.log('Update result:', { data, error });
 
         if (error) throw error;
-      }
 
-      setMaintenanceMode(newMode);
-      showMessage(
-        newMode
-          ? 'Modo mantenimiento activado'
-          : 'Modo mantenimiento desactivado',
-        'success'
-      );
+        setMaintenanceMode(newMode);
+        setSuccess(
+          newMode
+            ? 'Modo mantenimiento activado'
+            : 'Modo mantenimiento desactivado'
+        );
+        setTimeout(() => setSuccess(null), 3000);
+      }
     } catch (error: any) {
       console.error('Error toggling maintenance mode:', error);
-      showMessage('Error al cambiar el modo mantenimiento', 'error');
+      setError('Error al cambiar el modo mantenimiento: ' + error.message);
+      setTimeout(() => setError(null), 3000);
     }
   };
 
