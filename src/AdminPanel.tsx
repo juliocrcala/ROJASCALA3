@@ -79,6 +79,9 @@ export function AdminPanel() {
   const [success, setSuccess] = useState<string | null>(null);
   const [showHidden, setShowHidden] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [maintenanceTitle, setMaintenanceTitle] = useState('Página en Mantenimiento');
+  const [maintenanceMessage, setMaintenanceMessage] = useState('Estamos realizando mejoras en nuestro sitio para brindarte una mejor experiencia.');
+  const [maintenanceTimeMessage, setMaintenanceTimeMessage] = useState('Volveremos en unos minutos');
   const [formData, setFormData] = useState({
     title: '',
     author: 'Julio Cesar Rojas Cala',
@@ -96,11 +99,20 @@ export function AdminPanel() {
   useEffect(() => {
     fetchData();
     fetchCategoriesConfig();
-    // Cargar estado de mantenimiento desde localStorage
+    // Cargar estado de mantenimiento y mensajes desde localStorage
     const savedMode = localStorage.getItem('maintenanceMode');
     if (savedMode !== null) {
       setMaintenanceMode(savedMode === 'true');
     }
+
+    const savedTitle = localStorage.getItem('maintenanceTitle');
+    if (savedTitle) setMaintenanceTitle(savedTitle);
+
+    const savedMessage = localStorage.getItem('maintenanceMessage');
+    if (savedMessage) setMaintenanceMessage(savedMessage);
+
+    const savedTimeMessage = localStorage.getItem('maintenanceTimeMessage');
+    if (savedTimeMessage) setMaintenanceTimeMessage(savedTimeMessage);
   }, []);
 
   const fetchData = async () => {
@@ -202,6 +214,14 @@ export function AdminPanel() {
         ? 'Modo mantenimiento activado'
         : 'Modo mantenimiento desactivado'
     );
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  const saveMaintenanceMessages = () => {
+    localStorage.setItem('maintenanceTitle', maintenanceTitle);
+    localStorage.setItem('maintenanceMessage', maintenanceMessage);
+    localStorage.setItem('maintenanceTimeMessage', maintenanceTimeMessage);
+    setSuccess('Mensajes de mantenimiento guardados');
     setTimeout(() => setSuccess(null), 3000);
   };
 
@@ -499,7 +519,7 @@ export function AdminPanel() {
 
       {/* Maintenance Mode Toggle */}
       <div className="mb-6 bg-amber-50 border-2 border-amber-300 rounded-lg p-4" style={{ position: 'relative', zIndex: 10 }}>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             <Wrench className="w-6 h-6 text-amber-600" />
             <div>
@@ -536,6 +556,55 @@ export function AdminPanel() {
           >
             {maintenanceMode ? 'Desactivar Mantenimiento' : 'Activar Mantenimiento'}
           </button>
+        </div>
+
+        {/* Editable Messages */}
+        <div className="border-t border-amber-200 pt-4">
+          <h4 className="text-sm font-semibold text-amber-900 mb-3">Personalizar Mensajes</h4>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-amber-800 mb-1">
+                Título
+              </label>
+              <input
+                type="text"
+                value={maintenanceTitle}
+                onChange={(e) => setMaintenanceTitle(e.target.value)}
+                className="w-full px-3 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                placeholder="Página en Mantenimiento"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-amber-800 mb-1">
+                Mensaje Principal
+              </label>
+              <textarea
+                value={maintenanceMessage}
+                onChange={(e) => setMaintenanceMessage(e.target.value)}
+                className="w-full px-3 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                rows={2}
+                placeholder="Estamos realizando mejoras en nuestro sitio..."
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-amber-800 mb-1">
+                Mensaje de Tiempo
+              </label>
+              <input
+                type="text"
+                value={maintenanceTimeMessage}
+                onChange={(e) => setMaintenanceTimeMessage(e.target.value)}
+                className="w-full px-3 py-2 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                placeholder="Volveremos en unos minutos"
+              />
+            </div>
+            <button
+              onClick={saveMaintenanceMessages}
+              className="w-full bg-amber-700 hover:bg-amber-800 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              Guardar Mensajes
+            </button>
+          </div>
         </div>
       </div>
 

@@ -1,6 +1,10 @@
 import { Wrench } from 'lucide-react';
 
 export default function MaintenancePage() {
+  const title = localStorage.getItem('maintenanceTitle') || 'Página en Mantenimiento';
+  const message = localStorage.getItem('maintenanceMessage') || 'Estamos realizando mejoras en nuestro sitio para brindarte una mejor experiencia.';
+  const timeMessage = localStorage.getItem('maintenanceTimeMessage') || 'Volveremos en unos minutos';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4">
       <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-12 text-center">
@@ -9,16 +13,16 @@ export default function MaintenancePage() {
         </div>
 
         <h1 className="text-4xl font-bold text-slate-800 mb-4">
-          Página en Mantenimiento
+          {title}
         </h1>
 
         <p className="text-xl text-slate-600 mb-8">
-          Estamos realizando mejoras en nuestro sitio para brindarte una mejor experiencia.
+          {message}
         </p>
 
         <div className="bg-slate-50 rounded-xl p-6 mb-8">
           <p className="text-lg text-slate-700 font-medium">
-            Volveremos en unos minutos
+            {timeMessage}
           </p>
         </div>
 
