@@ -1,0 +1,37 @@
+import { Wrench } from 'lucide-react';
+
+export default function MaintenancePage() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4">
+      <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-12 text-center">
+        <div className="inline-flex items-center justify-center w-24 h-24 bg-amber-100 rounded-full mb-8">
+          <Wrench className="w-12 h-12 text-amber-600" />
+        </div>
+
+        <h1 className="text-4xl font-bold text-slate-800 mb-4">
+          Página en Mantenimiento
+        </h1>
+
+        <p className="text-xl text-slate-600 mb-8">
+          Estamos realizando mejoras en nuestro sitio para brindarte una mejor experiencia.
+        </p>
+
+        <div className="bg-slate-50 rounded-xl p-6 mb-8">
+          <p className="text-lg text-slate-700 font-medium">
+            Volveremos en unos minutos
+          </p>
+        </div>
+
+        <p className="text-slate-500">
+          Gracias por tu paciencia y comprensión.
+        </p>
+
+        <div className="mt-8 pt-8 border-t border-slate-200">
+          <p className="text-sm text-slate-400">
+            Rojas Cala Asociados - Asesoría Legal
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabase';
-import { Plus, CreditCard as Edit, Trash2, Save, X, AlertCircle, Image, Users, FileText, Star, Eye, EyeOff, MessageSquare, LogOut, Shield } from 'lucide-react';
+import { Plus, CreditCard as Edit, Trash2, Save, X, AlertCircle, Image, Users, FileText, Star, Eye, EyeOff, MessageSquare, LogOut, Shield, Wrench } from 'lucide-react';
 import { useAuth } from './useAuth';
 import { AdminLogin } from './AdminLogin';
 import { ContactsManager } from './ContactsManager';
@@ -78,6 +78,7 @@ export function AdminPanel() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [showHidden, setShowHidden] = useState(false);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     author: 'Julio Cesar Rojas Cala',
@@ -95,6 +96,7 @@ export function AdminPanel() {
   useEffect(() => {
     fetchData();
     fetchCategoriesConfig();
+    fetchMaintenanceMode();
   }, []);
 
   const fetchData = async () => {
@@ -161,7 +163,7 @@ export function AdminPanel() {
       if (error && error.code !== 'PGRST116') { // Ignore table not found error
         throw error;
       }
-      
+
       const allData = data || [];
       setDocumentTypes(allData.filter(item => item.type === 'document_type').map(item => item.name));
       setCategories(allData.filter(item => item.type === 'category').map(item => item.name));
@@ -176,6 +178,56 @@ export function AdminPanel() {
         "Constitucional", "Administrativo", "Civil", "Penal", "Laboral",
         "Tributario", "Ambiental", "Comercial"
       ]);
+    }
+  };
+
+  const fetchMaintenanceMode = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('maintenance_mode')
+        .maybeSingle();
+
+      if (error) throw error;
+      if (data) {
+        setMaintenanceMode(data.maintenance_mode);
+      }
+    } catch (error) {
+      console.error('Error fetching maintenance mode:', error);
+    }
+  };
+
+  const toggleMaintenanceMode = async () => {
+    try {
+      const newMode = !maintenanceMode;
+
+      const { data: existingSettings } = await supabase
+        .from('site_settings')
+        .select('id')
+        .maybeSingle();
+
+      if (existingSettings) {
+        const { error } = await supabase
+          .from('site_settings')
+          .update({
+            maintenance_mode: newMode,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingSettings.id);
+
+        if (error) throw error;
+      }
+
+      setMaintenanceMode(newMode);
+      showMessage(
+        newMode
+          ? 'Modo mantenimiento activado'
+          : 'Modo mantenimiento desactivado',
+        'success'
+      );
+    } catch (error: any) {
+      console.error('Error toggling maintenance mode:', error);
+      showMessage('Error al cambiar el modo mantenimiento', 'error');
     }
   };
 
@@ -469,6 +521,33 @@ export function AdminPanel() {
             <span>Nuevo {activeTab === 'articles' ? 'Artículo' : 'Artículo Especial'}</span>
           </button>
         )}
+      </div>
+
+      {/* Maintenance Mode Toggle */}
+      <div className="mb-6 bg-amber-50 border-2 border-amber-300 rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <Wrench className="w-6 h-6 text-amber-600" />
+            <div>
+              <h3 className="text-lg font-semibold text-amber-900">Modo Mantenimiento</h3>
+              <p className="text-sm text-amber-700">
+                {maintenanceMode
+                  ? 'La página está en modo mantenimiento. Los visitantes verán un mensaje informativo.'
+                  : 'La página está disponible normalmente para todos los visitantes.'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={toggleMaintenanceMode}
+            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+              maintenanceMode
+                ? 'bg-green-600 hover:bg-green-700 text-white'
+                : 'bg-amber-600 hover:bg-amber-700 text-white'
+            }`}
+          >
+            {maintenanceMode ? 'Desactivar Mantenimiento' : 'Activar Mantenimiento'}
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
