@@ -96,7 +96,11 @@ export function AdminPanel() {
   useEffect(() => {
     fetchData();
     fetchCategoriesConfig();
-    fetchMaintenanceMode();
+    // Cargar estado de mantenimiento desde localStorage
+    const savedMode = localStorage.getItem('maintenanceMode');
+    if (savedMode !== null) {
+      setMaintenanceMode(savedMode === 'true');
+    }
   }, []);
 
   const fetchData = async () => {
@@ -181,63 +185,24 @@ export function AdminPanel() {
     }
   };
 
-  const fetchMaintenanceMode = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('site_settings')
-        .select('maintenance_mode')
-        .maybeSingle();
+  const toggleMaintenanceMode = () => {
+    const newMode = !maintenanceMode;
+    setMaintenanceMode(newMode);
+    localStorage.setItem('maintenanceMode', String(newMode));
 
-      if (error) throw error;
-      if (data) {
-        setMaintenanceMode(data.maintenance_mode);
-      }
-    } catch (error) {
-      console.error('Error fetching maintenance mode:', error);
-    }
-  };
+    // Disparar evento para que otras partes de la app se actualicen inmediatamente
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'maintenanceMode',
+      newValue: String(newMode),
+      storageArea: localStorage
+    }));
 
-  const toggleMaintenanceMode = async () => {
-    console.log('🔧 toggleMaintenanceMode INICIADO');
-    console.log('🔧 maintenanceMode actual:', maintenanceMode);
-    try {
-      const newMode = !maintenanceMode;
-      console.log('🔧 Toggling maintenance mode to:', newMode);
-
-      const { data: existingSettings } = await supabase
-        .from('site_settings')
-        .select('id')
-        .maybeSingle();
-
-      console.log('Existing settings:', existingSettings);
-
-      if (existingSettings) {
-        const { data, error } = await supabase
-          .from('site_settings')
-          .update({
-            maintenance_mode: newMode,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingSettings.id)
-          .select();
-
-        console.log('Update result:', { data, error });
-
-        if (error) throw error;
-
-        setMaintenanceMode(newMode);
-        setSuccess(
-          newMode
-            ? 'Modo mantenimiento activado'
-            : 'Modo mantenimiento desactivado'
-        );
-        setTimeout(() => setSuccess(null), 3000);
-      }
-    } catch (error: any) {
-      console.error('Error toggling maintenance mode:', error);
-      setError('Error al cambiar el modo mantenimiento: ' + error.message);
-      setTimeout(() => setError(null), 3000);
-    }
+    setSuccess(
+      newMode
+        ? 'Modo mantenimiento activado'
+        : 'Modo mantenimiento desactivado'
+    );
+    setTimeout(() => setSuccess(null), 3000);
   };
 
   // Si no está autenticado, mostrar login

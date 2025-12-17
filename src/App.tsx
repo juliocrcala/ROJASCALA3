@@ -2055,32 +2055,21 @@ const AppContent = () => {
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
 
-  const checkMaintenanceMode = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('site_settings')
-        .select('maintenance_mode')
-        .maybeSingle();
-
-      if (error) throw error;
-      if (data) {
-        setMaintenanceMode(data.maintenance_mode);
-      }
-    } catch (error) {
-      console.error('Error checking maintenance mode:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    checkMaintenanceMode();
+    // Cargar estado inicial desde localStorage
+    const savedMode = localStorage.getItem('maintenanceMode');
+    setMaintenanceMode(savedMode === 'true');
+    setIsLoading(false);
 
-    const interval = setInterval(() => {
-      checkMaintenanceMode();
-    }, 5000);
+    // Listener para detectar cambios en localStorage (cuando se actualiza desde otra pestaña o panel admin)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'maintenanceMode') {
+        setMaintenanceMode(e.newValue === 'true');
+      }
+    };
 
-    return () => clearInterval(interval);
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   if (isLoading) {
