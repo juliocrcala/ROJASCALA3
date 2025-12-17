@@ -2049,14 +2049,11 @@ const HomePage = () => {
   );
 };
 
-function App() {
+const AppContent = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    checkMaintenanceMode();
-  }, []);
+  const location = useLocation();
 
   const checkMaintenanceMode = async () => {
     try {
@@ -2076,6 +2073,16 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    checkMaintenanceMode();
+
+    const interval = setInterval(() => {
+      checkMaintenanceMode();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -2084,76 +2091,83 @@ function App() {
     );
   }
 
+  const isAdminRoute = location.pathname === '/rojascalaperu2025';
+
+  if (maintenanceMode && !isAdminRoute) {
+    return <MaintenancePage />;
+  }
+
+  return (
+    <>
+      <Header isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
+      <MobileMenu isMenuOpen={isMenuOpen} />
+
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/normas" element={<DocumentTypesPage />} />
+        <Route path="/rojascalaperu2025" element={
+          <ErrorBoundary>
+            <AdminPanel />
+          </ErrorBoundary>
+        } />
+        <Route path="/fechas" element={<CalendarPage />} />
+        <Route path="/categorias" element={<CategoriesPage />} />
+        <Route path="/especiales" element={<SpecialsPage />} />
+        <Route path="/contacto" element={<ContactPage />} />
+        <Route path="/contacto/:id" element={<ContactPage />} />
+        <Route path="/articulo/:type/:id" element={<ArticleDetail />} />
+      </Routes>
+
+      <FloatingHelpWidget />
+
+      <footer className="bg-gray-900 text-white mt-16">
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid md:grid-cols-3 gap-8">
+            <div>
+              <div className="flex items-center space-x-2 mb-4">
+                <RCLogo />
+                <h4 className="text-xl italic" style={{ fontFamily: 'Brush Script MT, cursive' }}>Rojas Cala</h4>
+              </div>
+              <p className="text-gray-400">
+                Manteniéndote actualizado con las últimas normas legales y regulaciones.
+              </p>
+            </div>
+            <div>
+              <h4 className="text-xl font-bold mb-4">Enlaces Rápidos</h4>
+              <ul className="space-y-2">
+                <li><Link to="/" className="text-gray-400 hover:text-white">Inicio</Link></li>
+                <li><Link to="/normas" className="text-gray-400 hover:text-white">Normas</Link></li>
+                <li><Link to="/fechas" className="text-gray-400 hover:text-white">Fechas</Link></li>
+                <li><Link to="/categorias" className="text-gray-400 hover:text-white">Categorías</Link></li>
+                <li><Link to="/especiales" className="text-gray-400 hover:text-white">Especiales</Link></li>
+                <li><Link to="/contacto" className="text-gray-400 hover:text-white">Contacto</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-xl font-bold mb-4">Contacto</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li>Email: julio.cesar@rojascala.org</li>
+                <li>Dirección: Av. Principal 123, Lima</li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; 2025 Rojas Cala. Todos los derechos reservados.</p>
+          </div>
+        </div>
+      </footer>
+    </>
+  );
+};
+
+function App() {
   return (
     <ErrorBoundary>
-    <Router>
-      <div className="min-h-screen bg-gray-50">
-        {maintenanceMode && window.location.pathname !== '/rojascalaperu2025' ? (
-          <MaintenancePage />
-        ) : (
-          <>
-            <Header isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
-            <MobileMenu isMenuOpen={isMenuOpen} />
-
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/normas" element={<DocumentTypesPage />} />
-              <Route path="/rojascalaperu2025" element={
-                <ErrorBoundary>
-                  <AdminPanel />
-                </ErrorBoundary>
-              } />
-              <Route path="/fechas" element={<CalendarPage />} />
-              <Route path="/categorias" element={<CategoriesPage />} />
-              <Route path="/especiales" element={<SpecialsPage />} />
-              <Route path="/contacto" element={<ContactPage />} />
-              <Route path="/contacto/:id" element={<ContactPage />} />
-              <Route path="/articulo/:type/:id" element={<ArticleDetail />} />
-            </Routes>
-
-            {/* Widget flotante de ayuda */}
-            <FloatingHelpWidget />
-
-            <footer className="bg-gray-900 text-white mt-16">
-              <div className="container mx-auto px-4 py-8">
-                <div className="grid md:grid-cols-3 gap-8">
-                  <div>
-                    <div className="flex items-center space-x-2 mb-4">
-                      <RCLogo />
-                      <h4 className="text-xl italic" style={{ fontFamily: 'Brush Script MT, cursive' }}>Rojas Cala</h4>
-                    </div>
-                    <p className="text-gray-400">
-                      Manteniéndote actualizado con las últimas normas legales y regulaciones.
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="text-xl font-bold mb-4">Enlaces Rápidos</h4>
-                    <ul className="space-y-2">
-                      <li><Link to="/" className="text-gray-400 hover:text-white">Inicio</Link></li>
-                      <li><Link to="/normas" className="text-gray-400 hover:text-white">Normas</Link></li>
-                      <li><Link to="/fechas" className="text-gray-400 hover:text-white">Fechas</Link></li>
-                      <li><Link to="/categorias" className="text-gray-400 hover:text-white">Categorías</Link></li>
-                      <li><Link to="/especiales" className="text-gray-400 hover:text-white">Especiales</Link></li>
-                      <li><Link to="/contacto" className="text-gray-400 hover:text-white">Contacto</Link></li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="text-xl font-bold mb-4">Contacto</h4>
-                    <ul className="space-y-2 text-gray-400">
-                      <li>Email: julio.cesar@rojascala.org</li>
-                      <li>Dirección: Av. Principal 123, Lima</li>
-                    </ul>
-                  </div>
-                </div>
-                <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-                  <p>&copy; 2025 Rojas Cala. Todos los derechos reservados.</p>
-                </div>
-              </div>
-            </footer>
-          </>
-        )}
-      </div>
-    </Router>
+      <Router>
+        <div className="min-h-screen bg-gray-50">
+          <AppContent />
+        </div>
+      </Router>
     </ErrorBoundary>
   );
 }
