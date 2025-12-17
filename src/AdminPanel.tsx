@@ -198,9 +198,11 @@ export function AdminPanel() {
   };
 
   const toggleMaintenanceMode = async () => {
+    console.log('🔧 toggleMaintenanceMode INICIADO');
+    console.log('🔧 maintenanceMode actual:', maintenanceMode);
     try {
       const newMode = !maintenanceMode;
-      console.log('Toggling maintenance mode to:', newMode);
+      console.log('🔧 Toggling maintenance mode to:', newMode);
 
       const { data: existingSettings } = await supabase
         .from('site_settings')
@@ -545,7 +547,12 @@ export function AdminPanel() {
             </div>
           </div>
           <button
-            onClick={toggleMaintenanceMode}
+            onClick={(e) => {
+              console.log('🚀 CLICK EN BOTON DE MANTENIMIENTO');
+              e.preventDefault();
+              toggleMaintenanceMode();
+            }}
+            type="button"
             className={`px-6 py-3 rounded-lg font-medium transition-colors ${
               maintenanceMode
                 ? 'bg-green-600 hover:bg-green-700 text-white'
