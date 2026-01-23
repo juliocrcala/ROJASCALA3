@@ -10,14 +10,14 @@ import { CategoriesManager } from './CategoriesManager';
 interface Article {
   id: string;
   title: string;
-  author: string;
+  author: string[] | string;
   document_type: string;
   published_date: string;
   category: string[];
   content: string;
   summary?: string;
   official_link?: string;
-  author_contact_id?: string;
+  author_contact_id?: string[] | string;
   is_hidden?: boolean;
   created_at: string;
 }
@@ -25,15 +25,21 @@ interface Article {
 interface SpecialArticle {
   id: string;
   title: string;
-  author: string;
+  author: string[] | string;
   published_date: string;
   category: string[];
   content: string;
   summary?: string;
   image_url?: string;
-  author_contact_id?: string;
+  author_contact_id?: string[] | string;
   is_hidden?: boolean;
   created_at: string;
+}
+
+interface AuthorEntry {
+  type: 'contact' | 'custom';
+  contactId: string;
+  customName: string;
 }
 
 interface Contact {
@@ -85,10 +91,11 @@ export function AdminPanel() {
   const [maintenanceTimeMessage, setMaintenanceTimeMessage] = useState('Volveremos en unos minutos');
   const [maintenanceFooterMessage, setMaintenanceFooterMessage] = useState('Gracias por tu paciencia y comprensión.');
   const [maintenanceCompanyName, setMaintenanceCompanyName] = useState('Rojas Cala Asociados - Asesoría Legal');
+  const [authors, setAuthors] = useState<AuthorEntry[]>([
+    { type: 'custom', contactId: '', customName: 'Julio Cesar Rojas Cala' }
+  ]);
   const [formData, setFormData] = useState({
     title: '',
-    author: 'Julio Cesar Rojas Cala',
-    author_contact_id: '',
     document_type: '',
     published_date: new Date().toISOString().split('T')[0],
     category: [] as string[],
@@ -261,9 +268,25 @@ export function AdminPanel() {
       const newCategories = prev.category.includes(categoryName)
         ? prev.category.filter(cat => cat !== categoryName)
         : [...prev.category, categoryName];
-      
+
       return { ...prev, category: newCategories };
     });
+  };
+
+  const addAuthor = () => {
+    setAuthors([...authors, { type: 'contact', contactId: '', customName: '' }]);
+  };
+
+  const removeAuthor = (index: number) => {
+    if (authors.length > 1) {
+      setAuthors(authors.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateAuthor = (index: number, field: keyof AuthorEntry, value: string) => {
+    const newAuthors = [...authors];
+    newAuthors[index] = { ...newAuthors[index], [field]: value };
+    setAuthors(newAuthors);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -284,21 +307,31 @@ export function AdminPanel() {
         throw new Error('El contenido es requerido');
       }
 
-      // Determinar el autor basado en la selección
-      let authorName = formData.author;
-      let authorContactId = formData.author_contact_id || null;
+      // Procesar autores
+      const authorNames: string[] = [];
+      const authorContactIds: (string | null)[] = [];
 
-      if (formData.author_contact_id) {
-        const selectedContact = contacts.find(c => c.id === formData.author_contact_id);
-        if (selectedContact) {
-          authorName = selectedContact.name;
+      authors.forEach(author => {
+        if (author.type === 'contact' && author.contactId) {
+          const contact = contacts.find(c => c.id === author.contactId);
+          if (contact) {
+            authorNames.push(contact.name);
+            authorContactIds.push(author.contactId);
+          }
+        } else if (author.type === 'custom' && author.customName.trim()) {
+          authorNames.push(author.customName.trim());
+          authorContactIds.push(null);
         }
+      });
+
+      if (authorNames.length === 0) {
+        throw new Error('Debe agregar al menos un autor');
       }
 
       const baseData = {
         title: formData.title.trim(),
-        author: authorName,
-        author_contact_id: authorContactId,
+        author: authorNames,
+        author_contact_id: authorContactIds.filter(id => id !== null),
         published_date: formData.published_date,
         category: formData.category,
         content: formData.content.trim(),
@@ -372,8 +405,6 @@ export function AdminPanel() {
   const resetForm = () => {
     setFormData({
       title: '',
-      author: 'Julio Cesar Rojas Cala',
-      author_contact_id: '',
       document_type: '',
       published_date: new Date().toISOString().split('T')[0],
       category: [],
@@ -383,6 +414,7 @@ export function AdminPanel() {
       image_url: '',
       is_hidden: false
     });
+    setAuthors([{ type: 'custom', contactId: '', customName: 'Julio Cesar Rojas Cala' }]);
     setShowForm(false);
     setEditingId(null);
   };
@@ -390,8 +422,6 @@ export function AdminPanel() {
   const handleEdit = (item: Article | SpecialArticle) => {
     setFormData({
       title: item.title,
-      author: item.author,
-      author_contact_id: item.author_contact_id || '',
       document_type: 'document_type' in item ? item.document_type : '',
       published_date: item.published_date,
       category: Array.isArray(item.category) ? item.category : [item.category].filter(Boolean),
@@ -401,6 +431,21 @@ export function AdminPanel() {
       image_url: 'image_url' in item ? item.image_url || '' : '',
       is_hidden: item.is_hidden || false
     });
+
+    // Cargar autores
+    const authorsArray = Array.isArray(item.author) ? item.author : (item.author ? [item.author] : []);
+    const contactIdsArray = Array.isArray(item.author_contact_id) ? item.author_contact_id : (item.author_contact_id ? [item.author_contact_id] : []);
+
+    const loadedAuthors: AuthorEntry[] = authorsArray.map((authorName, index) => {
+      const contactId = contactIdsArray[index];
+      if (contactId) {
+        return { type: 'contact', contactId, customName: '' };
+      } else {
+        return { type: 'custom', contactId: '', customName: authorName };
+      }
+    });
+
+    setAuthors(loadedAuthors.length > 0 ? loadedAuthors : [{ type: 'custom', contactId: '', customName: 'Julio Cesar Rojas Cala' }]);
     setEditingId(item.id);
     setShowForm(true);
     setError(null);
@@ -793,51 +838,91 @@ export function AdminPanel() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Autor</label>
-                      <div className="space-y-2">
-                        <select
-                          value={formData.author_contact_id}
-                          onChange={(e) => {
-                            const contactId = e.target.value;
-                            const selectedContact = contacts.find(c => c.id === contactId);
-                            setFormData({ 
-                              ...formData, 
-                              author_contact_id: contactId,
-                              author: selectedContact ? selectedContact.name : formData.author
-                            });
-                          }}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                        >
-                          <option value="">Seleccionar contacto existente</option>
-                          {contacts.map(contact => (
-                            <option key={contact.id} value={contact.id}>
-                              {contact.name} ({contact.email})
-                            </option>
-                          ))}
-                        </select>
-                        <div className="text-sm text-gray-500">O escribir nombre personalizado:</div>
-                        <input
-                          type="text"
-                          value={formData.author}
-                          onChange={(e) => setFormData({ ...formData, author: e.target.value, author_contact_id: '' })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                          placeholder="Nombre del autor"
-                        />
-                      </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-medium text-gray-700">Autores *</label>
+                      <button
+                        type="button"
+                        onClick={addAuthor}
+                        className="flex items-center space-x-1 text-sm text-red-900 hover:text-red-700 px-3 py-1 border border-red-900 rounded-md hover:bg-red-50"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Agregar autor</span>
+                      </button>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de Publicación</label>
-                      <input
-                        type="date"
-                        required
-                        value={formData.published_date}
-                        onChange={(e) => setFormData({ ...formData, published_date: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                      />
+                    <div className="space-y-3">
+                      {authors.map((author, index) => (
+                        <div key={index} className="flex items-start space-x-2 p-4 border-2 border-gray-200 rounded-lg bg-gray-50">
+                          <div className="flex-1 space-y-3">
+                            <div className="flex items-center space-x-4">
+                              <label className="flex items-center cursor-pointer">
+                                <input
+                                  type="radio"
+                                  checked={author.type === 'contact'}
+                                  onChange={() => updateAuthor(index, 'type', 'contact')}
+                                  className="mr-2 w-4 h-4"
+                                />
+                                <span className="text-sm font-medium">Contacto existente</span>
+                              </label>
+                              <label className="flex items-center cursor-pointer">
+                                <input
+                                  type="radio"
+                                  checked={author.type === 'custom'}
+                                  onChange={() => updateAuthor(index, 'type', 'custom')}
+                                  className="mr-2 w-4 h-4"
+                                />
+                                <span className="text-sm font-medium">Nombre personalizado</span>
+                              </label>
+                            </div>
+
+                            {author.type === 'contact' ? (
+                              <select
+                                value={author.contactId}
+                                onChange={(e) => updateAuthor(index, 'contactId', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                              >
+                                <option value="">Seleccionar contacto</option>
+                                {contacts.map(contact => (
+                                  <option key={contact.id} value={contact.id}>
+                                    {contact.name} ({contact.email})
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <input
+                                type="text"
+                                value={author.customName}
+                                onChange={(e) => updateAuthor(index, 'customName', e.target.value)}
+                                placeholder="Nombre del autor"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                              />
+                            )}
+                          </div>
+
+                          {authors.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeAuthor(index)}
+                              className="text-red-600 hover:text-red-800 p-2 hover:bg-red-100 rounded-md mt-1"
+                            >
+                              <X className="w-5 h-5" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de Publicación *</label>
+                    <input
+                      type="date"
+                      required
+                      value={formData.published_date}
+                      onChange={(e) => setFormData({ ...formData, published_date: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                    />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
