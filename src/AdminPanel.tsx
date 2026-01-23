@@ -18,6 +18,7 @@ interface Article {
   summary?: string;
   official_link?: string;
   author_contact_id?: string[] | string;
+  author_photo_url?: string[] | string;
   is_hidden?: boolean;
   created_at: string;
 }
@@ -32,6 +33,7 @@ interface SpecialArticle {
   summary?: string;
   image_url?: string;
   author_contact_id?: string[] | string;
+  author_photo_url?: string[] | string;
   is_hidden?: boolean;
   created_at: string;
 }
@@ -40,6 +42,7 @@ interface AuthorEntry {
   type: 'contact' | 'custom';
   contactId: string;
   customName: string;
+  photoUrl: string;
 }
 
 interface Contact {
@@ -92,7 +95,7 @@ export function AdminPanel() {
   const [maintenanceFooterMessage, setMaintenanceFooterMessage] = useState('Gracias por tu paciencia y comprensión.');
   const [maintenanceCompanyName, setMaintenanceCompanyName] = useState('Rojas Cala Asociados - Asesoría Legal');
   const [authors, setAuthors] = useState<AuthorEntry[]>([
-    { type: 'custom', contactId: '', customName: 'Julio Cesar Rojas Cala' }
+    { type: 'custom', contactId: '', customName: 'Julio Cesar Rojas Cala', photoUrl: '' }
   ]);
   const [formData, setFormData] = useState({
     title: '',
@@ -274,7 +277,7 @@ export function AdminPanel() {
   };
 
   const addAuthor = () => {
-    setAuthors([...authors, { type: 'contact', contactId: '', customName: '' }]);
+    setAuthors([...authors, { type: 'contact', contactId: '', customName: '', photoUrl: '' }]);
   };
 
   const removeAuthor = (index: number) => {
@@ -310,6 +313,7 @@ export function AdminPanel() {
       // Procesar autores
       const authorNames: string[] = [];
       const authorContactIds: (string | null)[] = [];
+      const authorPhotoUrls: (string | null)[] = [];
 
       authors.forEach(author => {
         if (author.type === 'contact' && author.contactId) {
@@ -317,10 +321,12 @@ export function AdminPanel() {
           if (contact) {
             authorNames.push(contact.name);
             authorContactIds.push(author.contactId);
+            authorPhotoUrls.push(null);
           }
         } else if (author.type === 'custom' && author.customName.trim()) {
           authorNames.push(author.customName.trim());
           authorContactIds.push(null);
+          authorPhotoUrls.push(author.photoUrl.trim() || null);
         }
       });
 
@@ -332,6 +338,7 @@ export function AdminPanel() {
         title: formData.title.trim(),
         author: authorNames,
         author_contact_id: authorContactIds.filter(id => id !== null),
+        author_photo_url: authorPhotoUrls,
         published_date: formData.published_date,
         category: formData.category,
         content: formData.content.trim(),
@@ -414,7 +421,7 @@ export function AdminPanel() {
       image_url: '',
       is_hidden: false
     });
-    setAuthors([{ type: 'custom', contactId: '', customName: 'Julio Cesar Rojas Cala' }]);
+    setAuthors([{ type: 'custom', contactId: '', customName: 'Julio Cesar Rojas Cala', photoUrl: '' }]);
     setShowForm(false);
     setEditingId(null);
   };
@@ -435,17 +442,19 @@ export function AdminPanel() {
     // Cargar autores
     const authorsArray = Array.isArray(item.author) ? item.author : (item.author ? [item.author] : []);
     const contactIdsArray = Array.isArray(item.author_contact_id) ? item.author_contact_id : (item.author_contact_id ? [item.author_contact_id] : []);
+    const photoUrlsArray = Array.isArray(item.author_photo_url) ? item.author_photo_url : (item.author_photo_url ? [item.author_photo_url] : []);
 
     const loadedAuthors: AuthorEntry[] = authorsArray.map((authorName, index) => {
       const contactId = contactIdsArray[index];
+      const photoUrl = photoUrlsArray[index] || '';
       if (contactId) {
-        return { type: 'contact', contactId, customName: '' };
+        return { type: 'contact', contactId, customName: '', photoUrl: '' };
       } else {
-        return { type: 'custom', contactId: '', customName: authorName };
+        return { type: 'custom', contactId: '', customName: authorName, photoUrl };
       }
     });
 
-    setAuthors(loadedAuthors.length > 0 ? loadedAuthors : [{ type: 'custom', contactId: '', customName: 'Julio Cesar Rojas Cala' }]);
+    setAuthors(loadedAuthors.length > 0 ? loadedAuthors : [{ type: 'custom', contactId: '', customName: 'Julio Cesar Rojas Cala', photoUrl: '' }]);
     setEditingId(item.id);
     setShowForm(true);
     setError(null);
@@ -890,13 +899,22 @@ export function AdminPanel() {
                                 ))}
                               </select>
                             ) : (
-                              <input
-                                type="text"
-                                value={author.customName}
-                                onChange={(e) => updateAuthor(index, 'customName', e.target.value)}
-                                placeholder="Nombre del autor"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                              />
+                              <div className="space-y-2">
+                                <input
+                                  type="text"
+                                  value={author.customName}
+                                  onChange={(e) => updateAuthor(index, 'customName', e.target.value)}
+                                  placeholder="Nombre del autor"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                />
+                                <input
+                                  type="text"
+                                  value={author.photoUrl}
+                                  onChange={(e) => updateAuthor(index, 'photoUrl', e.target.value)}
+                                  placeholder="URL de la foto (opcional)"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                />
+                              </div>
                             )}
                           </div>
 
