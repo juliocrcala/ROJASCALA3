@@ -229,18 +229,18 @@ const MobileMenu = ({ isMenuOpen }) => {
 
 const AuthorLink = ({ author, authorContactId, contacts }) => {
   const contact = contacts.find(c => c.id === authorContactId);
-  
+
   if (contact) {
     return (
-      <Link 
+      <Link
         to={`/contacto/${contact.id}`}
         className="text-red-900 font-medium hover:text-red-700 hover:underline"
       >
-        {author}
+        {contact.name || author}
       </Link>
     );
   }
-  
+
   return <span className="text-gray-600">{author}</span>;
 };
 
@@ -408,7 +408,7 @@ const ArticleDetail = () => {
                 {authorContact?.photo_url ? (
                   <img
                     src={authorContact.photo_url}
-                    alt={article.author}
+                    alt={authorContact.name || article.author}
                     className="w-16 h-16 rounded-full object-cover border-2 border-red-900"
                   />
                 ) : (
@@ -417,7 +417,7 @@ const ArticleDetail = () => {
                   </div>
                 )}
                 <div>
-                  <h4 className="font-semibold text-gray-900">{article.author}</h4>
+                  <h4 className="font-semibold text-gray-900">{authorContact?.name || article.author}</h4>
                   <Link
                     to={`/contacto/${article.author_contact_id}`}
                     className="text-red-900 hover:text-red-700 font-medium"
