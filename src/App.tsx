@@ -399,25 +399,36 @@ const ArticleDetail = () => {
         </main>
 
         {/* Información del autor */}
-        {article.author_contact_id && (
-          <div className="mt-12 bg-red-50 rounded-lg p-6">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Sobre el autor</h3>
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-red-900 rounded-full flex items-center justify-center text-white">
-                <User className="w-8 h-8" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-gray-900">{article.author}</h4>
-                <Link
-                  to={`/contacto/${article.author_contact_id}`}
-                  className="text-red-900 hover:text-red-700 font-medium"
-                >
-                  Ver perfil completo →
-                </Link>
+        {article.author_contact_id && (() => {
+          const authorContact = contacts.find(c => c.id === article.author_contact_id);
+          return (
+            <div className="mt-12 bg-red-50 rounded-lg p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Sobre el autor</h3>
+              <div className="flex items-center space-x-4">
+                {authorContact?.photo_url ? (
+                  <img
+                    src={authorContact.photo_url}
+                    alt={article.author}
+                    className="w-16 h-16 rounded-full object-cover border-2 border-red-900"
+                  />
+                ) : (
+                  <div className="w-16 h-16 bg-red-900 rounded-full flex items-center justify-center text-white">
+                    <User className="w-8 h-8" />
+                  </div>
+                )}
+                <div>
+                  <h4 className="font-semibold text-gray-900">{article.author}</h4>
+                  <Link
+                    to={`/contacto/${article.author_contact_id}`}
+                    className="text-red-900 hover:text-red-700 font-medium"
+                  >
+                    Ver perfil completo →
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Navegación adicional */}
         <div className="mt-12 pt-8 border-t border-gray-200">
@@ -1032,13 +1043,13 @@ const ContactPage = () => {
           <div key={contact.id} className="bg-white rounded-2xl shadow-xl overflow-hidden">
             <div className={`flex flex-col ${index % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'}`}>
               {/* Imagen del contacto */}
-              <div className="lg:w-80 lg:flex-shrink-0">
-                <div className="h-80 lg:h-full bg-gradient-to-br from-red-100 to-red-50 flex items-center justify-center">
+              <div className="lg:w-64 lg:flex-shrink-0">
+                <div className="h-72 lg:h-80 bg-gradient-to-br from-red-100 to-red-50 flex items-center justify-center p-4">
                   {contact.photo_url ? (
-                    <img 
-                      src={contact.photo_url} 
+                    <img
+                      src={contact.photo_url}
                       alt={contact.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover rounded-lg shadow-lg"
                     />
                   ) : (
                     <div className="text-center">
