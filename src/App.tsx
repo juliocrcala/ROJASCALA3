@@ -244,6 +244,40 @@ const AuthorLink = ({ author, authorContactId, contacts }) => {
   return <span className="text-gray-600">{author}</span>;
 };
 
+const AuthorsDisplay = ({ authors, authorContactIds, contacts }) => {
+  const authorsArray = Array.isArray(authors) ? authors : (authors ? [authors] : []);
+  const contactIdsArray = Array.isArray(authorContactIds) ? authorContactIds : (authorContactIds ? [authorContactIds] : []);
+
+  if (authorsArray.length === 0 && contactIdsArray.length === 0) {
+    return <span className="text-gray-600">Autor desconocido</span>;
+  }
+
+  const authorElements = authorsArray.map((authorName, index) => {
+    const contactId = contactIdsArray[index];
+    return (
+      <AuthorLink
+        key={index}
+        author={authorName}
+        authorContactId={contactId}
+        contacts={contacts}
+      />
+    );
+  });
+
+  return (
+    <>
+      {authorElements.map((element, index) => (
+        <span key={index}>
+          {element}
+          {index < authorElements.length - 1 && (
+            <span className="text-gray-600"> y </span>
+          )}
+        </span>
+      ))}
+    </>
+  );
+};
+
 const ArticleDetail = () => {
   const { id, type } = useParams();
   const [article, setArticle] = useState<Article | SpecialArticle | null>(null);
@@ -353,10 +387,10 @@ const ArticleDetail = () => {
           <div className="flex items-center justify-between mb-6">
             <div className="text-lg">
               <span className="text-gray-600">Por </span>
-              <AuthorLink 
-                author={article.author} 
-                authorContactId={article.author_contact_id} 
-                contacts={contacts} 
+              <AuthorsDisplay
+                authors={article.author}
+                authorContactIds={article.author_contact_id}
+                contacts={contacts}
               />
             </div>
             
@@ -399,32 +433,50 @@ const ArticleDetail = () => {
         </main>
 
         {/* Información del autor */}
-        {article.author_contact_id && (() => {
-          const authorContact = contacts.find(c => c.id === article.author_contact_id);
+        {(() => {
+          const contactIdsArray = Array.isArray(article.author_contact_id) ? article.author_contact_id : (article.author_contact_id ? [article.author_contact_id] : []);
+          const authorsArray = Array.isArray(article.author) ? article.author : (article.author ? [article.author] : []);
+
+          const authorContacts = contactIdsArray
+            .map((contactId, index) => ({
+              contact: contacts.find(c => c.id === contactId),
+              name: authorsArray[index],
+              contactId
+            }))
+            .filter(item => item.contact);
+
+          if (authorContacts.length === 0) return null;
+
           return (
             <div className="mt-12 bg-red-50 rounded-lg p-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Sobre el autor</h3>
-              <div className="flex items-center space-x-4">
-                {authorContact?.photo_url ? (
-                  <img
-                    src={authorContact.photo_url}
-                    alt={authorContact.name || article.author}
-                    className="w-16 h-16 rounded-full object-cover border-2 border-red-900"
-                  />
-                ) : (
-                  <div className="w-16 h-16 bg-red-900 rounded-full flex items-center justify-center text-white">
-                    <User className="w-8 h-8" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                {authorContacts.length > 1 ? 'Sobre los autores' : 'Sobre el autor'}
+              </h3>
+              <div className="space-y-4">
+                {authorContacts.map(({ contact, name, contactId }, index) => (
+                  <div key={index} className="flex items-center space-x-4">
+                    {contact?.photo_url ? (
+                      <img
+                        src={contact.photo_url}
+                        alt={contact.name || name}
+                        className="w-16 h-16 rounded-full object-cover border-2 border-red-900"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 bg-red-900 rounded-full flex items-center justify-center text-white">
+                        <User className="w-8 h-8" />
+                      </div>
+                    )}
+                    <div>
+                      <h4 className="font-semibold text-gray-900">{contact?.name || name}</h4>
+                      <Link
+                        to={`/contacto/${contactId}`}
+                        className="text-red-900 hover:text-red-700 font-medium"
+                      >
+                        Ver perfil completo →
+                      </Link>
+                    </div>
                   </div>
-                )}
-                <div>
-                  <h4 className="font-semibold text-gray-900">{authorContact?.name || article.author}</h4>
-                  <Link
-                    to={`/contacto/${article.author_contact_id}`}
-                    className="text-red-900 hover:text-red-700 font-medium"
-                  >
-                    Ver perfil completo →
-                  </Link>
-                </div>
+                ))}
               </div>
             </div>
           );
@@ -794,10 +846,11 @@ const SpecialsPage = () => {
               
               <div className="flex items-center justify-between">
                 <div className="text-sm">
-                  <AuthorLink 
-                    author={article.author} 
-                    authorContactId={article.author_contact_id} 
-                    contacts={contacts} 
+                  <span className="text-gray-600">Por </span>
+                  <AuthorsDisplay
+                    authors={article.author}
+                    authorContactIds={article.author_contact_id}
+                    contacts={contacts}
                   />
                 </div>
                 <Link 
@@ -1344,11 +1397,13 @@ const CategoriesPage = () => {
                       >
                         <h4 className="font-medium text-gray-900 line-clamp-2 hover:text-red-900">{article.title}</h4>
                         <div className="flex items-center justify-between mt-1">
-                          <AuthorLink 
-                            author={article.author} 
-                            authorContactId={article.author_contact_id} 
-                            contacts={contacts} 
-                          />
+                          <div className="text-xs">
+                            <AuthorsDisplay
+                              authors={article.author}
+                              authorContactIds={article.author_contact_id}
+                              contacts={contacts}
+                            />
+                          </div>
                           <span className="text-gray-500 text-xs">
                             {formatDateSafe(article.published_date)}
                           </span>
@@ -1536,11 +1591,13 @@ const DocumentTypesPage = () => {
                       >
                         <h4 className="font-medium text-gray-900 line-clamp-2 hover:text-red-900">{article.title}</h4>
                         <div className="flex items-center justify-between mt-1">
-                          <AuthorLink 
-                            author={article.author} 
-                            authorContactId={article.author_contact_id} 
-                            contacts={contacts} 
-                          />
+                          <div className="text-xs">
+                            <AuthorsDisplay
+                              authors={article.author}
+                              authorContactIds={article.author_contact_id}
+                              contacts={contacts}
+                            />
+                          </div>
                           <span className="text-gray-500 text-xs">
                             {formatDateSafe(article.published_date)}
                           </span>
@@ -1716,10 +1773,11 @@ const CalendarPage = () => {
                     </Link>
                     <p className="text-gray-600 mb-2">{article.summary || article.content.substring(0, 200) + '...'}</p>
                     <div className="text-sm mb-2">
-                      <AuthorLink 
-                        author={article.author} 
-                        authorContactId={article.author_contact_id} 
-                        contacts={contacts} 
+                      <span className="text-gray-600">Por </span>
+                      <AuthorsDisplay
+                        authors={article.author}
+                        authorContactIds={article.author_contact_id}
+                        contacts={contacts}
                       />
                     </div>
                     <div className="flex justify-between items-center">
@@ -2020,11 +2078,14 @@ const HomePage = () => {
                         </span>
                       )}
                     </div>
-                    <AuthorLink 
-                      author={article.author} 
-                      authorContactId={article.author_contact_id} 
-                      contacts={contacts} 
-                    />
+                    <div className="text-sm">
+                      <span className="text-gray-600">Por </span>
+                      <AuthorsDisplay
+                        authors={article.author}
+                        authorContactIds={article.author_contact_id}
+                        contacts={contacts}
+                      />
+                    </div>
                   </div>
                   <div className="flex space-x-2">
                     {article.type === 'normal' && 'official_link' in article && article.official_link && (
