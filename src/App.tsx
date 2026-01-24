@@ -540,8 +540,8 @@ const SpecialsPage = () => {
   const fetchSpecialArticles = async () => {
     const { data, error } = await supabase
       .from('special_articles')
-      .select('id, title, author, published_date, category, content, summary, image_url, author_contact_id, author_photo_url, is_hidden, created_at')
-      .eq('is_hidden', false)
+      .select('*')
+      .eq('is_hidden', false) // Solo mostrar artículos visibles
       .order('published_date', { ascending: false });
 
     if (error) throw error;
@@ -1252,8 +1252,8 @@ const CategoriesPage = () => {
   const fetchArticles = async () => {
     const { data, error } = await supabase
       .from('articles')
-      .select('id, title, author, document_type, published_date, category, content, summary, official_link, author_contact_id, author_photo_url, is_hidden, created_at')
-      .eq('is_hidden', false)
+      .select('*')
+      .eq('is_hidden', false) // Solo mostrar artículos visibles
       .order('published_date', { ascending: false });
 
     if (error) throw error;
@@ -1263,8 +1263,8 @@ const CategoriesPage = () => {
   const fetchSpecialArticles = async () => {
     const { data, error } = await supabase
       .from('special_articles')
-      .select('id, title, author, published_date, category, content, summary, image_url, author_contact_id, author_photo_url, is_hidden, created_at')
-      .eq('is_hidden', false)
+      .select('*')
+      .eq('is_hidden', false) // Solo mostrar artículos visibles
       .order('published_date', { ascending: false });
 
     if (error && error.code !== 'PGRST116') throw error;
@@ -1463,8 +1463,8 @@ const DocumentTypesPage = () => {
   const fetchArticles = async () => {
     const { data, error } = await supabase
       .from('articles')
-      .select('id, title, author, document_type, published_date, category, content, summary, official_link, author_contact_id, author_photo_url, is_hidden, created_at')
-      .eq('is_hidden', false)
+      .select('*')
+      .eq('is_hidden', false) // Solo mostrar artículos visibles
       .order('published_date', { ascending: false });
 
     if (error) throw error;
@@ -1654,8 +1654,8 @@ const CalendarPage = () => {
   const fetchArticles = async () => {
     const { data, error } = await supabase
       .from('articles')
-      .select('id, title, author, document_type, published_date, category, content, summary, official_link, author_contact_id, author_photo_url, is_hidden, created_at')
-      .eq('is_hidden', false)
+      .select('*')
+      .eq('is_hidden', false) // Solo mostrar artículos visibles
       .order('published_date', { ascending: false });
 
     if (error) throw error;
@@ -1842,8 +1842,8 @@ const HomePage = () => {
   const fetchArticles = async () => {
     const { data, error } = await supabase
       .from('articles')
-      .select('id, title, author, document_type, published_date, category, content, summary, official_link, author_contact_id, author_photo_url, is_hidden, created_at')
-      .eq('is_hidden', false)
+      .select('*')
+      .eq('is_hidden', false) // Solo mostrar artículos visibles
       .order('published_date', { ascending: false })
       .limit(20);
 
@@ -1854,8 +1854,8 @@ const HomePage = () => {
   const fetchSpecialArticles = async () => {
     const { data, error } = await supabase
       .from('special_articles')
-      .select('id, title, author, published_date, category, content, summary, image_url, author_contact_id, author_photo_url, is_hidden, created_at')
-      .eq('is_hidden', false)
+      .select('*')
+      .eq('is_hidden', false) // Solo mostrar artículos visibles
       .order('published_date', { ascending: false })
       .limit(10);
 

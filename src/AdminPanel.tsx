@@ -150,19 +150,7 @@ export function AdminPanel() {
     const { data, error } = await supabase
       .from('articles')
       .select(`
-        id,
-        title,
-        author,
-        document_type,
-        published_date,
-        category,
-        content,
-        summary,
-        official_link,
-        author_contact_id,
-        author_photo_url,
-        is_hidden,
-        created_at,
+        *,
         contact:author_contact_id(name, email)
       `)
       .order('published_date', { ascending: false });
@@ -175,23 +163,12 @@ export function AdminPanel() {
     const { data, error } = await supabase
       .from('special_articles')
       .select(`
-        id,
-        title,
-        author,
-        published_date,
-        category,
-        content,
-        summary,
-        image_url,
-        author_contact_id,
-        author_photo_url,
-        is_hidden,
-        created_at,
+        *,
         contact:author_contact_id(name, email)
       `)
       .order('published_date', { ascending: false });
 
-    if (error && error.code !== 'PGRST116') {
+    if (error && error.code !== 'PGRST116') { // Ignore table not found error
       throw error;
     }
     setSpecialArticles(data || []);
