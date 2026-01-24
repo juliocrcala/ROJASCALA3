@@ -334,17 +334,20 @@ export function AdminPanel() {
         throw new Error('Debe agregar al menos un autor');
       }
 
-      const baseData = {
+      const baseData: any = {
         title: formData.title.trim(),
         author: authorNames,
         author_contact_id: authorContactIds,
-        author_photo_url: authorPhotoUrls,
         published_date: formData.published_date,
         category: formData.category,
         content: formData.content.trim(),
         summary: formData.summary.trim() || null,
         is_hidden: formData.is_hidden
       };
+
+      if (authorPhotoUrls.some(url => url !== null)) {
+        baseData.author_photo_url = authorPhotoUrls;
+      }
 
       if (activeTab === 'articles') {
         if (!formData.document_type) {

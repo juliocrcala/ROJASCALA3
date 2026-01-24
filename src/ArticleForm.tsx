@@ -113,12 +113,15 @@ export function ArticleForm({ onSuccess }: ArticleFormProps) {
         return;
       }
 
-      const articleData = {
+      const articleData: any = {
         ...formData,
         author: authorNames,
-        author_contact_id: authorContactIds,
-        author_photo_url: authorPhotoUrls
+        author_contact_id: authorContactIds
       };
+
+      if (authorPhotoUrls.some(url => url !== null)) {
+        articleData.author_photo_url = authorPhotoUrls;
+      }
 
       const { error } = await supabase
         .from('articles')
