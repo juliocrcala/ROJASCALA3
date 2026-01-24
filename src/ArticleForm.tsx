@@ -90,8 +90,11 @@ export function ArticleForm({ onSuccess }: ArticleFormProps) {
 
     try {
       const authorNames: string[] = [];
-      const authorContactIds: (string | null)[] = [];
-      const authorPhotoUrls: (string | null)[] = [];
+      const authorContactIds: string[] = [];
+      const authorPhotoUrls: string[] = [];
+
+      // UUID especial para representar "sin contacto"
+      const NO_CONTACT_UUID = '00000000-0000-0000-0000-000000000000';
 
       authors.forEach(author => {
         if (author.type === 'contact' && author.contactId) {
@@ -99,12 +102,12 @@ export function ArticleForm({ onSuccess }: ArticleFormProps) {
           if (contact) {
             authorNames.push(contact.name);
             authorContactIds.push(author.contactId);
-            authorPhotoUrls.push(null);
+            authorPhotoUrls.push('');
           }
         } else if (author.type === 'custom' && author.customName.trim()) {
           authorNames.push(author.customName.trim());
-          authorContactIds.push(null);
-          authorPhotoUrls.push(author.photoUrl.trim() || null);
+          authorContactIds.push(NO_CONTACT_UUID);
+          authorPhotoUrls.push(author.photoUrl.trim() || '');
         }
       });
 
@@ -115,20 +118,10 @@ export function ArticleForm({ onSuccess }: ArticleFormProps) {
 
       const articleData: any = {
         ...formData,
-        author: authorNames
+        author: authorNames,
+        author_contact_id: authorContactIds,
+        author_photo_url: authorPhotoUrls
       };
-
-      // Solo incluir author_contact_id si hay al menos un contacto real
-      const hasContactIds = authorContactIds.some(id => id !== null);
-      if (hasContactIds) {
-        articleData.author_contact_id = authorContactIds;
-      }
-
-      // Solo incluir author_photo_url si hay al menos una foto
-      const hasPhotoUrls = authorPhotoUrls.some(url => url !== null);
-      if (hasPhotoUrls) {
-        articleData.author_photo_url = authorPhotoUrls;
-      }
 
       const { error } = await supabase
         .from('articles')

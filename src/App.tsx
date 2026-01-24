@@ -228,6 +228,13 @@ const MobileMenu = ({ isMenuOpen }) => {
 };
 
 const AuthorLink = ({ author, authorContactId, contacts }) => {
+  const NO_CONTACT_UUID = '00000000-0000-0000-0000-000000000000';
+
+  // Ignorar el UUID especial que representa "sin contacto"
+  if (!authorContactId || authorContactId === NO_CONTACT_UUID) {
+    return <span className="text-gray-600">{author}</span>;
+  }
+
   const contact = contacts.find(c => c.id === authorContactId);
 
   if (contact) {

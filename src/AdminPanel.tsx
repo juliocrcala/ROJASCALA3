@@ -312,8 +312,11 @@ export function AdminPanel() {
 
       // Procesar autores
       const authorNames: string[] = [];
-      const authorContactIds: (string | null)[] = [];
-      const authorPhotoUrls: (string | null)[] = [];
+      const authorContactIds: string[] = [];
+      const authorPhotoUrls: string[] = [];
+
+      // UUID especial para representar "sin contacto"
+      const NO_CONTACT_UUID = '00000000-0000-0000-0000-000000000000';
 
       authors.forEach(author => {
         if (author.type === 'contact' && author.contactId) {
@@ -321,12 +324,12 @@ export function AdminPanel() {
           if (contact) {
             authorNames.push(contact.name);
             authorContactIds.push(author.contactId);
-            authorPhotoUrls.push(null);
+            authorPhotoUrls.push('');
           }
         } else if (author.type === 'custom' && author.customName.trim()) {
           authorNames.push(author.customName.trim());
-          authorContactIds.push(null);
-          authorPhotoUrls.push(author.photoUrl.trim() || null);
+          authorContactIds.push(NO_CONTACT_UUID);
+          authorPhotoUrls.push(author.photoUrl.trim() || '');
         }
       });
 
@@ -341,20 +344,10 @@ export function AdminPanel() {
         category: formData.category,
         content: formData.content.trim(),
         summary: formData.summary.trim() || null,
-        is_hidden: formData.is_hidden
+        is_hidden: formData.is_hidden,
+        author_contact_id: authorContactIds,
+        author_photo_url: authorPhotoUrls
       };
-
-      // Solo incluir author_contact_id si hay al menos un contacto real
-      const hasContactIds = authorContactIds.some(id => id !== null);
-      if (hasContactIds) {
-        baseData.author_contact_id = authorContactIds;
-      }
-
-      // Solo incluir author_photo_url si hay al menos una foto
-      const hasPhotoUrls = authorPhotoUrls.some(url => url !== null);
-      if (hasPhotoUrls) {
-        baseData.author_photo_url = authorPhotoUrls;
-      }
 
       if (activeTab === 'articles') {
         if (!formData.document_type) {
@@ -450,6 +443,7 @@ export function AdminPanel() {
     });
 
     // Cargar autores
+    const NO_CONTACT_UUID = '00000000-0000-0000-0000-000000000000';
     const authorsArray = Array.isArray(item.author) ? item.author : (item.author ? [item.author] : []);
     const contactIdsArray = Array.isArray(item.author_contact_id) ? item.author_contact_id : (item.author_contact_id ? [item.author_contact_id] : []);
     const photoUrlsArray = Array.isArray(item.author_photo_url) ? item.author_photo_url : (item.author_photo_url ? [item.author_photo_url] : []);
@@ -457,7 +451,8 @@ export function AdminPanel() {
     const loadedAuthors: AuthorEntry[] = authorsArray.map((authorName, index) => {
       const contactId = contactIdsArray[index];
       const photoUrl = photoUrlsArray[index] || '';
-      if (contactId) {
+      // Ignorar el UUID especial que representa "sin contacto"
+      if (contactId && contactId !== NO_CONTACT_UUID) {
         return { type: 'contact', contactId, customName: '', photoUrl: '' };
       } else {
         return { type: 'custom', contactId: '', customName: authorName, photoUrl };
