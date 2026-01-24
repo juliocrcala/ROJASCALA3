@@ -312,8 +312,8 @@ export function AdminPanel() {
 
       // Procesar autores
       const authorNames: string[] = [];
-      const authorContactIds: (string | null)[] = [];
-      const authorPhotoUrls: (string | null)[] = [];
+      const authorContactIds: string[] = [];
+      const authorPhotoUrls: string[] = [];
 
       authors.forEach(author => {
         if (author.type === 'contact' && author.contactId) {
@@ -321,12 +321,12 @@ export function AdminPanel() {
           if (contact) {
             authorNames.push(contact.name);
             authorContactIds.push(author.contactId);
-            authorPhotoUrls.push(null);
+            authorPhotoUrls.push('');
           }
         } else if (author.type === 'custom' && author.customName.trim()) {
           authorNames.push(author.customName.trim());
-          authorContactIds.push(null);
-          authorPhotoUrls.push(author.photoUrl.trim() || null);
+          authorContactIds.push('');
+          authorPhotoUrls.push(author.photoUrl.trim() || '');
         }
       });
 
@@ -337,7 +337,6 @@ export function AdminPanel() {
       const baseData: any = {
         title: formData.title.trim(),
         author: authorNames,
-        author_contact_id: authorContactIds,
         published_date: formData.published_date,
         category: formData.category,
         content: formData.content.trim(),
@@ -345,8 +344,16 @@ export function AdminPanel() {
         is_hidden: formData.is_hidden
       };
 
-      if (authorPhotoUrls.some(url => url !== null)) {
-        baseData.author_photo_url = authorPhotoUrls;
+      // Solo incluir author_contact_id si hay al menos un contacto real
+      const validContactIds = authorContactIds.filter(id => id !== '');
+      if (validContactIds.length > 0) {
+        baseData.author_contact_id = authorContactIds.map(id => id || null);
+      }
+
+      // Solo incluir author_photo_url si hay al menos una foto
+      const validPhotoUrls = authorPhotoUrls.filter(url => url !== '');
+      if (validPhotoUrls.length > 0) {
+        baseData.author_photo_url = authorPhotoUrls.map(url => url || null);
       }
 
       if (activeTab === 'articles') {
