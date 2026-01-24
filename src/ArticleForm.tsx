@@ -90,8 +90,8 @@ export function ArticleForm({ onSuccess }: ArticleFormProps) {
 
     try {
       const authorNames: string[] = [];
-      const authorContactIds: string[] = [];
-      const authorPhotoUrls: string[] = [];
+      const authorContactIds: (string | null)[] = [];
+      const authorPhotoUrls: (string | null)[] = [];
 
       authors.forEach(author => {
         if (author.type === 'contact' && author.contactId) {
@@ -99,12 +99,12 @@ export function ArticleForm({ onSuccess }: ArticleFormProps) {
           if (contact) {
             authorNames.push(contact.name);
             authorContactIds.push(author.contactId);
-            authorPhotoUrls.push('');
+            authorPhotoUrls.push(null);
           }
         } else if (author.type === 'custom' && author.customName.trim()) {
           authorNames.push(author.customName.trim());
-          authorContactIds.push('');
-          authorPhotoUrls.push(author.photoUrl.trim() || '');
+          authorContactIds.push(null);
+          authorPhotoUrls.push(author.photoUrl.trim() || null);
         }
       });
 
@@ -119,15 +119,15 @@ export function ArticleForm({ onSuccess }: ArticleFormProps) {
       };
 
       // Solo incluir author_contact_id si hay al menos un contacto real
-      const validContactIds = authorContactIds.filter(id => id !== '');
-      if (validContactIds.length > 0) {
-        articleData.author_contact_id = authorContactIds.map(id => id || null);
+      const hasContactIds = authorContactIds.some(id => id !== null);
+      if (hasContactIds) {
+        articleData.author_contact_id = authorContactIds;
       }
 
       // Solo incluir author_photo_url si hay al menos una foto
-      const validPhotoUrls = authorPhotoUrls.filter(url => url !== '');
-      if (validPhotoUrls.length > 0) {
-        articleData.author_photo_url = authorPhotoUrls.map(url => url || null);
+      const hasPhotoUrls = authorPhotoUrls.some(url => url !== null);
+      if (hasPhotoUrls) {
+        articleData.author_photo_url = authorPhotoUrls;
       }
 
       const { error } = await supabase
