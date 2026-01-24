@@ -16,7 +16,6 @@ interface AuthorEntry {
   type: 'contact' | 'custom';
   contactId: string;
   customName: string;
-  photoUrl: string;
 }
 
 const documentTypes = [
@@ -38,7 +37,7 @@ const categories = [
 export function ArticleForm({ onSuccess }: ArticleFormProps) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [authors, setAuthors] = useState<AuthorEntry[]>([
-    { type: 'contact', contactId: '', customName: '', photoUrl: '' }
+    { type: 'contact', contactId: '', customName: '' }
   ]);
   const [formData, setFormData] = useState({
     title: '',
@@ -70,7 +69,7 @@ export function ArticleForm({ onSuccess }: ArticleFormProps) {
   };
 
   const addAuthor = () => {
-    setAuthors([...authors, { type: 'contact', contactId: '', customName: '', photoUrl: '' }]);
+    setAuthors([...authors, { type: 'contact', contactId: '', customName: '' }]);
   };
 
   const removeAuthor = (index: number) => {
@@ -91,7 +90,6 @@ export function ArticleForm({ onSuccess }: ArticleFormProps) {
     try {
       const authorNames: string[] = [];
       const authorContactIds: string[] = [];
-      const authorPhotoUrls: string[] = [];
 
       // UUID especial para representar "sin contacto"
       const NO_CONTACT_UUID = '00000000-0000-0000-0000-000000000000';
@@ -102,12 +100,10 @@ export function ArticleForm({ onSuccess }: ArticleFormProps) {
           if (contact) {
             authorNames.push(contact.name);
             authorContactIds.push(author.contactId);
-            authorPhotoUrls.push('');
           }
         } else if (author.type === 'custom' && author.customName.trim()) {
           authorNames.push(author.customName.trim());
           authorContactIds.push(NO_CONTACT_UUID);
-          authorPhotoUrls.push(author.photoUrl.trim() || '');
         }
       });
 
@@ -119,8 +115,7 @@ export function ArticleForm({ onSuccess }: ArticleFormProps) {
       const articleData: any = {
         ...formData,
         author: authorNames,
-        author_contact_id: authorContactIds,
-        author_photo_url: authorPhotoUrls
+        author_contact_id: authorContactIds
       };
 
       const { error } = await supabase
@@ -139,7 +134,7 @@ export function ArticleForm({ onSuccess }: ArticleFormProps) {
         summary: ''
       });
 
-      setAuthors([{ type: 'contact', contactId: '', customName: '', photoUrl: '' }]);
+      setAuthors([{ type: 'contact', contactId: '', customName: '' }]);
 
       if (onSuccess) onSuccess();
       alert('Artículo publicado exitosamente');
@@ -214,22 +209,13 @@ export function ArticleForm({ onSuccess }: ArticleFormProps) {
                     ))}
                   </select>
                 ) : (
-                  <>
-                    <input
-                      type="text"
-                      value={author.customName}
-                      onChange={(e) => updateAuthor(index, 'customName', e.target.value)}
-                      placeholder="Nombre del autor"
-                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
-                    />
-                    <input
-                      type="url"
-                      value={author.photoUrl}
-                      onChange={(e) => updateAuthor(index, 'photoUrl', e.target.value)}
-                      placeholder="URL de la foto (opcional)"
-                      className="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
-                    />
-                  </>
+                  <input
+                    type="text"
+                    value={author.customName}
+                    onChange={(e) => updateAuthor(index, 'customName', e.target.value)}
+                    placeholder="Nombre del autor"
+                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
+                  />
                 )}
               </div>
 
