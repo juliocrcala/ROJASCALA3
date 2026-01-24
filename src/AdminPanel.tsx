@@ -309,10 +309,7 @@ export function AdminPanel() {
 
       // Procesar autores
       const authorNames: string[] = [];
-      const authorContactIds: string[] = [];
-
-      // UUID especial para representar "sin contacto"
-      const NO_CONTACT_UUID = '00000000-0000-0000-0000-000000000000';
+      const authorContactIds: (string | null)[] = [];
 
       authors.forEach(author => {
         if (author.type === 'contact' && author.contactId) {
@@ -323,7 +320,7 @@ export function AdminPanel() {
           }
         } else if (author.type === 'custom' && author.customName.trim()) {
           authorNames.push(author.customName.trim());
-          authorContactIds.push(NO_CONTACT_UUID);
+          authorContactIds.push(null);
         }
       });
 
@@ -331,15 +328,15 @@ export function AdminPanel() {
         throw new Error('Debe agregar al menos un autor');
       }
 
-      const baseData: any = {
+      const baseData = {
         title: formData.title.trim(),
         author: authorNames,
+        author_contact_id: authorContactIds.filter(id => id !== null),
         published_date: formData.published_date,
         category: formData.category,
         content: formData.content.trim(),
         summary: formData.summary.trim() || null,
-        is_hidden: formData.is_hidden,
-        author_contact_id: authorContactIds
+        is_hidden: formData.is_hidden
       };
 
       if (activeTab === 'articles') {
@@ -436,14 +433,12 @@ export function AdminPanel() {
     });
 
     // Cargar autores
-    const NO_CONTACT_UUID = '00000000-0000-0000-0000-000000000000';
     const authorsArray = Array.isArray(item.author) ? item.author : (item.author ? [item.author] : []);
     const contactIdsArray = Array.isArray(item.author_contact_id) ? item.author_contact_id : (item.author_contact_id ? [item.author_contact_id] : []);
 
     const loadedAuthors: AuthorEntry[] = authorsArray.map((authorName, index) => {
       const contactId = contactIdsArray[index];
-      // Ignorar el UUID especial que representa "sin contacto"
-      if (contactId && contactId !== NO_CONTACT_UUID) {
+      if (contactId) {
         return { type: 'contact', contactId, customName: '' };
       } else {
         return { type: 'custom', contactId: '', customName: authorName };

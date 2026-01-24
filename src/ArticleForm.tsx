@@ -89,10 +89,7 @@ export function ArticleForm({ onSuccess }: ArticleFormProps) {
 
     try {
       const authorNames: string[] = [];
-      const authorContactIds: string[] = [];
-
-      // UUID especial para representar "sin contacto"
-      const NO_CONTACT_UUID = '00000000-0000-0000-0000-000000000000';
+      const authorContactIds: (string | null)[] = [];
 
       authors.forEach(author => {
         if (author.type === 'contact' && author.contactId) {
@@ -103,7 +100,7 @@ export function ArticleForm({ onSuccess }: ArticleFormProps) {
           }
         } else if (author.type === 'custom' && author.customName.trim()) {
           authorNames.push(author.customName.trim());
-          authorContactIds.push(NO_CONTACT_UUID);
+          authorContactIds.push(null);
         }
       });
 
@@ -112,10 +109,10 @@ export function ArticleForm({ onSuccess }: ArticleFormProps) {
         return;
       }
 
-      const articleData: any = {
+      const articleData = {
         ...formData,
         author: authorNames,
-        author_contact_id: authorContactIds
+        author_contact_id: authorContactIds.filter(id => id !== null)
       };
 
       const { error } = await supabase
