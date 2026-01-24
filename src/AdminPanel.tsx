@@ -337,7 +337,7 @@ export function AdminPanel() {
       const baseData = {
         title: formData.title.trim(),
         author: authorNames,
-        author_contact_id: authorContactIds.filter(id => id !== null),
+        author_contact_id: authorContactIds,
         author_photo_url: authorPhotoUrls,
         published_date: formData.published_date,
         category: formData.category,
