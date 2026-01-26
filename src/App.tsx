@@ -386,14 +386,14 @@ const ArticleDetail = () => {
           {article.summary && (
             <div className="bg-gray-50 border-l-4 border-red-900 p-6 mb-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-2">Resumen</h2>
-              <p className="text-gray-700 leading-relaxed">{article.summary}</p>
+              <p className="text-gray-700 leading-relaxed text-justify">{article.summary}</p>
             </div>
           )}
         </header>
 
         {/* Contenido principal */}
         <main className="prose prose-lg max-w-none">
-          <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+          <div className="text-gray-800 leading-relaxed whitespace-pre-wrap text-justify">
             {article.content}
           </div>
         </main>
@@ -790,7 +790,7 @@ const SpecialsPage = () => {
                 {article.title}
               </h3>
               
-              <p className="text-gray-600 mb-4 line-clamp-3">{article.summary}</p>
+              <p className="text-gray-600 mb-4 line-clamp-3 text-justify">{article.summary}</p>
               
               <div className="flex items-center justify-between">
                 <div className="text-sm">
@@ -1092,7 +1092,7 @@ const ContactPage = () => {
                     <div className="bg-red-50 rounded-xl p-8">
                       <h4 className="text-xl font-semibold text-gray-900 mb-4">Mis servicios:</h4>
                       {contact.services_description && (
-                        <p className="text-gray-700 mb-6 text-lg leading-relaxed">{contact.services_description}</p>
+                        <p className="text-gray-700 mb-6 text-lg leading-relaxed text-justify">{contact.services_description}</p>
                       )}
                       {contact.services_link && (
                         <a
@@ -1112,7 +1112,7 @@ const ContactPage = () => {
                   {contact.bio && (
                     <div className="bg-gray-50 rounded-xl p-8">
                       <h4 className="text-xl font-semibold text-gray-900 mb-4">Acerca de</h4>
-                      <p className="text-gray-700 leading-relaxed text-lg">{contact.bio}</p>
+                      <p className="text-gray-700 leading-relaxed text-lg text-justify">{contact.bio}</p>
                     </div>
                   )}
 
@@ -1714,7 +1714,7 @@ const CalendarPage = () => {
                     <Link to={`/articulo/normal/${article.id}`}>
                       <h4 className="text-xl font-semibold mb-2 hover:text-red-900">{article.title}</h4>
                     </Link>
-                    <p className="text-gray-600 mb-2">{article.summary || article.content.substring(0, 200) + '...'}</p>
+                    <p className="text-gray-600 mb-2 text-justify">{article.summary || article.content.substring(0, 200) + '...'}</p>
                     <div className="text-sm mb-2">
                       <AuthorLink 
                         author={article.author} 
@@ -2005,7 +2005,7 @@ const HomePage = () => {
                 <Link to={`/articulo/${article.type}/${article.id}`}>
                   <h3 className="text-xl font-semibold mb-2 hover:text-red-900">{article.title}</h3>
                 </Link>
-                <p className="text-gray-600 mb-4">{article.summary || article.content.substring(0, 150) + '...'}</p>
+                <p className="text-gray-600 mb-4 text-justify">{article.summary || article.content.substring(0, 150) + '...'}</p>
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col">
                     <div className="flex flex-wrap gap-1 mb-1">
