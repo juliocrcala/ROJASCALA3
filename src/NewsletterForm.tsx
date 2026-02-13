@@ -49,14 +49,14 @@ export const NewsletterForm: React.FC = () => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-blue-900 to-blue-800 rounded-lg p-6 shadow-lg">
+    <div className="bg-gradient-to-br from-red-900 to-red-800 rounded-lg p-6 shadow-lg">
       <div className="flex items-center space-x-3 mb-4">
         <div className="bg-white/10 p-3 rounded-full">
           <Mail className="w-6 h-6 text-white" />
         </div>
         <div>
           <h3 className="text-xl font-bold text-white">Únete a nuestro Newsletter</h3>
-          <p className="text-blue-100 text-sm">Recibe las últimas actualizaciones legales en tu correo</p>
+          <p className="text-red-100 text-sm">Recibe las últimas actualizaciones legales en tu correo</p>
         </div>
       </div>
 
@@ -74,7 +74,7 @@ export const NewsletterForm: React.FC = () => {
               onChange={(e) => setName(e.target.value)}
               placeholder="Tu nombre"
               required
-              className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-red-200 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all"
             />
           </div>
           <div>
@@ -84,7 +84,7 @@ export const NewsletterForm: React.FC = () => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Tu correo electrónico"
               required
-              className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-red-200 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all"
             />
           </div>
 
@@ -97,11 +97,11 @@ export const NewsletterForm: React.FC = () => {
           <button
             type="submit"
             disabled={status === 'loading'}
-            className="w-full bg-white text-blue-900 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+            className="w-full bg-white text-red-900 px-6 py-3 rounded-lg font-semibold hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
           >
             {status === 'loading' ? (
               <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-900"></div>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-900"></div>
                 <span>Suscribiendo...</span>
               </>
             ) : (
