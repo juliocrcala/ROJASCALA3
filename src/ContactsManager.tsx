@@ -109,16 +109,33 @@ export function ContactsManager() {
     reader.readAsDataURL(file);
   };
 
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error('Error al leer el archivo'));
+      reader.readAsDataURL(file);
+    });
+  };
+
   const uploadPhotoToStorage = async (file: File): Promise<string> => {
     try {
       setUploadingFile(true);
+
+      // Verificar autenticación
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Debes estar autenticado para subir fotos');
+      }
 
       // Generar nombre único para el archivo
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      // Subir archivo a Supabase Storage
+      console.log('Intentando subir archivo a Storage:', filePath);
+
+      // Intentar subir archivo a Supabase Storage
       const { data, error } = await supabase.storage
         .from('contact-photos')
         .upload(filePath, file, {
@@ -126,17 +143,45 @@ export function ContactsManager() {
           upsert: false
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Storage upload error:', error);
+
+        // Si el bucket no está disponible, usar base64 como respaldo
+        if (error.message?.includes('not found') || error.message?.includes('Bucket')) {
+          console.log('Bucket no disponible, convirtiendo a base64...');
+          const base64 = await convertFileToBase64(file);
+          return base64;
+        }
+
+        throw error;
+      }
+
+      console.log('Upload successful:', data);
 
       // Obtener URL pública
       const { data: { publicUrl } } = supabase.storage
         .from('contact-photos')
         .getPublicUrl(filePath);
 
+      console.log('Public URL:', publicUrl);
+
       return publicUrl;
     } catch (error: any) {
       console.error('Error uploading photo:', error);
-      throw new Error('Error al subir la foto. Intenta nuevamente.');
+
+      // Mensajes de error más específicos
+      if (error.message?.includes('auth')) {
+        throw new Error('Debes estar autenticado para subir fotos.');
+      }
+
+      // Como último recurso, convertir a base64
+      try {
+        console.log('Intentando método de respaldo (base64)...');
+        const base64 = await convertFileToBase64(file);
+        return base64;
+      } catch (base64Error) {
+        throw new Error('Error al procesar la imagen. Intenta con una imagen más pequeña.');
+      }
     } finally {
       setUploadingFile(false);
     }
