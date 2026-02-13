@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabase';
-import { Plus, Edit, Trash2, Save, X, AlertCircle, User, Mail, Linkedin, Instagram, ExternalLink, RefreshCw, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, AlertCircle, User, Mail, Linkedin, Instagram, ExternalLink, RefreshCw, ArrowUp, ArrowDown, Upload, Image as ImageIcon } from 'lucide-react';
 
 interface Contact {
   id: string;
@@ -27,6 +27,9 @@ export function ContactsManager() {
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -80,6 +83,65 @@ export function ContactsManager() {
     }, 5000);
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo de archivo
+    if (!file.type.startsWith('image/')) {
+      showMessage('Por favor selecciona un archivo de imagen válido', 'error');
+      return;
+    }
+
+    // Validar tamaño (5MB máximo)
+    if (file.size > 5 * 1024 * 1024) {
+      showMessage('La imagen debe ser menor a 5MB', 'error');
+      return;
+    }
+
+    setSelectedFile(file);
+
+    // Crear URL de vista previa
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const uploadPhotoToStorage = async (file: File): Promise<string> => {
+    try {
+      setUploadingFile(true);
+
+      // Generar nombre único para el archivo
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      // Subir archivo a Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('contact-photos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) throw error;
+
+      // Obtener URL pública
+      const { data: { publicUrl } } = supabase.storage
+        .from('contact-photos')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error: any) {
+      console.error('Error uploading photo:', error);
+      throw new Error('Error al subir la foto. Intenta nuevamente.');
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
   const getNextOrderNumber = (position: 'first' | 'last' | number) => {
     if (contacts.length === 0) return 1;
     
@@ -115,7 +177,7 @@ export function ContactsManager() {
     setIsSaving(true);
     setError(null);
     setSuccess(null);
-    
+
     try {
       // Validar campos requeridos
       if (!formData.name.trim()) {
@@ -125,10 +187,16 @@ export function ContactsManager() {
         throw new Error('El email es requerido');
       }
 
+      // Subir foto si hay un archivo seleccionado
+      let photoUrl = formData.photo_url.trim() || null;
+      if (selectedFile) {
+        photoUrl = await uploadPhotoToStorage(selectedFile);
+      }
+
       const contactData = {
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
-        photo_url: formData.photo_url.trim() || null,
+        photo_url: photoUrl,
         linkedin_url: formData.linkedin_url.trim() || null,
         instagram_url: formData.instagram_url.trim() || null,
         bio: formData.bio.trim() || null,
@@ -196,6 +264,8 @@ export function ContactsManager() {
       is_active: true,
       display_order: getNextOrderNumber('last')
     });
+    setSelectedFile(null);
+    setPreviewUrl(null);
     setShowForm(false);
     setEditingId(null);
   };
@@ -428,20 +498,94 @@ export function ContactsManager() {
                 />
               </div>
 
-              <div>
+              <div className="space-y-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  URL de Foto de Perfil
+                  Foto de Perfil
                 </label>
-                <input
-                  type="url"
-                  value={formData.photo_url}
-                  onChange={(e) => setFormData({ ...formData, photo_url: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                  placeholder="https://images.pexels.com/..."
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  💡 Puedes usar fotos de Pexels como: https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg
-                </p>
+
+                {/* Vista previa de la imagen */}
+                {(previewUrl || formData.photo_url) && (
+                  <div className="flex items-center justify-center">
+                    <div className="relative">
+                      <img
+                        src={previewUrl || formData.photo_url}
+                        alt="Vista previa"
+                        className="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
+                      />
+                      {(previewUrl || formData.photo_url) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPreviewUrl(null);
+                            setSelectedFile(null);
+                            setFormData({ ...formData, photo_url: '' });
+                          }}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Opción 1: Subir archivo */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Opción 1: Subir foto desde tu computadora
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    <label className="flex-1 cursor-pointer">
+                      <div className="flex items-center justify-center px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-red-500 transition-colors">
+                        <Upload className="w-5 h-5 text-gray-400 mr-2" />
+                        <span className="text-sm text-gray-600">
+                          {selectedFile ? selectedFile.name : 'Seleccionar imagen'}
+                        </span>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Formatos: JPG, PNG, GIF, WEBP. Tamaño máximo: 5MB
+                  </p>
+                </div>
+
+                {/* Separador */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-500">O</span>
+                  </div>
+                </div>
+
+                {/* Opción 2: URL */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Opción 2: URL de imagen externa
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.photo_url}
+                    onChange={(e) => {
+                      setFormData({ ...formData, photo_url: e.target.value });
+                      setSelectedFile(null);
+                      setPreviewUrl(null);
+                    }}
+                    disabled={!!selectedFile}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    placeholder="https://ejemplo.com/imagen.jpg"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Nota: Las URLs externas pueden dejar de funcionar con el tiempo
+                  </p>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -538,13 +682,13 @@ export function ContactsManager() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isSaving}
+                  disabled={isSaving || uploadingFile}
                   className="px-6 py-2 bg-red-900 text-white rounded-md hover:bg-red-800 flex items-center space-x-2 disabled:opacity-50"
                 >
-                  {isSaving ? (
+                  {isSaving || uploadingFile ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Guardando...</span>
+                      <span>{uploadingFile ? 'Subiendo foto...' : 'Guardando...'}</span>
                     </>
                   ) : (
                     <>
