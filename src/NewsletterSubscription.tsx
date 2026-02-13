@@ -5,7 +5,6 @@ import { supabase } from './supabase';
 export const NewsletterSubscription = () => {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
-  const [acceptTerms, setAcceptTerms] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
@@ -17,12 +16,6 @@ export const NewsletterSubscription = () => {
     if (!email || !name) {
       setStatus('error');
       setMessage('Por favor completa todos los campos');
-      return;
-    }
-
-    if (!acceptTerms) {
-      setStatus('error');
-      setMessage('Debes aceptar recibir comunicaciones por correo');
       return;
     }
 
@@ -55,7 +48,6 @@ export const NewsletterSubscription = () => {
         setMessage('¡Te has suscrito exitosamente!');
         setEmail('');
         setName('');
-        setAcceptTerms(false);
 
         setTimeout(() => {
           setStatus('idle');
@@ -70,14 +62,14 @@ export const NewsletterSubscription = () => {
   };
 
   return (
-    <div className="bg-gradient-to-r from-red-600 to-red-800 text-white py-12">
+    <div style={{ backgroundColor: '#7D3C3C' }} className="text-white py-12">
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto text-center">
           <div className="flex justify-center mb-4">
             <Mail className="w-12 h-12" />
           </div>
           <h3 className="text-3xl font-bold mb-2">Únete a Nuestro Newsletter</h3>
-          <p className="text-red-100 mb-6">
+          <p className="text-gray-100 mb-6">
             Recibe las últimas actualizaciones legales directamente en tu correo
           </p>
 
@@ -102,24 +94,10 @@ export const NewsletterSubscription = () => {
               <button
                 type="submit"
                 disabled={status === 'loading'}
-                className="bg-white text-red-600 px-8 py-3 rounded-lg font-semibold hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                className="bg-white text-red-800 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
               >
                 {status === 'loading' ? 'Suscribiendo...' : 'Suscribirse'}
               </button>
-            </div>
-
-            <div className="flex items-start gap-2 text-left max-w-xl mx-auto">
-              <input
-                type="checkbox"
-                id="acceptTerms"
-                checked={acceptTerms}
-                onChange={(e) => setAcceptTerms(e.target.checked)}
-                disabled={status === 'loading'}
-                className="mt-1 w-4 h-4 text-red-600 bg-white border-gray-300 rounded focus:ring-red-500"
-              />
-              <label htmlFor="acceptTerms" className="text-sm text-red-50 cursor-pointer">
-                Acepto recibir comunicaciones por correo electrónico
-              </label>
             </div>
 
             {message && (
@@ -136,11 +114,11 @@ export const NewsletterSubscription = () => {
                 <span className="text-sm font-medium">{message}</span>
               </div>
             )}
-          </form>
 
-          <p className="text-red-100 text-sm mt-4">
-            No compartimos tu información con terceros
-          </p>
+            <p className="text-gray-400 text-xs mt-4">
+              Acepto recibir comunicaciones por correo electrónico. No compartimos tu información con terceros.
+            </p>
+          </form>
         </div>
       </div>
     </div>
