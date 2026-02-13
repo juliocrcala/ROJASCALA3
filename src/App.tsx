@@ -8,6 +8,7 @@ import { AdminPanel } from './AdminPanel';
 import { FloatingHelpWidget } from './FloatingHelpWidget';
 import { ErrorBoundary } from './ErrorBoundary';
 import MaintenancePage from './MaintenancePage';
+import { NewsletterForm } from './NewsletterForm';
 
 
 interface Article {
@@ -2122,7 +2123,7 @@ const AppContent = () => {
 
       <footer className="bg-gray-900 text-white mt-16">
         <div className="container mx-auto px-4 py-8">
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-8 mb-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <RCLogo />
@@ -2151,7 +2152,14 @@ const AppContent = () => {
               </ul>
             </div>
           </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+
+          <div className="border-t border-gray-800 pt-8 mb-8">
+            <div className="max-w-2xl mx-auto">
+              <NewsletterForm />
+            </div>
+          </div>
+
+          <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
             <p>&copy; 2025 Rojas Cala. Todos los derechos reservados.</p>
           </div>
         </div>
