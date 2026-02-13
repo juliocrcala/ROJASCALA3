@@ -2123,39 +2123,41 @@ const AppContent = () => {
 
       <footer className="bg-gray-900 text-white mt-16">
         <div className="container mx-auto px-4 py-8">
-          <div className="grid md:grid-cols-3 gap-8 mb-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <RCLogo />
-                <h4 className="text-xl italic" style={{ fontFamily: 'Brush Script MT, cursive' }}>Rojas Cala</h4>
-              </div>
-              <p className="text-gray-400">
-                Manteniéndote actualizado con las últimas normas legales y regulaciones.
-              </p>
-            </div>
-            <div>
-              <h4 className="text-xl font-bold mb-4">Enlaces Rápidos</h4>
-              <ul className="space-y-2">
-                <li><Link to="/" className="text-gray-400 hover:text-white">Inicio</Link></li>
-                <li><Link to="/normas" className="text-gray-400 hover:text-white">Normas</Link></li>
-                <li><Link to="/fechas" className="text-gray-400 hover:text-white">Fechas</Link></li>
-                <li><Link to="/categorias" className="text-gray-400 hover:text-white">Categorías</Link></li>
-                <li><Link to="/especiales" className="text-gray-400 hover:text-white">Especiales</Link></li>
-                <li><Link to="/contacto" className="text-gray-400 hover:text-white">Contacto</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-xl font-bold mb-4">Contacto</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li>Email: julio.cesar@rojascala.org</li>
-                <li>Dirección: Av. Principal 123, Lima</li>
-              </ul>
+          <div className="mb-8">
+            <div className="max-w-2xl mx-auto">
+              <NewsletterForm />
             </div>
           </div>
 
           <div className="border-t border-gray-800 pt-8 mb-8">
-            <div className="max-w-2xl mx-auto">
-              <NewsletterForm />
+            <div className="grid md:grid-cols-3 gap-8">
+              <div>
+                <div className="flex items-center space-x-2 mb-4">
+                  <RCLogo />
+                  <h4 className="text-xl italic" style={{ fontFamily: 'Brush Script MT, cursive' }}>Rojas Cala</h4>
+                </div>
+                <p className="text-gray-400">
+                  Manteniéndote actualizado con las últimas normas legales y regulaciones.
+                </p>
+              </div>
+              <div>
+                <h4 className="text-xl font-bold mb-4">Enlaces Rápidos</h4>
+                <ul className="space-y-2">
+                  <li><Link to="/" className="text-gray-400 hover:text-white">Inicio</Link></li>
+                  <li><Link to="/normas" className="text-gray-400 hover:text-white">Normas</Link></li>
+                  <li><Link to="/fechas" className="text-gray-400 hover:text-white">Fechas</Link></li>
+                  <li><Link to="/categorias" className="text-gray-400 hover:text-white">Categorías</Link></li>
+                  <li><Link to="/especiales" className="text-gray-400 hover:text-white">Especiales</Link></li>
+                  <li><Link to="/contacto" className="text-gray-400 hover:text-white">Contacto</Link></li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-xl font-bold mb-4">Contacto</h4>
+                <ul className="space-y-2 text-gray-400">
+                  <li>Email: julio.cesar@rojascala.org</li>
+                  <li>Dirección: Av. Principal 123, Lima</li>
+                </ul>
+              </div>
             </div>
           </div>
 
