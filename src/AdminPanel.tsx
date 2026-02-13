@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabase';
-import { Plus, CreditCard as Edit, Trash2, Save, X, AlertCircle, Image, Users, FileText, Star, Eye, EyeOff, MessageSquare, LogOut, Shield, Wrench, Pencil, Mail } from 'lucide-react';
+import { Plus, CreditCard as Edit, Trash2, Save, X, AlertCircle, Image, Users, FileText, Star, Eye, EyeOff, MessageSquare, LogOut, Shield, Wrench, Pencil } from 'lucide-react';
 import { useAuth } from './useAuth';
 import { AdminLogin } from './AdminLogin';
 import { ContactsManager } from './ContactsManager';
 import { ConsultationsManager } from './ConsultationsManager';
 import { CategoriesManager } from './CategoriesManager';
-import { NewsletterManager } from './NewsletterManager';
 
 interface Article {
   id: string;
@@ -66,7 +65,7 @@ const formatDateSafe = (dateString: string): string => {
 export function AdminPanel() {
   const { isAuthenticated, login, logout, error: authError } = useAuth();
   
-  const [activeTab, setActiveTab] = useState<'articles' | 'specials' | 'contacts' | 'consultations' | 'categories' | 'newsletter'>('articles');
+  const [activeTab, setActiveTab] = useState<'articles' | 'specials' | 'contacts' | 'consultations' | 'categories'>('articles');
   const [articles, setArticles] = useState<Article[]>([]);
   const [specialArticles, setSpecialArticles] = useState<SpecialArticle[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -699,23 +698,12 @@ export function AdminPanel() {
               <FileText className="w-4 h-4" />
               <span>Configuración</span>
             </button>
-            <button
-              onClick={() => setActiveTab('newsletter')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                activeTab === 'newsletter'
-                  ? 'border-red-500 text-red-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <Mail className="w-4 h-4" />
-              <span>Newsletter</span>
-            </button>
           </nav>
         </div>
       </div>
 
       {/* Controles de visibilidad para artículos */}
-      {activeTab !== 'contacts' && activeTab !== 'consultations' && activeTab !== 'categories' && activeTab !== 'newsletter' && (
+      {activeTab !== 'contacts' && activeTab !== 'consultations' && activeTab !== 'categories' && (
         <div className="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-4">
@@ -775,8 +763,6 @@ export function AdminPanel() {
         <ConsultationsManager />
       ) : activeTab === 'categories' ? (
         <CategoriesManager />
-      ) : activeTab === 'newsletter' ? (
-        <NewsletterManager />
       ) : (
         <>
           {/* Formulario Modal */}
