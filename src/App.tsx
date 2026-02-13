@@ -8,6 +8,7 @@ import { AdminPanel } from './AdminPanel';
 import { FloatingHelpWidget } from './FloatingHelpWidget';
 import { ErrorBoundary } from './ErrorBoundary';
 import MaintenancePage from './MaintenancePage';
+import { NewsletterSubscription } from './NewsletterSubscription';
 
 
 interface Article {
@@ -2120,7 +2121,9 @@ const AppContent = () => {
 
       <FloatingHelpWidget />
 
-      <footer className="bg-gray-900 text-white mt-16">
+      <NewsletterSubscription />
+
+      <footer className="bg-gray-900 text-white mt-0">
         <div className="container mx-auto px-4 py-8">
           <div className="grid md:grid-cols-3 gap-8">
             <div>
