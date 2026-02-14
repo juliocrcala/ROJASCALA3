@@ -265,10 +265,15 @@ export function AdminPanel() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('💾 handleSubmit called');
+    console.log('📝 Form data:', formData);
+    console.log('✏️ Editing ID:', editingId);
+    console.log('📂 Active tab:', activeTab);
+
     setIsSaving(true);
     setError(null);
     setSuccess(null);
-    
+
     try {
       // Validar campos requeridos
       if (!formData.title.trim()) {
@@ -316,18 +321,24 @@ export function AdminPanel() {
         };
 
         if (editingId) {
-          const { error } = await supabase
+          console.log('🔄 Updating article:', { editingId, articleData });
+          const { error, data } = await supabase
             .from('articles')
             .update({ ...articleData, updated_at: new Date().toISOString() })
-            .eq('id', editingId);
+            .eq('id', editingId)
+            .select();
 
+          console.log('📦 Update response:', { error, data });
           if (error) throw error;
           showMessage('Artículo actualizado exitosamente', 'success');
         } else {
-          const { error } = await supabase
+          console.log('➕ Creating new article:', articleData);
+          const { error, data } = await supabase
             .from('articles')
-            .insert([articleData]);
+            .insert([articleData])
+            .select();
 
+          console.log('📦 Insert response:', { error, data });
           if (error) throw error;
           showMessage('Artículo creado exitosamente', 'success');
         }
@@ -339,18 +350,24 @@ export function AdminPanel() {
         };
 
         if (editingId) {
-          const { error } = await supabase
+          console.log('🔄 Updating special article:', { editingId, specialData });
+          const { error, data } = await supabase
             .from('special_articles')
             .update({ ...specialData, updated_at: new Date().toISOString() })
-            .eq('id', editingId);
+            .eq('id', editingId)
+            .select();
 
+          console.log('📦 Update response:', { error, data });
           if (error) throw error;
           showMessage('Artículo especial actualizado exitosamente', 'success');
         } else {
-          const { error } = await supabase
+          console.log('➕ Creating new special article:', specialData);
+          const { error, data } = await supabase
             .from('special_articles')
-            .insert([specialData]);
+            .insert([specialData])
+            .select();
 
+          console.log('📦 Insert response:', { error, data });
           if (error) throw error;
           showMessage('Artículo especial creado exitosamente', 'success');
         }
@@ -410,26 +427,36 @@ export function AdminPanel() {
   };
 
   const handleDelete = async (id: string, type: 'articles' | 'specials') => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este artículo?')) return;
+    console.log('🗑️ handleDelete called:', { id, type });
+    if (!confirm('¿Estás seguro de que quieres eliminar este artículo?')) {
+      console.log('❌ Delete cancelled by user');
+      return;
+    }
 
     try {
+      console.log('🚀 Starting delete operation...');
       setError(null);
       const table = type === 'articles' ? 'articles' : 'special_articles';
-      const { error } = await supabase
+      console.log('📋 Table:', table);
+
+      const { error, data } = await supabase
         .from(table)
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .select();
+
+      console.log('📦 Delete response:', { error, data });
 
       if (error) throw error;
       showMessage('Artículo eliminado exitosamente', 'success');
-      
+
       if (type === 'articles') {
         await fetchArticles();
       } else {
         await fetchSpecialArticles();
       }
     } catch (error: any) {
-      console.error('Error deleting:', error);
+      console.error('❌ Error deleting:', error);
       const errorMessage = error?.message || error?.error?.message || 'Error al eliminar el artículo';
       showMessage(`Error: ${errorMessage}`, 'error');
     }
