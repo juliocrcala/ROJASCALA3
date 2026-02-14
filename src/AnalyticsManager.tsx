@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabase';
-import { Eye, TrendingUp, Users, Calendar, BarChart3, RefreshCw } from 'lucide-react';
+import { Eye, TrendingUp, Users, Calendar, BarChart3, RefreshCw, Download, FileText } from 'lucide-react';
 import { LoadingSpinner } from './LoadingSpinner';
 
 interface PageView {
@@ -22,6 +22,7 @@ interface AnalyticsSummary {
     title: string;
     views: number;
   }>;
+  created_at: string;
 }
 
 interface Stats {
@@ -44,9 +45,11 @@ export function AnalyticsManager() {
   const [dateRange, setDateRange] = useState(7);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [historicalReports, setHistoricalReports] = useState<AnalyticsSummary[]>([]);
 
   useEffect(() => {
     fetchAnalytics();
+    fetchHistoricalReports();
   }, [dateRange]);
 
   const fetchAnalytics = async () => {
@@ -129,6 +132,21 @@ export function AnalyticsManager() {
     }
   };
 
+  const fetchHistoricalReports = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('analytics_summary')
+        .select('*')
+        .order('date', { ascending: false })
+        .limit(30);
+
+      if (error) throw error;
+      setHistoricalReports(data || []);
+    } catch (err) {
+      console.error('Error fetching historical reports:', err);
+    }
+  };
+
   const generateDailyReport = async () => {
     setIsGenerating(true);
     setError(null);
@@ -146,7 +164,8 @@ export function AnalyticsManager() {
       }
 
       await fetchAnalytics();
-      alert('Reporte diario generado exitosamente');
+      await fetchHistoricalReports();
+      alert('Reporte diario generado y guardado exitosamente');
     } catch (err: any) {
       console.error('Error generating report:', err);
       const errorMessage = err.message || 'Error al generar el reporte diario';
@@ -154,6 +173,37 @@ export function AnalyticsManager() {
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const downloadCSV = () => {
+    const csvContent = [
+      ['Fecha', 'Visitas Totales', 'Visitantes Únicos', 'Visitas Hoy', 'Promedio Diario'],
+      [
+        new Date().toLocaleDateString('es-ES'),
+        stats.totalViews.toString(),
+        stats.uniqueVisitors.toString(),
+        stats.todayViews.toString(),
+        stats.avgViewsPerDay.toString()
+      ],
+      [],
+      ['Páginas Más Visitadas'],
+      ['Título', 'URL', 'Visitas'],
+      ...topPages.map(page => [page.title || 'Sin título', page.url, page.views.toString()])
+    ]
+      .map(row => row.join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    const timestamp = new Date().toISOString().split('T')[0];
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', `estadisticas_${timestamp}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const formatDate = (dateString: string) => {
@@ -186,12 +236,19 @@ export function AnalyticsManager() {
             <option value={90}>Últimos 90 días</option>
           </select>
           <button
+            onClick={downloadCSV}
+            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          >
+            <Download className="w-4 h-4" />
+            <span>Descargar CSV</span>
+          </button>
+          <button
             onClick={generateDailyReport}
             disabled={isGenerating}
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <RefreshCw className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
-            <span>Generar Reporte</span>
+            <span>Guardar Reporte</span>
           </button>
         </div>
       </div>
@@ -250,6 +307,62 @@ export function AnalyticsManager() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex items-center space-x-3 mb-6">
+          <FileText className="w-6 h-6 text-blue-600" />
+          <h3 className="text-xl font-bold text-gray-900">Reportes Guardados</h3>
+        </div>
+
+        {historicalReports.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Fecha
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Visitas
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Visitantes Únicos
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Guardado
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {historicalReports.map((report) => (
+                  <tr key={report.date} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {new Date(report.date).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {report.total_views.toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {report.unique_visitors.toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {formatDate(report.created_at)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-center text-gray-500 py-8">
+            No hay reportes guardados. Presiona "Guardar Reporte" para crear uno.
+          </p>
+        )}
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -320,12 +433,13 @@ export function AnalyticsManager() {
       </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 className="font-semibold text-blue-900 mb-2">Sobre las Estadísticas</h4>
+        <h4 className="font-semibold text-blue-900 mb-2">Sobre las Estadísticas y Reportes</h4>
         <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
           <li>Las visitas solo se registran cuando los usuarios aceptan las cookies</li>
           <li>Los datos son anónimos y no incluyen información personal identificable</li>
           <li>Los visitantes únicos se cuentan por ID de visitante generado localmente</li>
-          <li>Puedes generar reportes diarios para mantener un historial</li>
+          <li><strong>Descargar CSV:</strong> Descarga un archivo con las estadísticas actuales para guardar en tu computadora</li>
+          <li><strong>Guardar Reporte:</strong> Guarda un snapshot permanente de las estadísticas del día en la base de datos</li>
         </ul>
       </div>
     </div>
