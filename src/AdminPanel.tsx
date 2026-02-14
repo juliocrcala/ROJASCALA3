@@ -140,10 +140,7 @@ export function AdminPanel() {
   const fetchArticles = async () => {
     const { data, error } = await supabase
       .from('articles')
-      .select(`
-        *,
-        contact:author_contact_id(name, email)
-      `)
+      .select('*')
       .order('published_date', { ascending: false });
 
     if (error) throw error;
@@ -153,13 +150,10 @@ export function AdminPanel() {
   const fetchSpecialArticles = async () => {
     const { data, error } = await supabase
       .from('special_articles')
-      .select(`
-        *,
-        contact:author_contact_id(name, email)
-      `)
+      .select('*')
       .order('published_date', { ascending: false });
 
-    if (error && error.code !== 'PGRST116') { // Ignore table not found error
+    if (error && error.code !== 'PGRST116') {
       throw error;
     }
     setSpecialArticles(data || []);
