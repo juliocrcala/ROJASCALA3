@@ -137,8 +137,8 @@ export function AnalyticsManager() {
       const { data, error } = await supabase
         .from('analytics_summary')
         .select('*')
-        .order('date', { ascending: false })
-        .limit(30);
+        .order('created_at', { ascending: false })
+        .limit(1);
 
       if (error) throw error;
       setHistoricalReports(data || []);
