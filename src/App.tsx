@@ -183,10 +183,10 @@ const Header = ({ isMenuOpen, setIsMenuOpen }) => {
     <header className="bg-red-900 text-white">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between py-6">
-          <div className="flex items-center space-x-4">
+          <Link to="/" className="flex items-center space-x-4 hover:opacity-80 transition-opacity cursor-pointer">
             <RCLogo />
             <h1 className="text-4xl" style={{ fontFamily: 'Brush Script MT, cursive' }}>Rojas Cala</h1>
-          </div>
+          </Link>
           
           <nav className="hidden md:flex items-center space-x-6">
             <Link to="/" className={`hover:text-red-200 ${location.pathname === '/' ? 'text-red-200' : ''}`}>Inicio</Link>
