@@ -34,91 +34,87 @@ export const CookieBanner: React.FC = () => {
   if (!showBanner) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end justify-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl max-w-3xl w-full mb-4 animate-slide-up">
-        <div className="p-6">
-          <div className="flex justify-between items-start mb-4">
-            <h3 className="text-2xl font-bold text-gray-900">Aviso de Cookies y Términos de Uso</h3>
+    <div className="fixed bottom-4 right-4 z-50 max-w-md w-full animate-slide-up">
+      <div className="bg-white rounded-lg shadow-2xl border-2 border-gray-200">
+        <div className="p-5">
+          <div className="flex justify-between items-start mb-3">
+            <h3 className="text-lg font-bold text-gray-900">Cookies y Términos</h3>
             <button
               onClick={handleReject}
               className="text-gray-400 hover:text-gray-600 transition-colors"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="space-y-4 text-gray-700">
-            <p className="text-base leading-relaxed">
-              Utilizamos cookies para mejorar tu experiencia de navegación y analizar el tráfico del sitio web.
+          <div className="space-y-3">
+            <p className="text-sm text-gray-700 leading-relaxed">
+              Utilizamos cookies para mejorar tu experiencia y analizar el tráfico del sitio.
             </p>
 
             {!showDetails && (
               <button
                 onClick={() => setShowDetails(true)}
-                className="text-blue-600 hover:text-blue-700 font-medium text-sm underline"
+                className="text-red-900 hover:text-red-800 font-medium text-sm underline"
               >
                 Ver más detalles
               </button>
             )}
 
             {showDetails && (
-              <div className="bg-gray-50 p-4 rounded-lg space-y-3 text-sm border border-gray-200">
+              <div className="bg-gray-50 p-3 rounded-lg space-y-2 text-xs border border-gray-200 max-h-96 overflow-y-auto">
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Uso de Cookies</h4>
+                  <h4 className="font-semibold text-gray-900 mb-1">Uso de Cookies</h4>
                   <p className="text-gray-600">
-                    Recopilamos datos anónimos sobre las páginas visitadas, el tiempo de navegación y el
-                    comportamiento general en el sitio. Esta información nos ayuda a mejorar nuestros contenidos
-                    y servicios.
+                    Recopilamos datos anónimos sobre las páginas visitadas para mejorar nuestros contenidos.
                   </p>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Propiedad Intelectual y Derechos de Autor</h4>
-                  <p className="text-gray-600 mb-2">
-                    Al acceder y utilizar este sitio web, reconoces y aceptas que:
+                  <h4 className="font-semibold text-gray-900 mb-1">Propiedad Intelectual</h4>
+                  <p className="text-gray-600 mb-1">
+                    Al usar este sitio, aceptas que:
                   </p>
-                  <ul className="list-disc list-inside space-y-1 text-gray-600 ml-2">
-                    <li>Todo el contenido publicado (artículos, imágenes, diseños) es propiedad de sus respectivos autores</li>
-                    <li>Los artículos están protegidos por derechos de autor y su reproducción no autorizada está prohibida</li>
-                    <li>Cada artículo incluye la autoría correspondiente que debe ser respetada y citada en caso de referencia</li>
-                    <li>El uso comercial del contenido sin autorización expresa está estrictamente prohibido</li>
-                    <li>Puedes compartir enlaces a los artículos, pero no copiar o redistribuir el contenido sin permiso</li>
+                  <ul className="list-disc list-inside space-y-0.5 text-gray-600 ml-1">
+                    <li>El contenido es propiedad de sus autores</li>
+                    <li>Los artículos están protegidos por derechos de autor</li>
+                    <li>Debe respetarse y citarse la autoría</li>
+                    <li>El uso comercial sin autorización está prohibido</li>
+                    <li>Puedes compartir enlaces, no copiar contenido</li>
                   </ul>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Privacidad</h4>
+                  <h4 className="font-semibold text-gray-900 mb-1">Privacidad</h4>
                   <p className="text-gray-600">
-                    No recopilamos datos personales identificables. Los datos analíticos son agregados y anónimos.
-                    No vendemos ni compartimos tu información con terceros.
+                    No recopilamos datos personales identificables. Todo es anónimo.
                   </p>
                 </div>
 
                 <button
                   onClick={() => setShowDetails(false)}
-                  className="text-blue-600 hover:text-blue-700 font-medium underline"
+                  className="text-red-900 hover:text-red-800 font-medium underline"
                 >
                   Ocultar detalles
                 </button>
               </div>
             )}
 
-            <div className="pt-4 border-t border-gray-200">
-              <p className="text-sm text-gray-600 mb-4">
-                Al hacer clic en "Aceptar", aceptas el uso de cookies y reconoces los términos de uso y
-                derechos de autor mencionados anteriormente.
+            <div className="pt-3 border-t border-gray-200">
+              <p className="text-xs text-gray-600 mb-3">
+                Al aceptar, reconoces los términos de uso y derechos de autor.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col gap-2">
                 <button
                   onClick={handleAccept}
-                  className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-md"
+                  className="w-full bg-red-900 text-white px-4 py-2.5 rounded-lg font-semibold hover:bg-red-800 transition-colors shadow-md text-sm"
                 >
                   Aceptar Todo
                 </button>
                 <button
                   onClick={handleReject}
-                  className="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                  className="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors text-sm"
                 >
                   Rechazar
                 </button>

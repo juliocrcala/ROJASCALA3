@@ -114,15 +114,23 @@ export function AnalyticsManager() {
     setError(null);
 
     try {
-      const { error } = await supabase.rpc('generate_daily_analytics');
+      const today = new Date().toISOString().split('T')[0];
 
-      if (error) throw error;
+      const { error } = await supabase.rpc('generate_daily_analytics', {
+        target_date: today
+      });
+
+      if (error) {
+        console.error('RPC Error:', error);
+        throw new Error(error.message || 'Error al generar el reporte');
+      }
 
       await fetchAnalytics();
       alert('Reporte diario generado exitosamente');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error generating report:', err);
-      setError('Error al generar el reporte diario');
+      const errorMessage = err.message || 'Error al generar el reporte diario';
+      setError(errorMessage);
     } finally {
       setIsGenerating(false);
     }
@@ -152,6 +160,7 @@ export function AnalyticsManager() {
             onChange={(e) => setDateRange(Number(e.target.value))}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
+            <option value={1}>Últimas 24 horas</option>
             <option value={7}>Últimos 7 días</option>
             <option value={30}>Últimos 30 días</option>
             <option value={90}>Últimos 90 días</option>
