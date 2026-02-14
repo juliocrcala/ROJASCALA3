@@ -11,6 +11,8 @@ import MaintenancePage from './MaintenancePage';
 import { NewsletterSection } from './NewsletterSection';
 import { ShareButtons } from './ShareButtons';
 import { LoadingSpinner } from './LoadingSpinner';
+import { CookieBanner } from './CookieBanner';
+import { useAnalytics } from './useAnalytics';
 
 
 interface Article {
@@ -252,6 +254,8 @@ const ArticleDetail = () => {
   const [article, setArticle] = useState<Article | SpecialArticle | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  useAnalytics(article?.title || 'Artículo', id);
 
   useEffect(() => {
     fetchArticleAndContacts();
@@ -1762,6 +1766,8 @@ const HomePage = () => {
   const [documentTypes, setDocumentTypes] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+  useAnalytics('Página Principal');
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -2187,6 +2193,7 @@ function App() {
       <Router>
         <div className="min-h-screen bg-gray-50">
           <AppContent />
+          <CookieBanner />
         </div>
       </Router>
     </ErrorBoundary>
