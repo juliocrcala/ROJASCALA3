@@ -18,14 +18,15 @@ import { useAnalytics } from './useAnalytics';
 interface Article {
   id: string;
   title: string;
-  author: string;
+  author: string[] | null;
   document_type: string;
   published_date: string;
   category: string[];
   content: string;
   summary?: string;
   official_link?: string;
-  author_contact_id?: string;
+  author_contact_id?: string[] | null;
+  author_photo_url?: string[] | null;
   is_hidden?: boolean;
   created_at: string;
 }
@@ -33,13 +34,14 @@ interface Article {
 interface SpecialArticle {
   id: string;
   title: string;
-  author: string;
+  author: string[] | null;
   published_date: string;
   category: string[];
   content: string;
   summary?: string;
   image_url?: string;
-  author_contact_id?: string;
+  author_contact_id?: string[] | null;
+  author_photo_url?: string[] | null;
   is_hidden?: boolean;
   created_at: string;
 }
@@ -233,7 +235,9 @@ const MobileMenu = ({ isMenuOpen }) => {
 };
 
 const AuthorLink = ({ author, authorContactId, contacts }) => {
-  const contact = contacts.find(c => c.id === authorContactId);
+  const authorName = Array.isArray(author) ? author[0] : author;
+  const contactId = Array.isArray(authorContactId) ? authorContactId[0] : authorContactId;
+  const contact = contactId ? contacts.find(c => c.id === contactId) : null;
 
   if (contact) {
     return (
@@ -241,12 +245,12 @@ const AuthorLink = ({ author, authorContactId, contacts }) => {
         to={`/contacto/${contact.id}`}
         className="text-red-900 font-medium hover:text-red-700 hover:underline"
       >
-        {contact.name || author}
+        {contact.name || authorName}
       </Link>
     );
   }
 
-  return <span className="text-gray-600">{author}</span>;
+  return <span className="text-gray-600">{authorName || 'Anónimo'}</span>;
 };
 
 const ArticleDetail = () => {
@@ -410,8 +414,10 @@ const ArticleDetail = () => {
         </main>
 
         {/* Información del autor */}
-        {article.author_contact_id && (() => {
-          const authorContact = contacts.find(c => c.id === article.author_contact_id);
+        {article.author_contact_id && article.author_contact_id.length > 0 && (() => {
+          const contactId = Array.isArray(article.author_contact_id) ? article.author_contact_id[0] : article.author_contact_id;
+          const authorName = Array.isArray(article.author) ? article.author[0] : article.author;
+          const authorContact = contacts.find(c => c.id === contactId);
           return (
             <div className="mt-12 bg-red-50 rounded-lg p-6">
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Sobre el autor</h3>
@@ -419,7 +425,7 @@ const ArticleDetail = () => {
                 {authorContact?.photo_url ? (
                   <img
                     src={authorContact.photo_url}
-                    alt={authorContact.name || article.author}
+                    alt={authorContact.name || authorName}
                     className="w-16 h-16 rounded-full object-cover border-2 border-red-900"
                   />
                 ) : (
@@ -428,9 +434,9 @@ const ArticleDetail = () => {
                   </div>
                 )}
                 <div>
-                  <h4 className="font-semibold text-gray-900">{authorContact?.name || article.author}</h4>
+                  <h4 className="font-semibold text-gray-900">{authorContact?.name || authorName}</h4>
                   <Link
-                    to={`/contacto/${article.author_contact_id}`}
+                    to={`/contacto/${contactId}`}
                     className="text-red-900 hover:text-red-700 font-medium"
                   >
                     Ver perfil completo →
@@ -544,14 +550,15 @@ const SpecialsPage = () => {
     // Filtrar por término de búsqueda
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(article => 
-        article.title.toLowerCase().includes(searchLower) ||
-        article.content.toLowerCase().includes(searchLower) ||
-        article.author.toLowerCase().includes(searchLower) ||
-        (article.summary && article.summary.toLowerCase().includes(searchLower)) ||
-        (Array.isArray(article.category) ? article.category : [article.category])
-          .some(cat => cat.toLowerCase().includes(searchLower))
-      );
+      filtered = filtered.filter(article => {
+        const authorName = Array.isArray(article.author) ? article.author[0] : article.author;
+        return article.title.toLowerCase().includes(searchLower) ||
+          article.content.toLowerCase().includes(searchLower) ||
+          (authorName && authorName.toLowerCase().includes(searchLower)) ||
+          (article.summary && article.summary.toLowerCase().includes(searchLower)) ||
+          (Array.isArray(article.category) ? article.category : [article.category])
+            .some(cat => cat.toLowerCase().includes(searchLower));
+      });
     }
 
     // Filtrar por categoría
@@ -564,7 +571,10 @@ const SpecialsPage = () => {
 
     // Filtrar por autor
     if (selectedAuthor !== 'Todos') {
-      filtered = filtered.filter(article => article.author === selectedAuthor);
+      filtered = filtered.filter(article => {
+        const authorName = Array.isArray(article.author) ? article.author[0] : article.author;
+        return authorName === selectedAuthor;
+      });
     }
 
     // Ordenar
@@ -579,7 +589,9 @@ const SpecialsPage = () => {
           comparison = a.title.localeCompare(b.title);
           break;
         case 'author':
-          comparison = a.author.localeCompare(b.author);
+          const authorA = Array.isArray(a.author) ? a.author[0] : a.author;
+          const authorB = Array.isArray(b.author) ? b.author[0] : b.author;
+          comparison = (authorA || '').localeCompare(authorB || '');
           break;
       }
       
@@ -599,7 +611,9 @@ const SpecialsPage = () => {
 
   // Obtener autores únicos
   const getUniqueAuthors = () => {
-    const allAuthors = specialArticles.map(article => article.author).filter(Boolean);
+    const allAuthors = specialArticles.map(article => {
+      return Array.isArray(article.author) ? article.author[0] : article.author;
+    }).filter(Boolean);
     return [...new Set(allAuthors)].sort();
   };
 

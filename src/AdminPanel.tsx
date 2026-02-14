@@ -12,14 +12,15 @@ import { AnalyticsManager } from './AnalyticsManager';
 interface Article {
   id: string;
   title: string;
-  author: string;
+  author: string[] | null;
   document_type: string;
   published_date: string;
   category: string[];
   content: string;
   summary?: string;
   official_link?: string;
-  author_contact_id?: string;
+  author_contact_id?: string[] | null;
+  author_photo_url?: string[] | null;
   is_hidden?: boolean;
   created_at: string;
 }
@@ -27,13 +28,14 @@ interface Article {
 interface SpecialArticle {
   id: string;
   title: string;
-  author: string;
+  author: string[] | null;
   published_date: string;
   category: string[];
   content: string;
   summary?: string;
   image_url?: string;
-  author_contact_id?: string;
+  author_contact_id?: string[] | null;
+  author_photo_url?: string[] | null;
   is_hidden?: boolean;
   created_at: string;
 }
@@ -141,10 +143,7 @@ export function AdminPanel() {
   const fetchArticles = async () => {
     const { data, error } = await supabase
       .from('articles')
-      .select(`
-        *,
-        contact:author_contact_id(name, email)
-      `)
+      .select('*')
       .order('published_date', { ascending: false });
 
     if (error) throw error;
@@ -154,10 +153,7 @@ export function AdminPanel() {
   const fetchSpecialArticles = async () => {
     const { data, error } = await supabase
       .from('special_articles')
-      .select(`
-        *,
-        contact:author_contact_id(name, email)
-      `)
+      .select('*')
       .order('published_date', { ascending: false });
 
     if (error && error.code !== 'PGRST116') { // Ignore table not found error
@@ -170,7 +166,6 @@ export function AdminPanel() {
     const { data, error } = await supabase
       .from('contacts')
       .select('*')
-      .eq('is_active', true)
       .order('name');
 
     if (error && error.code !== 'PGRST116') { // Ignore table not found error
@@ -299,8 +294,9 @@ export function AdminPanel() {
 
       const baseData = {
         title: formData.title.trim(),
-        author: authorName,
-        author_contact_id: authorContactId,
+        author: authorName ? [authorName] : null,
+        author_contact_id: authorContactId ? [authorContactId] : null,
+        author_photo_url: null,
         published_date: formData.published_date,
         category: formData.category,
         content: formData.content.trim(),
