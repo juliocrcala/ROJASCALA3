@@ -10,6 +10,7 @@ import { ErrorBoundary } from './ErrorBoundary';
 import MaintenancePage from './MaintenancePage';
 import { NewsletterSection } from './NewsletterSection';
 import { ShareButtons } from './ShareButtons';
+import { LoadingSpinner } from './LoadingSpinner';
 
 
 interface Article {
@@ -292,9 +293,7 @@ const ArticleDetail = () => {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-12">
-        <div className="text-center">
-          <div className="text-xl">Cargando artículo...</div>
-        </div>
+        <LoadingSpinner message="Cargando artículo..." size="large" />
       </div>
     );
   }
@@ -611,9 +610,7 @@ const SpecialsPage = () => {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-12">
-        <div className="text-center">
-          <div className="text-xl">Cargando artículos especiales...</div>
-        </div>
+        <LoadingSpinner message="Cargando artículos especiales..." size="large" />
       </div>
     );
   }
@@ -1029,9 +1026,7 @@ const ContactPage = () => {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-12">
-        <div className="text-center">
-          <div className="text-xl">Cargando información de contacto...</div>
-        </div>
+        <LoadingSpinner message="Cargando información de contacto..." size="large" />
       </div>
     );
   }
@@ -1293,9 +1288,7 @@ const CategoriesPage = () => {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-12">
-        <div className="text-center">
-          <div className="text-xl">Cargando categorías...</div>
-        </div>
+        <LoadingSpinner message="Cargando categorías..." size="large" />
       </div>
     );
   }
@@ -1303,7 +1296,7 @@ const CategoriesPage = () => {
   return (
     <div className="container mx-auto px-4 py-12">
       <h2 className="text-3xl font-bold mb-8 text-center">Categorías Legales</h2>
-      
+
       <div className="max-w-md mx-auto mb-8">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -1485,9 +1478,7 @@ const DocumentTypesPage = () => {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-12">
-        <div className="text-center">
-          <div className="text-xl">Cargando tipos de normas...</div>
-        </div>
+        <LoadingSpinner message="Cargando tipos de normas..." size="large" />
       </div>
     );
   }
@@ -1495,7 +1486,7 @@ const DocumentTypesPage = () => {
   return (
     <div className="container mx-auto px-4 py-12">
       <h2 className="text-3xl font-bold mb-8 text-center">Tipos de Normas Legales</h2>
-      
+
       <div className="max-w-md mx-auto mb-8">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -2114,7 +2105,7 @@ const AppContent = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Cargando...</div>
+        <LoadingSpinner message="Cargando..." size="large" />
       </div>
     );
   }
