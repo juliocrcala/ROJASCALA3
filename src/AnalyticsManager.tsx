@@ -23,6 +23,7 @@ interface AnalyticsSummary {
     views: number;
   }>;
   created_at: string;
+  updated_at: string;
 }
 
 interface Stats {
@@ -377,7 +378,7 @@ export function AnalyticsManager() {
                       {report.unique_visitors.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {formatDate(report.created_at)}
+                      {formatDate(report.updated_at)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                       <button
