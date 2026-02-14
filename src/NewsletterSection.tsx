@@ -26,7 +26,7 @@ export function NewsletterSection() {
 
     try {
       const { error } = await supabase
-        .from('newsletter_subscribers')
+        .from('newsletter')
         .insert([
           {
             name: name.trim(),

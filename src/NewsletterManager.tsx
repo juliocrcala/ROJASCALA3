@@ -32,7 +32,7 @@ export function NewsletterManager() {
       setError(null);
 
       const { data, error } = await supabase
-        .from('newsletter_subscribers')
+        .from('newsletter')
         .select('*')
         .order('subscribed_at', { ascending: false });
 
@@ -66,7 +66,7 @@ export function NewsletterManager() {
 
     try {
       const { error } = await supabase
-        .from('newsletter_subscribers')
+        .from('newsletter')
         .delete()
         .eq('id', id);
 
@@ -83,7 +83,7 @@ export function NewsletterManager() {
   const toggleActive = async (id: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
-        .from('newsletter_subscribers')
+        .from('newsletter')
         .update({
           is_active: !currentStatus,
           updated_at: new Date().toISOString()
