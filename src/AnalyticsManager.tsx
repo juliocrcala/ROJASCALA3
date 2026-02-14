@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabase';
-import { Eye, TrendingUp, Users, Calendar, BarChart3, RefreshCw, Download, FileText } from 'lucide-react';
+import { Eye, TrendingUp, Users, Calendar, BarChart3, RefreshCw, Download, FileText, Trash2 } from 'lucide-react';
 import { LoadingSpinner } from './LoadingSpinner';
 
 interface PageView {
@@ -206,6 +206,29 @@ export function AnalyticsManager() {
     document.body.removeChild(link);
   };
 
+  const deleteReport = async (reportDate: string) => {
+    const confirmed = window.confirm(
+      `¿Estás seguro de que quieres eliminar el reporte del ${new Date(reportDate).toLocaleDateString('es-ES')}?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase
+        .from('analytics_summary')
+        .delete()
+        .eq('date', reportDate);
+
+      if (error) throw error;
+
+      await fetchHistoricalReports();
+      alert('Reporte eliminado exitosamente');
+    } catch (err: any) {
+      console.error('Error deleting report:', err);
+      alert('Error al eliminar el reporte: ' + (err.message || 'Error desconocido'));
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
       year: 'numeric',
@@ -332,6 +355,9 @@ export function AnalyticsManager() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Guardado
                   </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Acciones
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -352,6 +378,15 @@ export function AnalyticsManager() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {formatDate(report.created_at)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                      <button
+                        onClick={() => deleteReport(report.date)}
+                        className="text-red-600 hover:text-red-800 transition-colors"
+                        title="Eliminar reporte"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
                     </td>
                   </tr>
                 ))}
