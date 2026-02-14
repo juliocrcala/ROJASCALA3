@@ -31,12 +31,20 @@ export function NewsletterManager() {
     try {
       setError(null);
 
-      const { data, error } = await supabase
-        .from('newsletter')
-        .select('*')
-        .order('subscribed_at', { ascending: false });
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/newsletter/subscribers`,
+        {
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+          }
+        }
+      );
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error('Error al cargar los suscriptores');
+      }
+
+      const data = await response.json();
       setSubscribers(data || []);
     } catch (error: any) {
       console.error('Error fetching subscribers:', error);
@@ -65,12 +73,19 @@ export function NewsletterManager() {
     if (!confirm(`¿Estás seguro de que quieres eliminar a ${email}?`)) return;
 
     try {
-      const { error } = await supabase
-        .from('newsletter')
-        .delete()
-        .eq('id', id);
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/newsletter/subscribers/${id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+          }
+        }
+      );
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error('Error al eliminar el suscriptor');
+      }
 
       showMessage('Suscriptor eliminado exitosamente', 'success');
       setSubscribers(prev => prev.filter(sub => sub.id !== id));
@@ -82,15 +97,21 @@ export function NewsletterManager() {
 
   const toggleActive = async (id: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('newsletter')
-        .update({
-          is_active: !currentStatus,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id);
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/newsletter/subscribers/${id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({ is_active: !currentStatus })
+        }
+      );
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error('Error al actualizar el estado');
+      }
 
       showMessage(`Suscriptor ${!currentStatus ? 'activado' : 'desactivado'} exitosamente`, 'success');
 

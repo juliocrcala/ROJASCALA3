@@ -25,28 +25,35 @@ export function NewsletterSection() {
     setMessage(null);
 
     try {
-      const { error } = await supabase
-        .from('newsletter')
-        .insert([
-          {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/newsletter/subscribe`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({
             name: name.trim(),
             email: email.trim().toLowerCase(),
             ip_address: null,
             user_agent: navigator.userAgent
-          }
-        ]);
-
-      if (error) {
-        if (error.code === '23505') {
-          setMessage({ type: 'error', text: 'Este email ya está suscrito a nuestro newsletter' });
-        } else {
-          throw error;
+          })
         }
-      } else {
-        setMessage({ type: 'success', text: '¡Gracias por suscribirte! Pronto recibirás nuestras actualizaciones.' });
-        setName('');
-        setEmail('');
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 409) {
+          setMessage({ type: 'error', text: 'Este email ya está suscrito a nuestro newsletter' });
+          return;
+        }
+        throw new Error(errorData.error || 'Error al suscribirse');
       }
+
+      setMessage({ type: 'success', text: '¡Gracias por suscribirte! Pronto recibirás nuestras actualizaciones.' });
+      setName('');
+      setEmail('');
     } catch (error: any) {
       console.error('Error subscribing to newsletter:', error);
       setMessage({ type: 'error', text: 'Ocurrió un error. Por favor intenta nuevamente.' });
