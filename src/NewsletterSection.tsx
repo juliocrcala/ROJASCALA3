@@ -25,27 +25,27 @@ export function NewsletterSection() {
     setMessage(null);
 
     try {
-      const { data, error } = await supabase.rpc('subscribe_to_newsletter', {
-        p_name: name.trim(),
-        p_email: email.trim().toLowerCase(),
-        p_ip_address: null,
-        p_user_agent: navigator.userAgent
-      });
+      const { error } = await supabase
+        .from('newsletter_subscribers')
+        .insert([
+          {
+            name: name.trim(),
+            email: email.trim().toLowerCase(),
+            ip_address: null,
+            user_agent: navigator.userAgent
+          }
+        ]);
 
-      if (error) throw error;
-
-      const result = data as { success: boolean; error?: string };
-
-      if (result.success) {
+      if (error) {
+        if (error.code === '23505') {
+          setMessage({ type: 'error', text: 'Este email ya está suscrito a nuestro newsletter' });
+        } else {
+          throw error;
+        }
+      } else {
         setMessage({ type: 'success', text: '¡Gracias por suscribirte! Pronto recibirás nuestras actualizaciones.' });
         setName('');
         setEmail('');
-      } else {
-        if (result.error === 'Email already subscribed') {
-          setMessage({ type: 'error', text: 'Este email ya está suscrito a nuestro newsletter' });
-        } else {
-          setMessage({ type: 'error', text: result.error || 'Ocurrió un error. Por favor intenta nuevamente.' });
-        }
       }
     } catch (error: any) {
       console.error('Error subscribing to newsletter:', error);

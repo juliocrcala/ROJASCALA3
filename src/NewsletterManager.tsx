@@ -31,17 +31,13 @@ export function NewsletterManager() {
     try {
       setError(null);
 
-      const { data, error } = await supabase.rpc('get_all_subscribers');
+      const { data, error } = await supabase
+        .from('newsletter_subscribers')
+        .select('*')
+        .order('subscribed_at', { ascending: false });
 
       if (error) throw error;
-
-      const result = data as { success: boolean; data?: any[]; error?: string };
-
-      if (result.success && result.data) {
-        setSubscribers(result.data);
-      } else {
-        throw new Error(result.error || 'Error al cargar los suscriptores');
-      }
+      setSubscribers(data || []);
     } catch (error: any) {
       console.error('Error fetching subscribers:', error);
       setError('Error al cargar los suscriptores');
@@ -69,20 +65,15 @@ export function NewsletterManager() {
     if (!confirm(`¿Estás seguro de que quieres eliminar a ${email}?`)) return;
 
     try {
-      const { data, error } = await supabase.rpc('delete_subscriber', {
-        p_id: id
-      });
+      const { error } = await supabase
+        .from('newsletter_subscribers')
+        .delete()
+        .eq('id', id);
 
       if (error) throw error;
 
-      const result = data as { success: boolean; error?: string };
-
-      if (result.success) {
-        showMessage('Suscriptor eliminado exitosamente', 'success');
-        setSubscribers(prev => prev.filter(sub => sub.id !== id));
-      } else {
-        throw new Error(result.error || 'Error al eliminar el suscriptor');
-      }
+      showMessage('Suscriptor eliminado exitosamente', 'success');
+      setSubscribers(prev => prev.filter(sub => sub.id !== id));
     } catch (error: any) {
       console.error('Error deleting subscriber:', error);
       showMessage('Error al eliminar el suscriptor', 'error');
@@ -91,23 +82,21 @@ export function NewsletterManager() {
 
   const toggleActive = async (id: string, currentStatus: boolean) => {
     try {
-      const { data, error } = await supabase.rpc('update_subscriber_status', {
-        p_id: id,
-        p_is_active: !currentStatus
-      });
+      const { error } = await supabase
+        .from('newsletter_subscribers')
+        .update({
+          is_active: !currentStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
 
       if (error) throw error;
 
-      const result = data as { success: boolean; error?: string };
+      showMessage(`Suscriptor ${!currentStatus ? 'activado' : 'desactivado'} exitosamente`, 'success');
 
-      if (result.success) {
-        showMessage(`Suscriptor ${!currentStatus ? 'activado' : 'desactivado'} exitosamente`, 'success');
-        setSubscribers(prev => prev.map(sub =>
-          sub.id === id ? { ...sub, is_active: !currentStatus } : sub
-        ));
-      } else {
-        throw new Error(result.error || 'Error al actualizar el estado');
-      }
+      setSubscribers(prev => prev.map(sub =>
+        sub.id === id ? { ...sub, is_active: !currentStatus } : sub
+      ));
     } catch (error: any) {
       console.error('Error updating subscriber status:', error);
       showMessage('Error al actualizar el estado', 'error');
