@@ -9,6 +9,7 @@ import { FloatingHelpWidget } from './FloatingHelpWidget';
 import { ErrorBoundary } from './ErrorBoundary';
 import MaintenancePage from './MaintenancePage';
 import { NewsletterSection } from './NewsletterSection';
+import { ShareButtons } from './ShareButtons';
 
 
 interface Article {
@@ -390,6 +391,12 @@ const ArticleDetail = () => {
               <p className="text-gray-700 leading-relaxed text-justify">{article.summary}</p>
             </div>
           )}
+
+          {/* Botones de compartir */}
+          <ShareButtons
+            title={article.title}
+            url={window.location.href}
+          />
         </header>
 
         {/* Contenido principal */}
