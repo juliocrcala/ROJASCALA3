@@ -23,16 +23,23 @@ export const ShareButtons: React.FC<ShareButtonsProps> = ({ title, url }) => {
 
   const handleInstagramShare = async () => {
     try {
-      await navigator.clipboard.writeText(`${title} - ${url}`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      if (isMobile) {
-        window.location.href = 'instagram://story-camera';
+      if (navigator.share) {
+        await navigator.share({
+          title: title,
+          text: title,
+          url: url
+        });
+      } else {
+        await navigator.clipboard.writeText(`${title} - ${url}`);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
       }
     } catch (err) {
-      console.error('Error al copiar:', err);
+      if ((err as Error).name !== 'AbortError') {
+        await navigator.clipboard.writeText(`${title} - ${url}`);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
     }
   };
 
