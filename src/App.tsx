@@ -1788,7 +1788,7 @@ const HomePage = () => {
       .select('*')
       .eq('is_hidden', false) // Solo mostrar artículos visibles
       .order('published_date', { ascending: false })
-      .limit(20);
+      .limit(6);
 
     if (error) throw error;
     setArticles(data || []);
@@ -1800,7 +1800,7 @@ const HomePage = () => {
       .select('*')
       .eq('is_hidden', false) // Solo mostrar artículos visibles
       .order('published_date', { ascending: false })
-      .limit(10);
+      .limit(3);
 
     if (error && error.code !== 'PGRST116') throw error;
     setSpecialArticles(data || []);
@@ -1983,7 +1983,7 @@ const HomePage = () => {
         </div>
 
         <section className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredArticles.map((article) => (
+          {filteredArticles.slice(0, 9).map((article) => (
             <article key={`${article.type}-${article.id}`} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
               {article.type === 'special' && 'image_url' in article && article.image_url && (
                 <img 
@@ -2050,6 +2050,26 @@ const HomePage = () => {
             </article>
           ))}
         </section>
+
+        {filteredArticles.length > 9 && (
+          <div className="text-center py-8">
+            <p className="text-gray-600 mb-4">Mostrando los 9 artículos más recientes</p>
+            <div className="flex justify-center space-x-4">
+              <Link
+                to="/normas"
+                className="px-6 py-2 bg-red-900 text-white rounded-lg hover:bg-red-800 transition-colors"
+              >
+                Ver todas las normas
+              </Link>
+              <Link
+                to="/especiales"
+                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                Ver artículos especiales
+              </Link>
+            </div>
+          </div>
+        )}
 
         {filteredArticles.length === 0 && (
           <div className="text-center py-12">
