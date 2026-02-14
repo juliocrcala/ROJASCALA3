@@ -29,9 +29,12 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 
           <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-600 animate-spin"></div>
 
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
             <div className="font-bold text-blue-600 animate-pulse" style={{ fontSize: size === 'large' ? '1.5rem' : size === 'medium' ? '1rem' : '0.75rem' }}>
               RC
+            </div>
+            <div className="text-blue-600 font-semibold animate-pulse mt-0.5" style={{ fontSize: size === 'large' ? '0.5rem' : size === 'medium' ? '0.35rem' : '0.25rem' }}>
+              Rojas Cala
             </div>
           </div>
         </div>
