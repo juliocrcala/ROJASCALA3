@@ -354,7 +354,8 @@ export function ContactsManager() {
       setContacts(prev => prev.filter(contact => contact.id !== id));
     } catch (error: any) {
       console.error('Error deleting contact:', error);
-      showMessage('Error al eliminar el contacto', 'error');
+      const errorMessage = error?.message || error?.error?.message || 'Error al eliminar el contacto';
+      showMessage(`Error: ${errorMessage}`, 'error');
     }
   };
 
@@ -382,7 +383,8 @@ export function ContactsManager() {
       ));
     } catch (error: any) {
       console.error('Error updating contact status:', error);
-      showMessage('Error al actualizar el estado del contacto', 'error');
+      const errorMessage = error?.message || error?.error?.message || 'Error al actualizar el estado del contacto';
+      showMessage(`Error: ${errorMessage}`, 'error');
     }
   };
 
@@ -427,7 +429,8 @@ export function ContactsManager() {
       ).sort((a, b) => a.display_order - b.display_order));
     } catch (error: any) {
       console.error('Error moving contact:', error);
-      showMessage('Error al cambiar el orden del contacto', 'error');
+      const errorMessage = error?.message || error?.error?.message || 'Error al cambiar el orden del contacto';
+      showMessage(`Error: ${errorMessage}`, 'error');
     }
   };
 

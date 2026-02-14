@@ -361,7 +361,8 @@ export function AdminPanel() {
       resetForm();
     } catch (error: any) {
       console.error('Error saving:', error);
-      showMessage(error.message || 'Error al guardar. Intenta nuevamente.', 'error');
+      const errorMessage = error?.message || error?.error?.message || 'Error al guardar. Intenta nuevamente.';
+      showMessage(`Error: ${errorMessage}`, 'error');
     } finally {
       setIsSaving(false);
     }
@@ -386,10 +387,13 @@ export function AdminPanel() {
   };
 
   const handleEdit = (item: Article | SpecialArticle) => {
+    const authorName = Array.isArray(item.author) ? item.author[0] : item.author;
+    const contactId = Array.isArray(item.author_contact_id) ? item.author_contact_id[0] : item.author_contact_id;
+
     setFormData({
       title: item.title,
-      author: item.author,
-      author_contact_id: item.author_contact_id || '',
+      author: authorName || 'Julio Cesar Rojas Cala',
+      author_contact_id: contactId || '',
       document_type: 'document_type' in item ? item.document_type : '',
       published_date: item.published_date,
       category: Array.isArray(item.category) ? item.category : [item.category].filter(Boolean),
@@ -426,7 +430,8 @@ export function AdminPanel() {
       }
     } catch (error: any) {
       console.error('Error deleting:', error);
-      showMessage('Error al eliminar el artículo', 'error');
+      const errorMessage = error?.message || error?.error?.message || 'Error al eliminar el artículo';
+      showMessage(`Error: ${errorMessage}`, 'error');
     }
   };
 
@@ -454,7 +459,8 @@ export function AdminPanel() {
       }
     } catch (error: any) {
       console.error('Error toggling visibility:', error);
-      showMessage('Error al cambiar la visibilidad del artículo', 'error');
+      const errorMessage = error?.message || error?.error?.message || 'Error al cambiar la visibilidad del artículo';
+      showMessage(`Error: ${errorMessage}`, 'error');
     }
   };
 

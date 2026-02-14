@@ -106,7 +106,8 @@ export function ConsultationsManager() {
       showMessage(`Consulta marcada como ${statusConfig[newStatus].label.toLowerCase()}`, 'success');
     } catch (error: any) {
       console.error('Error updating consultation status:', error);
-      showMessage('Error al actualizar el estado de la consulta', 'error');
+      const errorMessage = error?.message || error?.error?.message || 'Error al actualizar el estado de la consulta';
+      showMessage(`Error: ${errorMessage}`, 'error');
     }
   };
 
@@ -134,7 +135,8 @@ export function ConsultationsManager() {
       }
     } catch (error: any) {
       console.error('Error deleting consultation:', error);
-      showMessage('Error al eliminar la consulta', 'error');
+      const errorMessage = error?.message || error?.error?.message || 'Error al eliminar la consulta';
+      showMessage(`Error: ${errorMessage}`, 'error');
     }
   };
 
