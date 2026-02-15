@@ -13,6 +13,8 @@ import { ShareButtons } from './ShareButtons';
 import { LoadingSpinner } from './LoadingSpinner';
 import { CookieBanner } from './CookieBanner';
 import { useAnalytics } from './useAnalytics';
+import SecureLogin from './SecureLogin';
+import ProtectedRoute from './ProtectedRoute';
 
 
 interface Article {
@@ -2130,7 +2132,7 @@ const AppContent = () => {
     );
   }
 
-  const isAdminRoute = location.pathname === '/rojascalaperu2025';
+  const isAdminRoute = location.pathname === '/admin' || location.pathname === '/login';
 
   if (maintenanceMode && !isAdminRoute) {
     return <MaintenancePage />;
@@ -2144,10 +2146,13 @@ const AppContent = () => {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/normas" element={<DocumentTypesPage />} />
-        <Route path="/rojascalaperu2025" element={
-          <ErrorBoundary>
-            <AdminPanel />
-          </ErrorBoundary>
+        <Route path="/login" element={<SecureLogin />} />
+        <Route path="/admin" element={
+          <ProtectedRoute>
+            <ErrorBoundary>
+              <AdminPanel />
+            </ErrorBoundary>
+          </ProtectedRoute>
         } />
         <Route path="/fechas" element={<CalendarPage />} />
         <Route path="/categorias" element={<CategoriesPage />} />

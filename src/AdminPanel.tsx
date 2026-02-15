@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './supabase';
 import { Plus, CreditCard as Edit, Trash2, Save, X, AlertCircle, Image, Users, FileText, Star, Eye, EyeOff, MessageSquare, LogOut, Shield, Wrench, Pencil, Mail, BarChart3 } from 'lucide-react';
 import { useAuth } from './useAuth';
-import { AdminLogin } from './AdminLogin';
 import { ContactsManager } from './ContactsManager';
 import { ConsultationsManager } from './ConsultationsManager';
 import { CategoriesManager } from './CategoriesManager';
@@ -67,7 +66,7 @@ const formatDateSafe = (dateString: string): string => {
 };
 
 export function AdminPanel() {
-  const { isAuthenticated, login, logout, error: authError } = useAuth();
+  const { logout } = useAuth();
   
   const [activeTab, setActiveTab] = useState<'articles' | 'specials' | 'contacts' | 'consultations' | 'categories' | 'newsletter' | 'analytics'>('articles');
   const [articles, setArticles] = useState<Article[]>([]);
@@ -232,11 +231,6 @@ export function AdminPanel() {
     setSuccess('Mensajes de mantenimiento guardados');
     setTimeout(() => setSuccess(null), 3000);
   };
-
-  // Si no está autenticado, mostrar login
-  if (!isAuthenticated) {
-    return <AdminLogin onLogin={login} error={authError} />;
-  }
 
   const showMessage = (message: string, type: 'success' | 'error') => {
     if (type === 'success') {
