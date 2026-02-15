@@ -15,90 +15,77 @@ Tu panel de administración ahora está **protegido con Supabase Auth**, un sist
 
 ## Configuración Paso a Paso
 
-### 1. Actualiza tu email autorizado
+### 1. ✅ Email autorizado (Ya configurado)
 
-En tu código, hay **3 archivos** donde debes reemplazar `'tu_email@ejemplo.com'` con tu email real:
+Tu email **ya está configurado** en todos los archivos necesarios:
 
 #### a) `src/SecureLogin.tsx` (línea 8)
 ```typescript
-const AUTHORIZED_EMAIL = 'tu_email@ejemplo.com';  // ← Cambia esto por tu email
+const AUTHORIZED_EMAIL = 'rojas.ca.la.admi@gmail.com';  // ✅ Configurado
 ```
 
 #### b) `src/ProtectedRoute.tsx` (línea 6)
 ```typescript
-const AUTHORIZED_EMAIL = 'tu_email@ejemplo.com';  // ← Cambia esto por tu email
+const AUTHORIZED_EMAIL = 'rojas.ca.la.admi@gmail.com';  // ✅ Configurado
 ```
 
 #### c) `src/useAuth.ts` (línea 5)
 ```typescript
-const AUTHORIZED_EMAIL = 'tu_email@ejemplo.com';  // ← Cambia esto por tu email
-```
-
-**Ejemplo:**
-Si tu email es `julio.rojas@gmail.com`, reemplaza:
-```typescript
-const AUTHORIZED_EMAIL = 'julio.rojas@gmail.com';
+const AUTHORIZED_EMAIL = 'rojas.ca.la.admi@gmail.com';  // ✅ Configurado
 ```
 
 ---
 
-### 2. Crea tu cuenta de administrador en Supabase
+### 2. ✅ Cuenta de administrador (Ya creada)
 
-Ahora necesitas crear tu usuario en Supabase:
+Tu cuenta de administrador **ya está creada y activa** en Supabase:
 
-#### Opción A: Desde el Dashboard de Supabase (Recomendado)
+- **Email:** `rojas.ca.la.admi@gmail.com`
+- **Contraseña temporal:** `AdminRojasCala2026!`
+- **Estado:** Confirmado y listo para usar
+
+**Recomendación:** Cambia tu contraseña después del primer login por seguridad.
+
+#### Cambiar tu contraseña desde Supabase Dashboard
 
 1. Ve a tu proyecto en [Supabase Dashboard](https://app.supabase.com)
 2. En el menú lateral, haz clic en **"Authentication"**
 3. Haz clic en **"Users"**
-4. Haz clic en **"Add user"** → **"Create new user"**
-5. Completa el formulario:
-   - **Email**: Tu email (el mismo que pusiste en el código)
-   - **Password**: Tu contraseña segura
-   - **Auto Confirm User**: ✅ Activar (para confirmar el email automáticamente)
-6. Haz clic en **"Create user"**
+4. Busca tu email: `rojas.ca.la.admi@gmail.com`
+5. Haz clic en el usuario y luego en **"Reset password"**
+6. Ingresa tu nueva contraseña y guarda
 
-#### Opción B: Usando SQL (Alternativa)
+#### Opción B: Usando SQL (Ya configurado)
 
-Si prefieres usar SQL, ejecuta esto en el SQL Editor de Supabase:
+Tu cuenta ya está creada con el email: `rojas.ca.la.admi@gmail.com`
+
+Si necesitas cambiar la contraseña, usa:
 
 ```sql
--- Reemplaza con tu email y contraseña
-INSERT INTO auth.users (
-  id,
-  email,
-  encrypted_password,
-  email_confirmed_at,
-  raw_app_meta_data,
-  raw_user_meta_data,
-  created_at,
-  updated_at,
-  confirmation_token,
-  role,
-  aud
-) VALUES (
-  gen_random_uuid(),
-  'tu_email@ejemplo.com',  -- ← Tu email aquí
-  crypt('TU_CONTRASEÑA_SEGURA', gen_salt('bf')),  -- ← Tu contraseña aquí
-  now(),
-  '{"provider":"email","providers":["email"]}',
-  '{}',
-  now(),
-  now(),
-  '',
-  'authenticated',
-  'authenticated'
-);
+UPDATE auth.users
+SET encrypted_password = crypt('TU_NUEVA_CONTRASEÑA', gen_salt('bf'))
+WHERE email = 'rojas.ca.la.admi@gmail.com';
 ```
 
 ---
 
-### 3. ¡Ya está listo!
+### 3. ¡Ya está listo! Inicia sesión ahora
 
-Ahora puedes iniciar sesión:
+Todo está configurado. Usa estas credenciales:
 
+**Email:**
+```
+rojas.ca.la.admi@gmail.com
+```
+
+**Contraseña temporal:**
+```
+AdminRojasCala2026!
+```
+
+**Pasos para iniciar sesión:**
 1. Ve a: `https://tu-sitio.com/login`
-2. Ingresa tu email y contraseña
+2. Ingresa el email y contraseña de arriba
 3. ¡Accede al panel admin!
 
 **URL antigua:** `/rojascalaperu2025` (ya no funciona)
@@ -203,11 +190,16 @@ Estas tablas tienen políticas RLS activas:
 
 ## Resumen rápido
 
-### Lo que DEBES hacer:
-1. ✅ Reemplazar `'tu_email@ejemplo.com'` en 3 archivos
-2. ✅ Crear tu usuario en Supabase con ese email
-3. ✅ Ir a `/login` e iniciar sesión
-4. ✅ ¡Disfrutar de tu panel admin seguro!
+### ✅ Ya está todo configurado:
+1. ✅ Email configurado: `rojas.ca.la.admi@gmail.com`
+2. ✅ Usuario creado en Supabase
+3. ✅ Base de datos protegida con RLS
+4. ✅ Contraseña temporal: `AdminRojasCala2026!`
+
+### 🚀 Lo que DEBES hacer ahora:
+1. Ir a `/login` e iniciar sesión
+2. Cambiar tu contraseña temporal (recomendado)
+3. ¡Disfrutar de tu panel admin seguro!
 
 ### URLs importantes:
 - **Login**: `/login`
