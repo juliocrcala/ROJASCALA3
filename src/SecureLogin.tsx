@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from './supabase';
 import { Lock, Mail, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
-const AUTHORIZED_EMAIL = 'rojas.ca.la.admi@gmail.com';
+const AUTHORIZED_EMAIL = 'tu_email@ejemplo.com';
 
 export default function SecureLogin() {
   const navigate = useNavigate();

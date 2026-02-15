@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from './supabase';
 
-const AUTHORIZED_EMAIL = 'rojas.ca.la.admi@gmail.com';
+const AUTHORIZED_EMAIL = 'tu_email@ejemplo.com';
 
 interface AuthState {
   isAuthenticated: boolean;

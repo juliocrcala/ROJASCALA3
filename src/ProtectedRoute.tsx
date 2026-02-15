@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { supabase } from './supabase';
 import { LoadingSpinner } from './LoadingSpinner';
 
-const AUTHORIZED_EMAIL = 'rojas.ca.la.admi@gmail.com';
+const AUTHORIZED_EMAIL = 'tu_email@ejemplo.com';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
