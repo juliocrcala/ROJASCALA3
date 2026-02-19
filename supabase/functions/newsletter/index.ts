@@ -141,7 +141,7 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
       const { data, error } = await supabase
         .from('newsletter')
@@ -164,6 +164,7 @@ Deno.serve(async (req: Request) => {
             }
           );
         }
+        console.error('Newsletter subscription error:', error);
         throw error;
       }
 
