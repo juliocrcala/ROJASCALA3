@@ -2128,7 +2128,7 @@ const AppContent = () => {
     );
   }
 
-  const isAdminRoute = location.pathname === '/admin' || location.pathname === '/login';
+  const isAdminRoute = location.pathname === '/rojascalaperu2025admin' || location.pathname === '/rojascalaperu2025login';
 
   if (maintenanceMode && !isAdminRoute) {
     return <MaintenancePage />;
@@ -2142,8 +2142,8 @@ const AppContent = () => {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/normas" element={<DocumentTypesPage />} />
-        <Route path="/login" element={<SecureLogin />} />
-        <Route path="/admin" element={
+        <Route path="/rojascalaperu2025login" element={<SecureLogin />} />
+        <Route path="/rojascalaperu2025admin" element={
           <ProtectedRoute>
             <ErrorBoundary>
               <AdminPanel />

@@ -55,7 +55,7 @@ export function useAuth(): AuthState {
       await supabase.auth.signOut();
       setIsAuthenticated(false);
       setError(null);
-      navigate('/login');
+      navigate('/rojascalaperu2025login');
     } catch (error) {
       console.error('Error during logout:', error);
     }

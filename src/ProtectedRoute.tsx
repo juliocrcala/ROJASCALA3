@@ -55,7 +55,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!isAuthorized) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/rojascalaperu2025login" replace />;
   }
 
   return <>{children}</>;

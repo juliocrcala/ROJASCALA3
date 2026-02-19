@@ -31,7 +31,7 @@ export default function SecureLogin() {
         throw new Error('No tienes autorización para acceder al panel de administración');
       }
 
-      navigate('/admin');
+      navigate('/rojascalaperu2025admin');
     } catch (err: any) {
       setError(err.message || 'Error al iniciar sesión');
     } finally {
