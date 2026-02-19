@@ -55,7 +55,6 @@ export function FloatingHelpWidget() {
         throw new Error('Error al enviar la consulta. Por favor intenta nuevamente.');
       }
 
-      console.log('Consultation saved successfully:', data);
       setIsSubmitted(true);
       
       // Reset después de 3 segundos

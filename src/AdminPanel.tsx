@@ -259,10 +259,6 @@ export function AdminPanel() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('💾 handleSubmit called');
-    console.log('📝 Form data:', formData);
-    console.log('✏️ Editing ID:', editingId);
-    console.log('📂 Active tab:', activeTab);
 
     setIsSaving(true);
     setError(null);
@@ -316,23 +312,21 @@ export function AdminPanel() {
 
         if (editingId) {
           console.log('🔄 Updating article:', { editingId, articleData });
-          const { error, data } = await supabase
+          const { error } = await supabase
             .from('articles')
             .update({ ...articleData, updated_at: new Date().toISOString() })
             .eq('id', editingId)
             .select();
 
-          console.log('📦 Update response:', { error, data });
           if (error) throw error;
           showMessage('Artículo actualizado exitosamente', 'success');
         } else {
-          console.log('➕ Creating new article:', articleData);
-          const { error, data } = await supabase
+          const { error } = await supabase
             .from('articles')
             .insert([articleData])
             .select();
 
-          console.log('📦 Insert response:', { error, data });
+
           if (error) throw error;
           showMessage('Artículo creado exitosamente', 'success');
         }
@@ -344,24 +338,21 @@ export function AdminPanel() {
         };
 
         if (editingId) {
-          console.log('🔄 Updating special article:', { editingId, specialData });
-          const { error, data } = await supabase
+          const { error } = await supabase
             .from('special_articles')
             .update({ ...specialData, updated_at: new Date().toISOString() })
             .eq('id', editingId)
             .select();
 
-          console.log('📦 Update response:', { error, data });
           if (error) throw error;
           showMessage('Artículo especial actualizado exitosamente', 'success');
         } else {
-          console.log('➕ Creating new special article:', specialData);
-          const { error, data } = await supabase
+          const { error } = await supabase
             .from('special_articles')
             .insert([specialData])
             .select();
 
-          console.log('📦 Insert response:', { error, data });
+
           if (error) throw error;
           showMessage('Artículo especial creado exitosamente', 'success');
         }
@@ -421,25 +412,21 @@ export function AdminPanel() {
   };
 
   const handleDelete = async (id: string, type: 'articles' | 'specials') => {
-    console.log('🗑️ handleDelete called:', { id, type });
     if (!confirm('¿Estás seguro de que quieres eliminar este artículo?')) {
-      console.log('❌ Delete cancelled by user');
       return;
     }
 
     try {
-      console.log('🚀 Starting delete operation...');
       setError(null);
       const table = type === 'articles' ? 'articles' : 'special_articles';
-      console.log('📋 Table:', table);
 
-      const { error, data } = await supabase
+      const { error } = await supabase
         .from(table)
         .delete()
         .eq('id', id)
         .select();
 
-      console.log('📦 Delete response:', { error, data });
+
 
       if (error) throw error;
       showMessage('Artículo eliminado exitosamente', 'success');

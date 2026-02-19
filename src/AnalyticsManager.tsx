@@ -61,8 +61,6 @@ export function AnalyticsManager() {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - dateRange);
 
-      console.log('Fetching analytics from:', startDate.toISOString());
-
       const { data: views, error: viewsError } = await supabase
         .from('page_views')
         .select('*')
@@ -70,10 +68,7 @@ export function AnalyticsManager() {
         .order('created_at', { ascending: false })
         .limit(100);
 
-      console.log('Views query result:', { views, error: viewsError });
-
       if (viewsError) {
-        console.error('Views error details:', viewsError);
         throw new Error(`Error al cargar vistas: ${viewsError.message || JSON.stringify(viewsError)}`);
       }
 
@@ -81,8 +76,6 @@ export function AnalyticsManager() {
         .from('page_views')
         .select('visitor_id, created_at')
         .gte('created_at', startDate.toISOString());
-
-      console.log('All views query result:', { count: allViews?.length, error: allViewsError });
 
       if (allViewsError) {
         console.error('All views error details:', allViewsError);

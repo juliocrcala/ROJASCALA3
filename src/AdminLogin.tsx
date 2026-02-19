@@ -20,8 +20,7 @@ export function AdminLogin({ onLogin, error }: AdminLoginProps) {
     // Simular un pequeño delay para mejor UX
     setTimeout(() => {
       try {
-        const success = onLogin(password);
-        console.log('Login attempt result:', success); // Debug log
+        onLogin(password);
       } catch (error) {
         console.error('Login error:', error);
       }

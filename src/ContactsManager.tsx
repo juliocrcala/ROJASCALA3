@@ -133,9 +133,6 @@ export function ContactsManager() {
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      console.log('Intentando subir archivo a Storage:', filePath);
-
-      // Intentar subir archivo a Supabase Storage
       const { data, error } = await supabase.storage
         .from('contact-photos')
         .upload(filePath, file, {
@@ -144,11 +141,7 @@ export function ContactsManager() {
         });
 
       if (error) {
-        console.error('Storage upload error:', error);
-
-        // Si el bucket no está disponible, usar base64 como respaldo
         if (error.message?.includes('not found') || error.message?.includes('Bucket')) {
-          console.log('Bucket no disponible, convirtiendo a base64...');
           const base64 = await convertFileToBase64(file);
           return base64;
         }
@@ -156,27 +149,17 @@ export function ContactsManager() {
         throw error;
       }
 
-      console.log('Upload successful:', data);
-
-      // Obtener URL pública
       const { data: { publicUrl } } = supabase.storage
         .from('contact-photos')
         .getPublicUrl(filePath);
 
-      console.log('Public URL:', publicUrl);
-
       return publicUrl;
     } catch (error: any) {
-      console.error('Error uploading photo:', error);
-
-      // Mensajes de error más específicos
       if (error.message?.includes('auth')) {
         throw new Error('Debes estar autenticado para subir fotos.');
       }
 
-      // Como último recurso, convertir a base64
       try {
-        console.log('Intentando método de respaldo (base64)...');
         const base64 = await convertFileToBase64(file);
         return base64;
       } catch (base64Error) {

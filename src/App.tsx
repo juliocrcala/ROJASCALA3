@@ -1449,7 +1449,6 @@ const DocumentTypesPage = () => {
 
   const fetchDocumentTypes = async () => {
     try {
-      console.log('🔍 Fetching document types from database...');
       const { data, error } = await supabase
         .from('categories_config')
         .select('name')
@@ -1458,13 +1457,10 @@ const DocumentTypesPage = () => {
         .order('display_order');
 
       if (error && error.code !== 'PGRST116') throw error;
-      
+
       const types = (data || []).map(item => item.name);
-      console.log('✅ Document types fetched:', data);
-      console.log('📋 Setting document types:', types);
-      
+
       if (types.length === 0) {
-        console.log('⚠️ No document types found, using fallback');
         // Fallback a tipos por defecto si hay error
         setDocumentTypes([
           "Ley", "Decreto Supremo", "Resolución Ministerial", "Resolución Directoral",
