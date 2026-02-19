@@ -31,11 +31,18 @@ export function NewsletterManager() {
     try {
       setError(null);
 
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setError('No estás autenticado');
+        setIsLoading(false);
+        return;
+      }
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/newsletter/subscribers`,
         {
           headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+            'Authorization': `Bearer ${session.access_token}`
           }
         }
       );
@@ -73,12 +80,18 @@ export function NewsletterManager() {
     if (!confirm(`¿Estás seguro de que quieres eliminar a ${email}?`)) return;
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        showMessage('No estás autenticado', 'error');
+        return;
+      }
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/newsletter/subscribers/${id}`,
         {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+            'Authorization': `Bearer ${session.access_token}`
           }
         }
       );
@@ -97,13 +110,19 @@ export function NewsletterManager() {
 
   const toggleActive = async (id: string, currentStatus: boolean) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        showMessage('No estás autenticado', 'error');
+        return;
+      }
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/newsletter/subscribers/${id}`,
         {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+            'Authorization': `Bearer ${session.access_token}`
           },
           body: JSON.stringify({ is_active: !currentStatus })
         }
