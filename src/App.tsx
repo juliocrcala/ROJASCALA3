@@ -15,6 +15,7 @@ import { CookieBanner } from './CookieBanner';
 import { useAnalytics } from './useAnalytics';
 import SecureLogin from './SecureLogin';
 import ProtectedRoute from './ProtectedRoute';
+import { DiagnosticPanel } from './DiagnosticPanel';
 
 
 interface Article {
@@ -2130,35 +2131,41 @@ const HomePage = () => {
   };
 
   const fetchArticles = async () => {
+    console.log('HomePage: Fetching articles...');
     const { data, error } = await supabase
       .from('articles')
       .select('*')
-      .eq('is_hidden', false) // Solo mostrar artículos visibles
+      .eq('is_hidden', false)
       .order('published_date', { ascending: false })
       .limit(6);
 
+    console.log('HomePage: Articles response:', { data, error });
     if (error) throw error;
     setArticles(data || []);
   };
 
   const fetchSpecialArticles = async () => {
+    console.log('HomePage: Fetching special articles...');
     const { data, error } = await supabase
       .from('special_articles')
       .select('*')
-      .eq('is_hidden', false) // Solo mostrar artículos visibles
+      .eq('is_hidden', false)
       .order('published_date', { ascending: false })
       .limit(3);
 
+    console.log('HomePage: Special articles response:', { data, error });
     if (error && error.code !== 'PGRST116') throw error;
     setSpecialArticles(data || []);
   };
 
   const fetchContacts = async () => {
+    console.log('HomePage: Fetching contacts...');
     const { data, error } = await supabase
       .from('contacts')
       .select('*')
       .eq('is_active', true);
 
+    console.log('HomePage: Contacts response:', { data, error });
     if (error && error.code !== 'PGRST116') throw error;
     setContacts(data || []);
   };
@@ -2424,6 +2431,7 @@ const HomePage = () => {
           </div>
         )}
       </main>
+      <DiagnosticPanel />
     </>
   );
 };

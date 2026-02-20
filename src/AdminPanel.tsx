@@ -140,22 +140,26 @@ export function AdminPanel() {
   };
 
   const fetchArticles = async () => {
+    console.log('AdminPanel: Fetching articles...');
     const { data, error } = await supabase
       .from('articles')
       .select('*')
       .order('published_date', { ascending: false });
 
+    console.log('AdminPanel: Articles response:', { data, error });
     if (error) throw error;
     setArticles(data || []);
   };
 
   const fetchSpecialArticles = async () => {
+    console.log('AdminPanel: Fetching special articles...');
     const { data, error } = await supabase
       .from('special_articles')
       .select('*')
       .order('published_date', { ascending: false });
 
-    if (error && error.code !== 'PGRST116') { // Ignore table not found error
+    console.log('AdminPanel: Special articles response:', { data, error });
+    if (error && error.code !== 'PGRST116') {
       throw error;
     }
     setSpecialArticles(data || []);
