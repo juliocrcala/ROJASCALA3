@@ -15,7 +15,6 @@ import { CookieBanner } from './CookieBanner';
 import { useAnalytics } from './useAnalytics';
 import SecureLogin from './SecureLogin';
 import ProtectedRoute from './ProtectedRoute';
-import { DiagnosticPanel } from './DiagnosticPanel';
 
 
 interface Article {
@@ -2431,7 +2430,6 @@ const HomePage = () => {
           </div>
         )}
       </main>
-      <DiagnosticPanel />
     </>
   );
 };
