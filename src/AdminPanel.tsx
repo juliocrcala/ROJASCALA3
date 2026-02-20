@@ -262,6 +262,14 @@ export function AdminPanel() {
   const saveCookieSettings = async () => {
     try {
       setIsSaving(true);
+
+      const { data: settings, error: fetchError } = await supabase
+        .from('site_settings')
+        .select('id')
+        .single();
+
+      if (fetchError) throw fetchError;
+
       const { error } = await supabase
         .from('site_settings')
         .update({
@@ -271,7 +279,7 @@ export function AdminPanel() {
           cookie_reject_text: cookieRejectText,
           updated_at: new Date().toISOString()
         })
-        .eq('id', (await supabase.from('site_settings').select('id').single()).data?.id);
+        .eq('id', settings.id);
 
       if (error) throw error;
 
@@ -802,7 +810,7 @@ export function AdminPanel() {
       </div>
 
       {/* Controles de visibilidad para artículos */}
-      {activeTab !== 'contacts' && activeTab !== 'consultations' && activeTab !== 'categories' && activeTab !== 'newsletter' && activeTab !== 'analytics' && (
+      {activeTab !== 'contacts' && activeTab !== 'consultations' && activeTab !== 'categories' && activeTab !== 'newsletter' && activeTab !== 'analytics' && activeTab !== 'settings' && (
         <div className="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-4">

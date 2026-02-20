@@ -2520,7 +2520,17 @@ const AppContent = () => {
             <div>
               <h4 className="text-xl font-bold mb-4">Enlaces Rápidos</h4>
               <ul className="space-y-2">
-                <li><Link to="/" className="text-gray-400 hover:text-white">Inicio</Link></li>
+                <li>
+                  <Link
+                    to="/"
+                    className="text-gray-400 hover:text-white"
+                    onClick={() => {
+                      localStorage.removeItem('cookieConsent');
+                    }}
+                  >
+                    Inicio
+                  </Link>
+                </li>
                 <li><Link to="/normas" className="text-gray-400 hover:text-white">Normas</Link></li>
                 <li><Link to="/fechas" className="text-gray-400 hover:text-white">Fechas</Link></li>
                 <li><Link to="/categorias" className="text-gray-400 hover:text-white">Categorías</Link></li>
