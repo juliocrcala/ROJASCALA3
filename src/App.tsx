@@ -2532,7 +2532,6 @@ const AppContent = () => {
               <h4 className="text-xl font-bold mb-4">Contacto</h4>
               <ul className="space-y-2 text-gray-400">
                 <li>Email: julio.cesar@rojascala.org</li>
-                <li>Dirección: Av. Principal 123, Lima</li>
               </ul>
             </div>
           </div>
