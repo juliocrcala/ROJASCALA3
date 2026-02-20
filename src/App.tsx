@@ -1373,7 +1373,6 @@ const DocumentTypesPage = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [documentTypes, setDocumentTypes] = useState<string[]>([]);
-  const [selectedType, setSelectedType] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -1451,10 +1450,6 @@ const DocumentTypesPage = () => {
     return articles.filter(article => article.document_type === typeName);
   };
 
-  const handleTypeClick = (typeName: string) => {
-    setSelectedType(selectedType === typeName ? null : typeName);
-  };
-
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-12">
@@ -1484,11 +1479,12 @@ const DocumentTypesPage = () => {
         {filteredTypes.map((type) => {
           const typeArticles = getArticlesByType(type);
           return (
-            <div key={type} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-              <div 
-                className="flex items-center justify-between cursor-pointer"
-                onClick={() => handleTypeClick(type)}
-              >
+            <Link
+              key={type}
+              to={`/norma/${encodeURIComponent(type)}`}
+              className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+            >
+              <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-red-900 rounded-full flex items-center justify-center text-white">
                     <FileText className="w-6 h-6" />
@@ -1500,41 +1496,9 @@ const DocumentTypesPage = () => {
                     )}
                   </div>
                 </div>
-                <div className="text-red-900">
-                  {selectedType === type ? '−' : '+'}
-                </div>
+                <ChevronRight className="w-6 h-6 text-red-900" />
               </div>
-
-              {selectedType === type && typeArticles.length > 0 && (
-                <div className="mt-4 space-y-3 border-t pt-4">
-                  {typeArticles.slice(0, 3).map((article) => (
-                    <div key={article.id} className="text-sm">
-                      <Link 
-                        to={`/articulo/normal/${article.id}`}
-                        className="block hover:bg-gray-50 p-2 rounded"
-                      >
-                        <h4 className="font-medium text-gray-900 line-clamp-2 hover:text-red-900">{article.title}</h4>
-                        <div className="flex items-center justify-between mt-1">
-                          <AuthorLink 
-                            author={article.author} 
-                            authorContactId={article.author_contact_id} 
-                            contacts={contacts} 
-                          />
-                          <span className="text-gray-500 text-xs">
-                            {formatDateSafe(article.published_date)}
-                          </span>
-                        </div>
-                      </Link>
-                    </div>
-                  ))}
-                  {typeArticles.length > 3 && (
-                    <p className="text-xs text-gray-500">
-                      +{typeArticles.length - 3} artículos más
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
+            </Link>
           );
         })}
       </div>
@@ -1728,6 +1692,190 @@ const CalendarPage = () => {
           </div>
         )}
       </div>
+    </div>
+  );
+};
+
+const DocumentTypeFilterView = () => {
+  const { typeName } = useParams<{ typeName: string }>();
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [displayCount, setDisplayCount] = useState(8);
+
+  const decodedTypeName = typeName ? decodeURIComponent(typeName) : '';
+
+  useAnalytics(`Tipo de Norma: ${decodedTypeName}`);
+
+  useEffect(() => {
+    fetchData();
+  }, [typeName]);
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      await Promise.all([fetchArticles(), fetchContacts()]);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchArticles = async () => {
+    const { data, error } = await supabase
+      .from('articles')
+      .select('*')
+      .eq('is_hidden', false)
+      .eq('document_type', decodedTypeName)
+      .order('published_date', { ascending: false });
+
+    if (error) throw error;
+    setArticles(data || []);
+  };
+
+  const fetchContacts = async () => {
+    const { data, error } = await supabase
+      .from('contacts')
+      .select('*')
+      .eq('is_active', true);
+
+    if (error && error.code !== 'PGRST116') throw error;
+    setContacts(data || []);
+  };
+
+  const filteredArticles = articles.map(article => ({ ...article, type: 'normal' as const }));
+  const displayedArticles = filteredArticles.slice(0, displayCount);
+  const hasMore = filteredArticles.length > displayCount;
+  const canShowLess = displayCount > 8;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner message="Cargando artículos..." size="large" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="mb-8">
+        <Link
+          to="/normas"
+          className="inline-flex items-center text-red-900 hover:text-red-700 mb-4"
+        >
+          <ChevronLeft className="w-5 h-5 mr-1" />
+          Volver a Tipos de Normas
+        </Link>
+        <div className="flex items-center space-x-4 mb-2">
+          <div className="w-16 h-16 bg-red-900 rounded-full flex items-center justify-center text-white">
+            <FileText className="w-8 h-8" />
+          </div>
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900">{decodedTypeName}</h1>
+            <p className="text-gray-600 mt-2">
+              {filteredArticles.length} {filteredArticles.length === 1 ? 'artículo' : 'artículos'} encontrados
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {filteredArticles.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">No hay artículos disponibles para este tipo de norma.</p>
+        </div>
+      ) : (
+        <>
+          <section className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {displayedArticles.map((article) => (
+              <article key={`${article.type}-${article.id}`} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <span className="inline-block px-3 py-1 text-sm rounded-full bg-red-100 text-red-900">
+                      {article.document_type}
+                    </span>
+                    <span className="text-sm text-gray-500">{formatDateSafe(article.published_date)}</span>
+                  </div>
+                  <Link to={`/articulo/${article.type}/${article.id}`}>
+                    <h3 className="text-xl font-semibold mb-2 hover:text-red-900">{article.title}</h3>
+                  </Link>
+                  <p className="text-gray-600 mb-4 text-justify line-clamp-3">
+                    {article.summary || article.content.substring(0, 150) + '...'}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <div className="flex flex-wrap gap-1 mb-1">
+                        {(Array.isArray(article.category) ? article.category : [article.category])
+                          .filter(Boolean)
+                          .slice(0, 2)
+                          .map(cat => (
+                            <span key={cat} className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
+                              {cat}
+                            </span>
+                          ))}
+                        {(Array.isArray(article.category) ? article.category : [article.category]).filter(Boolean).length > 2 && (
+                          <span className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
+                            +{(Array.isArray(article.category) ? article.category : [article.category]).filter(Boolean).length - 2}
+                          </span>
+                        )}
+                      </div>
+                      <AuthorLink
+                        author={article.author}
+                        authorContactId={article.author_contact_id}
+                        contacts={contacts}
+                      />
+                    </div>
+                    <div className="flex space-x-2">
+                      {article.official_link && (
+                        <a
+                          href={article.official_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          Ver oficial
+                        </a>
+                      )}
+                      <Link
+                        to={`/articulo/${article.type}/${article.id}`}
+                        className="text-red-900 hover:text-red-700 font-medium"
+                      >
+                        Leer más →
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </section>
+
+          {(hasMore || canShowLess) && (
+            <div className="text-center py-8 space-y-4">
+              <p className="text-gray-600">
+                Mostrando {displayedArticles.length} de {filteredArticles.length} artículos
+              </p>
+              <div className="flex justify-center space-x-4">
+                {canShowLess && (
+                  <button
+                    onClick={() => setDisplayCount(8)}
+                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                  >
+                    Mostrar menos
+                  </button>
+                )}
+                {hasMore && (
+                  <button
+                    onClick={() => setDisplayCount(displayCount + 8)}
+                    className="px-6 py-2 bg-red-900 text-white rounded-lg hover:bg-red-800 transition-colors"
+                  >
+                    Mostrar más
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };
@@ -2336,6 +2484,7 @@ const AppContent = () => {
         <Route path="/fechas" element={<CalendarPage />} />
         <Route path="/categorias" element={<CategoriesPage />} />
         <Route path="/categoria/:categoryName" element={<CategoryFilterView />} />
+        <Route path="/norma/:typeName" element={<DocumentTypeFilterView />} />
         <Route path="/especiales" element={<SpecialsPage />} />
         <Route path="/contacto" element={<ContactPage />} />
         <Route path="/contacto/:id" element={<ContactPage />} />
