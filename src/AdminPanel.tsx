@@ -68,7 +68,7 @@ const formatDateSafe = (dateString: string): string => {
 export function AdminPanel() {
   const { logout } = useAuth();
   
-  const [activeTab, setActiveTab] = useState<'articles' | 'specials' | 'contacts' | 'consultations' | 'categories' | 'newsletter' | 'analytics'>('articles');
+  const [activeTab, setActiveTab] = useState<'articles' | 'specials' | 'contacts' | 'consultations' | 'categories' | 'newsletter' | 'analytics' | 'settings'>('articles');
   const [articles, setArticles] = useState<Article[]>([]);
   const [specialArticles, setSpecialArticles] = useState<SpecialArticle[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -88,6 +88,10 @@ export function AdminPanel() {
   const [maintenanceTimeMessage, setMaintenanceTimeMessage] = useState('Volveremos en unos minutos');
   const [maintenanceFooterMessage, setMaintenanceFooterMessage] = useState('Gracias por tu paciencia y comprensión.');
   const [maintenanceCompanyName, setMaintenanceCompanyName] = useState('Rojas Cala Asociados - Asesoría Legal');
+  const [cookieTitle, setCookieTitle] = useState('Uso de Cookies');
+  const [cookieMessage, setCookieMessage] = useState('Utilizamos cookies para mejorar tu experiencia en nuestro sitio web. Al continuar navegando, aceptas nuestro uso de cookies.');
+  const [cookieAcceptText, setCookieAcceptText] = useState('Aceptar');
+  const [cookieRejectText, setCookieRejectText] = useState('Rechazar');
   const [formData, setFormData] = useState({
     title: '',
     author: 'Julio Cesar Rojas Cala',
@@ -105,6 +109,7 @@ export function AdminPanel() {
   useEffect(() => {
     fetchData();
     fetchCategoriesConfig();
+    fetchSiteSettings();
     // Cargar estado de mantenimiento y mensajes desde localStorage
     const savedMode = localStorage.getItem('maintenanceMode');
     if (savedMode !== null) {
@@ -177,6 +182,24 @@ export function AdminPanel() {
     setContacts(data || []);
   };
 
+  const fetchSiteSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('cookie_title, cookie_message, cookie_accept_text, cookie_reject_text')
+        .single();
+
+      if (!error && data) {
+        if (data.cookie_title) setCookieTitle(data.cookie_title);
+        if (data.cookie_message) setCookieMessage(data.cookie_message);
+        if (data.cookie_accept_text) setCookieAcceptText(data.cookie_accept_text);
+        if (data.cookie_reject_text) setCookieRejectText(data.cookie_reject_text);
+      }
+    } catch (error) {
+      console.error('Error fetching site settings:', error);
+    }
+  };
+
   const fetchCategoriesConfig = async () => {
     try {
       const { data, error } = await supabase
@@ -234,6 +257,33 @@ export function AdminPanel() {
     localStorage.setItem('maintenanceCompanyName', maintenanceCompanyName);
     setSuccess('Mensajes de mantenimiento guardados');
     setTimeout(() => setSuccess(null), 3000);
+  };
+
+  const saveCookieSettings = async () => {
+    try {
+      setIsSaving(true);
+      const { error } = await supabase
+        .from('site_settings')
+        .update({
+          cookie_title: cookieTitle,
+          cookie_message: cookieMessage,
+          cookie_accept_text: cookieAcceptText,
+          cookie_reject_text: cookieRejectText,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', (await supabase.from('site_settings').select('id').single()).data?.id);
+
+      if (error) throw error;
+
+      setSuccess('Configuración de cookies guardada correctamente');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (error) {
+      console.error('Error saving cookie settings:', error);
+      setError('Error al guardar la configuración de cookies');
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const showMessage = (message: string, type: 'success' | 'error') => {
@@ -736,6 +786,17 @@ export function AdminPanel() {
               <BarChart3 className="w-4 h-4" />
               <span>Estadísticas</span>
             </button>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+                activeTab === 'settings'
+                  ? 'border-red-500 text-red-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <Wrench className="w-4 h-4" />
+              <span>Configuración</span>
+            </button>
           </nav>
         </div>
       </div>
@@ -805,6 +866,87 @@ export function AdminPanel() {
         <NewsletterManager />
       ) : activeTab === 'analytics' ? (
         <AnalyticsManager />
+      ) : activeTab === 'settings' ? (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-2xl font-bold mb-6 text-gray-800">Configuración del Sitio</h2>
+
+          <div className="space-y-6">
+            <div className="border-b pb-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-700 flex items-center">
+                <Shield className="w-5 h-5 mr-2 text-blue-600" />
+                Política de Cookies
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Configura el texto que aparece en el banner de cookies del sitio web.
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Título del Banner
+                  </label>
+                  <input
+                    type="text"
+                    value={cookieTitle}
+                    onChange={(e) => setCookieTitle(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    placeholder="Uso de Cookies"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Mensaje Principal
+                  </label>
+                  <textarea
+                    value={cookieMessage}
+                    onChange={(e) => setCookieMessage(e.target.value)}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    placeholder="Utilizamos cookies para mejorar tu experiencia..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Texto Botón Aceptar
+                    </label>
+                    <input
+                      type="text"
+                      value={cookieAcceptText}
+                      onChange={(e) => setCookieAcceptText(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      placeholder="Aceptar"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Texto Botón Rechazar
+                    </label>
+                    <input
+                      type="text"
+                      value={cookieRejectText}
+                      onChange={(e) => setCookieRejectText(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      placeholder="Rechazar"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={saveCookieSettings}
+                  disabled={isSaving}
+                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{isSaving ? 'Guardando...' : 'Guardar Configuración'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       ) : (
         <>
           {/* Formulario Modal */}

@@ -1,16 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { supabase } from './supabase';
 
 export const CookieBanner: React.FC = () => {
   const [showBanner, setShowBanner] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [cookieTitle, setCookieTitle] = useState('Cookies y Términos');
+  const [cookieMessage, setCookieMessage] = useState('Utilizamos cookies para mejorar tu experiencia y analizar el tráfico del sitio.');
+  const [cookieAcceptText, setCookieAcceptText] = useState('Aceptar Todo');
+  const [cookieRejectText, setCookieRejectText] = useState('Rechazar');
 
   useEffect(() => {
     const consent = localStorage.getItem('cookieConsent');
     if (!consent) {
       setShowBanner(true);
     }
+    fetchCookieSettings();
   }, []);
+
+  const fetchCookieSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('cookie_title, cookie_message, cookie_accept_text, cookie_reject_text')
+        .single();
+
+      if (!error && data) {
+        if (data.cookie_title) setCookieTitle(data.cookie_title);
+        if (data.cookie_message) setCookieMessage(data.cookie_message);
+        if (data.cookie_accept_text) setCookieAcceptText(data.cookie_accept_text);
+        if (data.cookie_reject_text) setCookieRejectText(data.cookie_reject_text);
+      }
+    } catch (error) {
+      console.error('Error fetching cookie settings:', error);
+    }
+  };
 
   const handleAccept = () => {
     localStorage.setItem('cookieConsent', JSON.stringify({
@@ -38,7 +62,7 @@ export const CookieBanner: React.FC = () => {
       <div className="bg-white rounded-lg shadow-2xl border-2 border-gray-200">
         <div className="p-5">
           <div className="flex justify-between items-start mb-3">
-            <h3 className="text-lg font-bold text-gray-900">Cookies y Términos</h3>
+            <h3 className="text-lg font-bold text-gray-900">{cookieTitle}</h3>
             <button
               onClick={handleReject}
               className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -49,7 +73,7 @@ export const CookieBanner: React.FC = () => {
 
           <div className="space-y-3">
             <p className="text-sm text-gray-700 leading-relaxed">
-              Utilizamos cookies para mejorar tu experiencia y analizar el tráfico del sitio.
+              {cookieMessage}
             </p>
 
             {!showDetails && (
@@ -110,13 +134,13 @@ export const CookieBanner: React.FC = () => {
                   onClick={handleAccept}
                   className="w-full bg-red-900 text-white px-4 py-2.5 rounded-lg font-semibold hover:bg-red-800 transition-colors shadow-md text-sm"
                 >
-                  Aceptar Todo
+                  {cookieAcceptText}
                 </button>
                 <button
                   onClick={handleReject}
                   className="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors text-sm"
                 >
-                  Rechazar
+                  {cookieRejectText}
                 </button>
               </div>
             </div>
