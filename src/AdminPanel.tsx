@@ -92,6 +92,20 @@ export function AdminPanel() {
   const [cookieMessage, setCookieMessage] = useState('Utilizamos cookies para mejorar tu experiencia en nuestro sitio web. Al continuar navegando, aceptas nuestro uso de cookies.');
   const [cookieAcceptText, setCookieAcceptText] = useState('Aceptar');
   const [cookieRejectText, setCookieRejectText] = useState('Rechazar');
+  const [cookieDetailsButtonText, setCookieDetailsButtonText] = useState('Ver más detalles');
+  const [cookieHideDetailsButtonText, setCookieHideDetailsButtonText] = useState('Ocultar detalles');
+  const [cookieUsageTitle, setCookieUsageTitle] = useState('Uso de Cookies');
+  const [cookieUsageText, setCookieUsageText] = useState('Recopilamos datos anónimos sobre las páginas visitadas para mejorar nuestros contenidos.');
+  const [cookieIpTitle, setCookieIpTitle] = useState('Propiedad Intelectual');
+  const [cookieIpIntro, setCookieIpIntro] = useState('Al usar este sitio, aceptas que:');
+  const [cookieIpPoint1, setCookieIpPoint1] = useState('El contenido es propiedad de sus autores');
+  const [cookieIpPoint2, setCookieIpPoint2] = useState('Los artículos están protegidos por derechos de autor');
+  const [cookieIpPoint3, setCookieIpPoint3] = useState('Debe respetarse y citarse la autoría');
+  const [cookieIpPoint4, setCookieIpPoint4] = useState('El uso comercial sin autorización está prohibido');
+  const [cookieIpPoint5, setCookieIpPoint5] = useState('Puedes compartir enlaces, no copiar contenido');
+  const [cookiePrivacyTitle, setCookiePrivacyTitle] = useState('Privacidad');
+  const [cookiePrivacyText, setCookiePrivacyText] = useState('No recopilamos datos personales identificables. Todo es anónimo.');
+  const [cookieFooterText, setCookieFooterText] = useState('Al aceptar, reconoces los términos de uso y derechos de autor.');
   const [formData, setFormData] = useState({
     title: '',
     author: 'Julio Cesar Rojas Cala',
@@ -186,14 +200,47 @@ export function AdminPanel() {
     try {
       const { data, error } = await supabase
         .from('site_settings')
-        .select('cookie_title, cookie_message, cookie_accept_text, cookie_reject_text')
-        .single();
+        .select(`
+          cookie_title,
+          cookie_message,
+          cookie_accept_text,
+          cookie_reject_text,
+          cookie_details_button_text,
+          cookie_hide_details_button_text,
+          cookie_usage_title,
+          cookie_usage_text,
+          cookie_ip_title,
+          cookie_ip_intro,
+          cookie_ip_point_1,
+          cookie_ip_point_2,
+          cookie_ip_point_3,
+          cookie_ip_point_4,
+          cookie_ip_point_5,
+          cookie_privacy_title,
+          cookie_privacy_text,
+          cookie_footer_text
+        `)
+        .maybeSingle();
 
       if (!error && data) {
         if (data.cookie_title) setCookieTitle(data.cookie_title);
         if (data.cookie_message) setCookieMessage(data.cookie_message);
         if (data.cookie_accept_text) setCookieAcceptText(data.cookie_accept_text);
         if (data.cookie_reject_text) setCookieRejectText(data.cookie_reject_text);
+        if (data.cookie_details_button_text) setCookieDetailsButtonText(data.cookie_details_button_text);
+        if (data.cookie_hide_details_button_text) setCookieHideDetailsButtonText(data.cookie_hide_details_button_text);
+        if (data.cookie_usage_title) setCookieUsageTitle(data.cookie_usage_title);
+        if (data.cookie_usage_text) setCookieUsageText(data.cookie_usage_text);
+        if (data.cookie_ip_title) setCookieIpTitle(data.cookie_ip_title);
+        if (data.cookie_ip_intro) setCookieIpIntro(data.cookie_ip_intro);
+        if (data.cookie_ip_point_1) setCookieIpPoint1(data.cookie_ip_point_1);
+        if (data.cookie_ip_point_2) setCookieIpPoint2(data.cookie_ip_point_2);
+        if (data.cookie_ip_point_3) setCookieIpPoint3(data.cookie_ip_point_3);
+        if (data.cookie_ip_point_4) setCookieIpPoint4(data.cookie_ip_point_4);
+        if (data.cookie_ip_point_5) setCookieIpPoint5(data.cookie_ip_point_5);
+        if (data.cookie_privacy_title) setCookiePrivacyTitle(data.cookie_privacy_title);
+        if (data.cookie_privacy_text) setCookiePrivacyText(data.cookie_privacy_text);
+        if (data.cookie_footer_text) setCookieFooterText(data.cookie_footer_text);
       }
     } catch (error) {
       console.error('Error fetching site settings:', error);
@@ -266,9 +313,13 @@ export function AdminPanel() {
       const { data: settings, error: fetchError } = await supabase
         .from('site_settings')
         .select('id')
-        .single();
+        .maybeSingle();
 
       if (fetchError) throw fetchError;
+
+      if (!settings) {
+        throw new Error('No se encontró configuración del sitio');
+      }
 
       const { error } = await supabase
         .from('site_settings')
@@ -277,6 +328,20 @@ export function AdminPanel() {
           cookie_message: cookieMessage,
           cookie_accept_text: cookieAcceptText,
           cookie_reject_text: cookieRejectText,
+          cookie_details_button_text: cookieDetailsButtonText,
+          cookie_hide_details_button_text: cookieHideDetailsButtonText,
+          cookie_usage_title: cookieUsageTitle,
+          cookie_usage_text: cookieUsageText,
+          cookie_ip_title: cookieIpTitle,
+          cookie_ip_intro: cookieIpIntro,
+          cookie_ip_point_1: cookieIpPoint1,
+          cookie_ip_point_2: cookieIpPoint2,
+          cookie_ip_point_3: cookieIpPoint3,
+          cookie_ip_point_4: cookieIpPoint4,
+          cookie_ip_point_5: cookieIpPoint5,
+          cookie_privacy_title: cookiePrivacyTitle,
+          cookie_privacy_text: cookiePrivacyText,
+          cookie_footer_text: cookieFooterText,
           updated_at: new Date().toISOString()
         })
         .eq('id', settings.id);
@@ -888,67 +953,248 @@ export function AdminPanel() {
                 Configura el texto que aparece en el banner de cookies del sitio web.
               </p>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Título del Banner
-                  </label>
-                  <input
-                    type="text"
-                    value={cookieTitle}
-                    onChange={(e) => setCookieTitle(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    placeholder="Uso de Cookies"
-                  />
-                </div>
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-800">Banner Principal</h4>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mensaje Principal
-                  </label>
-                  <textarea
-                    value={cookieMessage}
-                    onChange={(e) => setCookieMessage(e.target.value)}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    placeholder="Utilizamos cookies para mejorar tu experiencia..."
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Texto Botón Aceptar
+                      Título del Banner
                     </label>
                     <input
                       type="text"
-                      value={cookieAcceptText}
-                      onChange={(e) => setCookieAcceptText(e.target.value)}
+                      value={cookieTitle}
+                      onChange={(e) => setCookieTitle(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      placeholder="Aceptar"
+                      placeholder="Cookies y Términos"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Texto Botón Rechazar
+                      Mensaje Principal
+                    </label>
+                    <textarea
+                      value={cookieMessage}
+                      onChange={(e) => setCookieMessage(e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      placeholder="Utilizamos cookies para mejorar tu experiencia..."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Botón Ver Detalles
+                      </label>
+                      <input
+                        type="text"
+                        value={cookieDetailsButtonText}
+                        onChange={(e) => setCookieDetailsButtonText(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        placeholder="Ver más detalles"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Botón Ocultar Detalles
+                      </label>
+                      <input
+                        type="text"
+                        value={cookieHideDetailsButtonText}
+                        onChange={(e) => setCookieHideDetailsButtonText(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        placeholder="Ocultar detalles"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-6 space-y-4">
+                  <h4 className="font-semibold text-gray-800">Sección: Uso de Cookies</h4>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Título de Sección
                     </label>
                     <input
                       type="text"
-                      value={cookieRejectText}
-                      onChange={(e) => setCookieRejectText(e.target.value)}
+                      value={cookieUsageTitle}
+                      onChange={(e) => setCookieUsageTitle(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                      placeholder="Rechazar"
+                      placeholder="Uso de Cookies"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Texto Descriptivo
+                    </label>
+                    <textarea
+                      value={cookieUsageText}
+                      onChange={(e) => setCookieUsageText(e.target.value)}
+                      rows={2}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      placeholder="Recopilamos datos anónimos..."
+                    />
+                  </div>
+                </div>
+
+                <div className="border-t pt-6 space-y-4">
+                  <h4 className="font-semibold text-gray-800">Sección: Propiedad Intelectual</h4>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Título de Sección
+                    </label>
+                    <input
+                      type="text"
+                      value={cookieIpTitle}
+                      onChange={(e) => setCookieIpTitle(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      placeholder="Propiedad Intelectual"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Texto de Introducción
+                    </label>
+                    <input
+                      type="text"
+                      value={cookieIpIntro}
+                      onChange={(e) => setCookieIpIntro(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      placeholder="Al usar este sitio, aceptas que:"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Puntos de la Lista
+                    </label>
+
+                    <input
+                      type="text"
+                      value={cookieIpPoint1}
+                      onChange={(e) => setCookieIpPoint1(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      placeholder="Punto 1"
+                    />
+                    <input
+                      type="text"
+                      value={cookieIpPoint2}
+                      onChange={(e) => setCookieIpPoint2(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      placeholder="Punto 2"
+                    />
+                    <input
+                      type="text"
+                      value={cookieIpPoint3}
+                      onChange={(e) => setCookieIpPoint3(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      placeholder="Punto 3"
+                    />
+                    <input
+                      type="text"
+                      value={cookieIpPoint4}
+                      onChange={(e) => setCookieIpPoint4(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      placeholder="Punto 4"
+                    />
+                    <input
+                      type="text"
+                      value={cookieIpPoint5}
+                      onChange={(e) => setCookieIpPoint5(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      placeholder="Punto 5"
+                    />
+                  </div>
+                </div>
+
+                <div className="border-t pt-6 space-y-4">
+                  <h4 className="font-semibold text-gray-800">Sección: Privacidad</h4>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Título de Sección
+                    </label>
+                    <input
+                      type="text"
+                      value={cookiePrivacyTitle}
+                      onChange={(e) => setCookiePrivacyTitle(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      placeholder="Privacidad"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Texto Descriptivo
+                    </label>
+                    <textarea
+                      value={cookiePrivacyText}
+                      onChange={(e) => setCookiePrivacyText(e.target.value)}
+                      rows={2}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      placeholder="No recopilamos datos personales..."
+                    />
+                  </div>
+                </div>
+
+                <div className="border-t pt-6 space-y-4">
+                  <h4 className="font-semibold text-gray-800">Pie del Banner</h4>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Texto antes de los botones
+                    </label>
+                    <input
+                      type="text"
+                      value={cookieFooterText}
+                      onChange={(e) => setCookieFooterText(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      placeholder="Al aceptar, reconoces los términos..."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Texto Botón Aceptar
+                      </label>
+                      <input
+                        type="text"
+                        value={cookieAcceptText}
+                        onChange={(e) => setCookieAcceptText(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        placeholder="Aceptar Todo"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Texto Botón Rechazar
+                      </label>
+                      <input
+                        type="text"
+                        value={cookieRejectText}
+                        onChange={(e) => setCookieRejectText(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                        placeholder="Rechazar"
+                      />
+                    </div>
                   </div>
                 </div>
 
                 <button
                   onClick={saveCookieSettings}
                   disabled={isSaving}
-                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                  className="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 >
-                  <Save className="w-4 h-4" />
+                  <Save className="w-5 h-5" />
                   <span>{isSaving ? 'Guardando...' : 'Guardar Configuración'}</span>
                 </button>
               </div>

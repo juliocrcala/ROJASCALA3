@@ -9,6 +9,20 @@ export const CookieBanner: React.FC = () => {
   const [cookieMessage, setCookieMessage] = useState('Utilizamos cookies para mejorar tu experiencia y analizar el tráfico del sitio.');
   const [cookieAcceptText, setCookieAcceptText] = useState('Aceptar Todo');
   const [cookieRejectText, setCookieRejectText] = useState('Rechazar');
+  const [detailsButtonText, setDetailsButtonText] = useState('Ver más detalles');
+  const [hideDetailsButtonText, setHideDetailsButtonText] = useState('Ocultar detalles');
+  const [usageTitle, setUsageTitle] = useState('Uso de Cookies');
+  const [usageText, setUsageText] = useState('Recopilamos datos anónimos sobre las páginas visitadas para mejorar nuestros contenidos.');
+  const [ipTitle, setIpTitle] = useState('Propiedad Intelectual');
+  const [ipIntro, setIpIntro] = useState('Al usar este sitio, aceptas que:');
+  const [ipPoint1, setIpPoint1] = useState('El contenido es propiedad de sus autores');
+  const [ipPoint2, setIpPoint2] = useState('Los artículos están protegidos por derechos de autor');
+  const [ipPoint3, setIpPoint3] = useState('Debe respetarse y citarse la autoría');
+  const [ipPoint4, setIpPoint4] = useState('El uso comercial sin autorización está prohibido');
+  const [ipPoint5, setIpPoint5] = useState('Puedes compartir enlaces, no copiar contenido');
+  const [privacyTitle, setPrivacyTitle] = useState('Privacidad');
+  const [privacyText, setPrivacyText] = useState('No recopilamos datos personales identificables. Todo es anónimo.');
+  const [footerText, setFooterText] = useState('Al aceptar, reconoces los términos de uso y derechos de autor.');
 
   useEffect(() => {
     const consent = localStorage.getItem('cookieConsent');
@@ -22,14 +36,47 @@ export const CookieBanner: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('site_settings')
-        .select('cookie_title, cookie_message, cookie_accept_text, cookie_reject_text')
-        .single();
+        .select(`
+          cookie_title,
+          cookie_message,
+          cookie_accept_text,
+          cookie_reject_text,
+          cookie_details_button_text,
+          cookie_hide_details_button_text,
+          cookie_usage_title,
+          cookie_usage_text,
+          cookie_ip_title,
+          cookie_ip_intro,
+          cookie_ip_point_1,
+          cookie_ip_point_2,
+          cookie_ip_point_3,
+          cookie_ip_point_4,
+          cookie_ip_point_5,
+          cookie_privacy_title,
+          cookie_privacy_text,
+          cookie_footer_text
+        `)
+        .maybeSingle();
 
       if (!error && data) {
         if (data.cookie_title) setCookieTitle(data.cookie_title);
         if (data.cookie_message) setCookieMessage(data.cookie_message);
         if (data.cookie_accept_text) setCookieAcceptText(data.cookie_accept_text);
         if (data.cookie_reject_text) setCookieRejectText(data.cookie_reject_text);
+        if (data.cookie_details_button_text) setDetailsButtonText(data.cookie_details_button_text);
+        if (data.cookie_hide_details_button_text) setHideDetailsButtonText(data.cookie_hide_details_button_text);
+        if (data.cookie_usage_title) setUsageTitle(data.cookie_usage_title);
+        if (data.cookie_usage_text) setUsageText(data.cookie_usage_text);
+        if (data.cookie_ip_title) setIpTitle(data.cookie_ip_title);
+        if (data.cookie_ip_intro) setIpIntro(data.cookie_ip_intro);
+        if (data.cookie_ip_point_1) setIpPoint1(data.cookie_ip_point_1);
+        if (data.cookie_ip_point_2) setIpPoint2(data.cookie_ip_point_2);
+        if (data.cookie_ip_point_3) setIpPoint3(data.cookie_ip_point_3);
+        if (data.cookie_ip_point_4) setIpPoint4(data.cookie_ip_point_4);
+        if (data.cookie_ip_point_5) setIpPoint5(data.cookie_ip_point_5);
+        if (data.cookie_privacy_title) setPrivacyTitle(data.cookie_privacy_title);
+        if (data.cookie_privacy_text) setPrivacyText(data.cookie_privacy_text);
+        if (data.cookie_footer_text) setFooterText(data.cookie_footer_text);
       }
     } catch (error) {
       console.error('Error fetching cookie settings:', error);
@@ -81,37 +128,37 @@ export const CookieBanner: React.FC = () => {
                 onClick={() => setShowDetails(true)}
                 className="text-red-900 hover:text-red-800 font-medium text-sm underline"
               >
-                Ver más detalles
+                {detailsButtonText}
               </button>
             )}
 
             {showDetails && (
               <div className="bg-gray-50 p-3 rounded-lg space-y-2 text-xs border border-gray-200 max-h-96 overflow-y-auto">
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-1">Uso de Cookies</h4>
+                  <h4 className="font-semibold text-gray-900 mb-1">{usageTitle}</h4>
                   <p className="text-gray-600">
-                    Recopilamos datos anónimos sobre las páginas visitadas para mejorar nuestros contenidos.
+                    {usageText}
                   </p>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-1">Propiedad Intelectual</h4>
+                  <h4 className="font-semibold text-gray-900 mb-1">{ipTitle}</h4>
                   <p className="text-gray-600 mb-1">
-                    Al usar este sitio, aceptas que:
+                    {ipIntro}
                   </p>
                   <ul className="list-disc list-inside space-y-0.5 text-gray-600 ml-1">
-                    <li>El contenido es propiedad de sus autores</li>
-                    <li>Los artículos están protegidos por derechos de autor</li>
-                    <li>Debe respetarse y citarse la autoría</li>
-                    <li>El uso comercial sin autorización está prohibido</li>
-                    <li>Puedes compartir enlaces, no copiar contenido</li>
+                    <li>{ipPoint1}</li>
+                    <li>{ipPoint2}</li>
+                    <li>{ipPoint3}</li>
+                    <li>{ipPoint4}</li>
+                    <li>{ipPoint5}</li>
                   </ul>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-1">Privacidad</h4>
+                  <h4 className="font-semibold text-gray-900 mb-1">{privacyTitle}</h4>
                   <p className="text-gray-600">
-                    No recopilamos datos personales identificables. Todo es anónimo.
+                    {privacyText}
                   </p>
                 </div>
 
@@ -119,14 +166,14 @@ export const CookieBanner: React.FC = () => {
                   onClick={() => setShowDetails(false)}
                   className="text-red-900 hover:text-red-800 font-medium underline"
                 >
-                  Ocultar detalles
+                  {hideDetailsButtonText}
                 </button>
               </div>
             )}
 
             <div className="pt-3 border-t border-gray-200">
               <p className="text-xs text-gray-600 mb-3">
-                Al aceptar, reconoces los términos de uso y derechos de autor.
+                {footerText}
               </p>
 
               <div className="flex flex-col gap-2">
