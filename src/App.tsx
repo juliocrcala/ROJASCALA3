@@ -2441,6 +2441,10 @@ const AppContent = () => {
   const location = useLocation();
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
+  useEffect(() => {
     // Cargar estado inicial desde localStorage
     const savedMode = localStorage.getItem('maintenanceMode');
     setMaintenanceMode(savedMode === 'true');
