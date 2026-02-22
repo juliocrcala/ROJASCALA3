@@ -283,28 +283,23 @@ export function AdminPanel() {
     const newMode = !maintenanceMode;
 
     try {
-      // Obtener el primer registro de site_settings
-      const { data: settings, error: fetchError } = await supabase
-        .from('site_settings')
-        .select('id')
-        .limit(1)
-        .single();
+      // Llamar a la Edge Function segura
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-maintenance`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            'X-Admin-Token': 'admin-authenticated',
+          },
+          body: JSON.stringify({ maintenance_mode: newMode }),
+        }
+      );
 
-      if (fetchError || !settings) {
-        console.error('Error fetching settings:', fetchError);
-        setError('Error al obtener la configuración del sitio');
-        setTimeout(() => setError(null), 5000);
-        return;
-      }
-
-      // Actualizar en la base de datos usando el ID correcto
-      const { error } = await supabase
-        .from('site_settings')
-        .update({ maintenance_mode: newMode })
-        .eq('id', settings.id);
-
-      if (error) {
-        console.error('Error updating maintenance mode:', error);
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error updating maintenance mode:', errorData);
         setError('Error al actualizar el modo mantenimiento en la base de datos');
         setTimeout(() => setError(null), 5000);
         return;
