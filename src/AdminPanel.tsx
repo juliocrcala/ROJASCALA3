@@ -124,12 +124,8 @@ export function AdminPanel() {
     fetchData();
     fetchCategoriesConfig();
     fetchSiteSettings();
-    // Cargar estado de mantenimiento y mensajes desde localStorage
-    const savedMode = localStorage.getItem('maintenanceMode');
-    if (savedMode !== null) {
-      setMaintenanceMode(savedMode === 'true');
-    }
 
+    // Cargar mensajes de mantenimiento desde localStorage (solo los mensajes, no el estado)
     const savedTitle = localStorage.getItem('maintenanceTitle');
     if (savedTitle) setMaintenanceTitle(savedTitle);
 
@@ -201,6 +197,7 @@ export function AdminPanel() {
       const { data, error } = await supabase
         .from('site_settings')
         .select(`
+          maintenance_mode,
           cookie_title,
           cookie_message,
           cookie_accept_text,
@@ -223,6 +220,12 @@ export function AdminPanel() {
         .maybeSingle();
 
       if (!error && data) {
+        // Cargar modo mantenimiento desde la base de datos
+        if (data.maintenance_mode !== undefined) {
+          setMaintenanceMode(data.maintenance_mode);
+          localStorage.setItem('maintenanceMode', String(data.maintenance_mode));
+        }
+
         if (data.cookie_title) setCookieTitle(data.cookie_title);
         if (data.cookie_message) setCookieMessage(data.cookie_message);
         if (data.cookie_accept_text) setCookieAcceptText(data.cookie_accept_text);
@@ -276,24 +279,47 @@ export function AdminPanel() {
     }
   };
 
-  const toggleMaintenanceMode = () => {
+  const toggleMaintenanceMode = async () => {
     const newMode = !maintenanceMode;
-    setMaintenanceMode(newMode);
-    localStorage.setItem('maintenanceMode', String(newMode));
 
-    // Disparar evento para que otras partes de la app se actualicen inmediatamente
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: 'maintenanceMode',
-      newValue: String(newMode),
-      storageArea: localStorage
-    }));
+    try {
+      // Actualizar en la base de datos
+      const { error } = await supabase
+        .from('site_settings')
+        .update({ maintenance_mode: newMode })
+        .eq('id', 1);
 
-    setSuccess(
-      newMode
-        ? 'Modo mantenimiento activado'
-        : 'Modo mantenimiento desactivado'
-    );
-    setTimeout(() => setSuccess(null), 3000);
+      if (error) {
+        console.error('Error updating maintenance mode:', error);
+        setError('Error al actualizar el modo mantenimiento en la base de datos');
+        setTimeout(() => setError(null), 5000);
+        return;
+      }
+
+      // Actualizar estado local
+      setMaintenanceMode(newMode);
+
+      // Sincronizar con localStorage
+      localStorage.setItem('maintenanceMode', String(newMode));
+
+      // Disparar evento para que otras partes de la app se actualicen inmediatamente
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'maintenanceMode',
+        newValue: String(newMode),
+        storageArea: localStorage
+      }));
+
+      setSuccess(
+        newMode
+          ? 'Modo mantenimiento activado'
+          : 'Modo mantenimiento desactivado'
+      );
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      console.error('Error:', err);
+      setError('Error al actualizar el modo mantenimiento');
+      setTimeout(() => setError(null), 5000);
+    }
   };
 
   const saveMaintenanceMessages = () => {

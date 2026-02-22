@@ -2445,10 +2445,36 @@ const AppContent = () => {
   }, [location.pathname]);
 
   useEffect(() => {
-    // Cargar estado inicial desde localStorage
-    const savedMode = localStorage.getItem('maintenanceMode');
-    setMaintenanceMode(savedMode === 'true');
-    setIsLoading(false);
+    // Cargar estado de mantenimiento desde la base de datos
+    const fetchMaintenanceMode = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('site_settings')
+          .select('maintenance_mode')
+          .eq('id', 1)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error fetching maintenance mode:', error);
+          // En caso de error, revisar localStorage como fallback
+          const savedMode = localStorage.getItem('maintenanceMode');
+          setMaintenanceMode(savedMode === 'true');
+        } else if (data) {
+          setMaintenanceMode(data.maintenance_mode || false);
+          // Sincronizar con localStorage para que otras pestañas también se enteren
+          localStorage.setItem('maintenanceMode', String(data.maintenance_mode || false));
+        }
+      } catch (err) {
+        console.error('Error:', err);
+        // En caso de error, revisar localStorage como fallback
+        const savedMode = localStorage.getItem('maintenanceMode');
+        setMaintenanceMode(savedMode === 'true');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMaintenanceMode();
 
     // Listener para detectar cambios en localStorage (cuando se actualiza desde otra pestaña o panel admin)
     const handleStorageChange = (e: StorageEvent) => {
