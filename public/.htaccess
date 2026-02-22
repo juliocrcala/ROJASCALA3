@@ -13,6 +13,15 @@
     Header set Pragma "no-cache"
     Header set Expires "0"
   </FilesMatch>
+
+  # Force no-cache for JS files (includes maintenance check)
+  <FilesMatch "\.(js)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+
+  # Clear Vary header to prevent www/non-www cache differences
+  Header unset Vary
+  Header set Vary "Accept-Encoding"
 </IfModule>
 
 # Disable directory browsing
@@ -21,10 +30,16 @@ Options -Indexes
 # Disable server signature
 ServerSignature Off
 
-# SPA Routing
+# Force WWW to non-WWW (canonical URL)
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+
+  # Redirect www to non-www
+  RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
+  RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
+
+  # SPA Routing
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
