@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Scale, Building2, Trees, FileText, Menu, X, Lightbulb, Briefcase, Zap, Droplets, Home, Book, Gavel, ScrollText, Mail, MapPin, User, Calendar, BookOpen, Linkedin, Instagram, Shield, Users, Globe, Landmark, Car, Plane, Ship, Wifi, Database, Heart, ShoppingCart, Factory, GraduationCap, Stethoscope, Palette, Baby, Accessibility, Mountain, PawPrint as Paw, Trophy, HardHat, Eye, DollarSign, Truck, Fish, Camera, AlertTriangle, Handshake, ExternalLink, Filter, Import as SortAsc, Dessert as SortDesc, Copy, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Scale, Building2, Trees, FileText, Menu, X, Lightbulb, Briefcase, Zap, Droplets, Home, Book, Gavel, ScrollText, Mail, MapPin, User, Calendar, BookOpen, Linkedin, Instagram, Shield, Users, Globe, Landmark, Car, Plane, Ship, Wifi, Database, Heart, ShoppingCart, Factory, GraduationCap, Stethoscope, Palette, Baby, Accessibility, Mountain, PawPrint as Paw, Trophy, HardHat, Eye, DollarSign, Truck, Fish, Camera, AlertTriangle, Handshake, ExternalLink, Filter, Import as SortAsc, Dessert as SortDesc, Copy, CheckCircle, ChevronLeft, ChevronRight, Facebook } from 'lucide-react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useParams } from 'react-router-dom';
 import { format, parse, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSameMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -2543,6 +2543,49 @@ const AppContent = () => {
               <ul className="space-y-2 text-gray-400">
                 <li>Email: julio.cesar@rojascala.org</li>
               </ul>
+              <div className="mt-4">
+                <h5 className="text-sm font-semibold text-gray-300 mb-3">Síguenos en:</h5>
+                <div className="flex space-x-4">
+                  <a
+                    href="https://x.com/rojascala_peru"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-400 hover:text-white transition-colors"
+                    aria-label="Twitter/X"
+                  >
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                  </a>
+                  <a
+                    href="https://www.instagram.com/rojascala_peru/?hl=es-la"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-400 hover:text-white transition-colors"
+                    aria-label="Instagram"
+                  >
+                    <Instagram className="w-6 h-6" />
+                  </a>
+                  <a
+                    href="https://www.facebook.com/profile.php?id=61588226957859"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-400 hover:text-white transition-colors"
+                    aria-label="Facebook"
+                  >
+                    <Facebook className="w-6 h-6" />
+                  </a>
+                  <a
+                    href="https://www.linkedin.com/company/rc-rojas-cala"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-400 hover:text-white transition-colors"
+                    aria-label="LinkedIn"
+                  >
+                    <Linkedin className="w-6 h-6" />
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
