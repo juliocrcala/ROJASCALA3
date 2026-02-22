@@ -47,11 +47,16 @@ export function FloatingHelpWidget() {
             status: 'pending'
           }
         ])
-        .select()
-        .single();
+        .select();
 
       if (supabaseError) {
         console.error('Error saving consultation:', supabaseError);
+        console.error('Error details:', JSON.stringify(supabaseError, null, 2));
+        throw new Error('Error al enviar la consulta. Por favor intenta nuevamente.');
+      }
+
+      if (!data || data.length === 0) {
+        console.error('No data returned from insert');
         throw new Error('Error al enviar la consulta. Por favor intenta nuevamente.');
       }
 
