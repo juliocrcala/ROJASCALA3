@@ -283,11 +283,25 @@ export function AdminPanel() {
     const newMode = !maintenanceMode;
 
     try {
-      // Actualizar en la base de datos
+      // Obtener el primer registro de site_settings
+      const { data: settings, error: fetchError } = await supabase
+        .from('site_settings')
+        .select('id')
+        .limit(1)
+        .single();
+
+      if (fetchError || !settings) {
+        console.error('Error fetching settings:', fetchError);
+        setError('Error al obtener la configuración del sitio');
+        setTimeout(() => setError(null), 5000);
+        return;
+      }
+
+      // Actualizar en la base de datos usando el ID correcto
       const { error } = await supabase
         .from('site_settings')
         .update({ maintenance_mode: newMode })
-        .eq('id', 1);
+        .eq('id', settings.id);
 
       if (error) {
         console.error('Error updating maintenance mode:', error);
