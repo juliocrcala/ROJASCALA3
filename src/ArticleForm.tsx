@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from './supabase';
+import { RichTextEditor } from './RichTextEditor';
 
 interface ArticleFormProps {
   onSuccess?: () => void;
@@ -110,13 +111,11 @@ export function ArticleForm({ onSuccess }: ArticleFormProps) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Análisis completo</label>
-        <textarea
-          required
+        <label className="block text-sm font-medium text-gray-700 mb-2">Análisis completo</label>
+        <RichTextEditor
           value={formData.content}
-          onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-          rows={6}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+          onChange={(content) => setFormData({ ...formData, content })}
+          placeholder="Escribe el análisis completo. Puedes usar formato con negrita, cursiva, subtítulos y listas..."
         />
       </div>
 

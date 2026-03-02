@@ -12,6 +12,7 @@ import { NewsletterSection } from './NewsletterSection';
 import { ShareButtons } from './ShareButtons';
 import { LoadingSpinner } from './LoadingSpinner';
 import { CookieBanner } from './CookieBanner';
+import { MarkdownRenderer } from './MarkdownRenderer';
 import { useAnalytics } from './useAnalytics';
 import SecureLogin from './SecureLogin';
 import ProtectedRoute from './ProtectedRoute';
@@ -410,9 +411,7 @@ const ArticleDetail = () => {
 
         {/* Contenido principal */}
         <main className="prose prose-lg max-w-none">
-          <div className="text-gray-800 leading-relaxed whitespace-pre-wrap text-justify">
-            {article.content}
-          </div>
+          <MarkdownRenderer content={article.content} />
         </main>
 
         {/* Información del autor */}
