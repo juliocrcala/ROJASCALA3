@@ -499,7 +499,9 @@ export function AdminPanel() {
       } else if (activeTab === 'specials') {
         const specialData = {
           ...baseData,
-          image_url: formData.image_url.trim() || null
+          image_url: formData.image_url.trim() || null,
+          attachment_url: formData.attachment_url.trim() || null,
+          attachment_label: formData.attachment_url.trim() ? (formData.attachment_label.trim() || 'Ver Anexo') : null
         };
 
         if (editingId) {
