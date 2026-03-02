@@ -46,6 +46,8 @@ interface SpecialArticle {
   author_contact_id?: string[] | null;
   author_photo_url?: string[] | null;
   is_hidden?: boolean;
+  attachment_url?: string;
+  attachment_label?: string;
   created_at: string;
 }
 
@@ -381,6 +383,18 @@ const ArticleDetail = () => {
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
                 Ver norma oficial
+              </a>
+            )}
+
+            {type === 'special' && 'attachment_url' in article && article.attachment_url && (
+              <a
+                href={article.attachment_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                {article.attachment_label || 'Ver Anexo'}
               </a>
             )}
           </div>
@@ -815,21 +829,35 @@ const SpecialsPage = () => {
               </h3>
               
               <p className="text-gray-600 mb-4 line-clamp-3 text-justify">{article.summary}</p>
-              
-              <div className="flex items-center justify-between">
-                <div className="text-sm">
-                  <AuthorLink 
-                    author={article.author} 
-                    authorContactId={article.author_contact_id} 
-                    contacts={contacts} 
-                  />
+
+              <div className="flex flex-col space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm">
+                    <AuthorLink
+                      author={article.author}
+                      authorContactId={article.author_contact_id}
+                      contacts={contacts}
+                    />
+                  </div>
+                  <Link
+                    to={`/articulo/special/${article.id}`}
+                    className="inline-flex items-center text-red-900 hover:text-red-700 font-medium transition-colors"
+                  >
+                    Leer más <BookOpen className="w-4 h-4 ml-1" />
+                  </Link>
                 </div>
-                <Link 
-                  to={`/articulo/special/${article.id}`}
-                  className="inline-flex items-center text-red-900 hover:text-red-700 font-medium transition-colors"
-                >
-                  Leer más <BookOpen className="w-4 h-4 ml-1" />
-                </Link>
+
+                {article.attachment_url && (
+                  <a
+                    href={article.attachment_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    {article.attachment_label || 'Ver Anexo'}
+                  </a>
+                )}
               </div>
             </div>
           </article>
@@ -2043,7 +2071,7 @@ const CategoryFilterView = () => {
                         contacts={contacts}
                       />
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex flex-col items-end space-y-2">
                       {article.type === 'normal' && 'official_link' in article && article.official_link && (
                         <a
                           href={article.official_link}
@@ -2052,6 +2080,17 @@ const CategoryFilterView = () => {
                           className="text-blue-600 hover:text-blue-800 text-sm"
                         >
                           Ver oficial
+                        </a>
+                      )}
+                      {article.type === 'special' && 'attachment_url' in article && article.attachment_url && (
+                        <a
+                          href={article.attachment_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm inline-flex items-center"
+                        >
+                          <ExternalLink className="w-3 h-3 mr-1" />
+                          {article.attachment_label || 'Ver Anexo'}
                         </a>
                       )}
                       <Link
@@ -2379,7 +2418,7 @@ const HomePage = () => {
                       contacts={contacts} 
                     />
                   </div>
-                  <div className="flex space-x-2">
+                  <div className="flex flex-col items-end space-y-2">
                     {article.type === 'normal' && 'official_link' in article && article.official_link && (
                       <a
                         href={article.official_link}
@@ -2390,7 +2429,18 @@ const HomePage = () => {
                         Ver oficial
                       </a>
                     )}
-                    <Link 
+                    {article.type === 'special' && 'attachment_url' in article && article.attachment_url && (
+                      <a
+                        href={article.attachment_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 text-sm inline-flex items-center"
+                      >
+                        <ExternalLink className="w-3 h-3 mr-1" />
+                        {article.attachment_label || 'Ver Anexo'}
+                      </a>
+                    )}
+                    <Link
                       to={`/articulo/${article.type}/${article.id}`}
                       className="text-red-900 hover:text-red-700 font-medium"
                     >

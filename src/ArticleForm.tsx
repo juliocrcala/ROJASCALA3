@@ -14,7 +14,9 @@ export function ArticleForm({ onSuccess }: ArticleFormProps) {
     published_date: new Date().toISOString().split('T')[0],
     category: '',
     content: '',
-    official_link: ''
+    official_link: '',
+    attachment_url: '',
+    attachment_label: 'Ver Anexo'
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,7 +36,9 @@ export function ArticleForm({ onSuccess }: ArticleFormProps) {
         published_date: new Date().toISOString().split('T')[0],
         category: '',
         content: '',
-        official_link: ''
+        official_link: '',
+        attachment_url: '',
+        attachment_label: 'Ver Anexo'
       });
 
       if (onSuccess) onSuccess();
@@ -127,6 +131,38 @@ export function ArticleForm({ onSuccess }: ArticleFormProps) {
           onChange={(e) => setFormData({ ...formData, official_link: e.target.value })}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
         />
+      </div>
+
+      <div className="border-t pt-4">
+        <h3 className="text-sm font-medium text-gray-900 mb-3">Anexo o Documento Adicional (Opcional)</h3>
+        <p className="text-xs text-gray-500 mb-3">Solo para artículos especiales que requieren adjuntar un enlace externo o documento</p>
+
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">URL del Anexo</label>
+            <input
+              type="url"
+              value={formData.attachment_url}
+              onChange={(e) => setFormData({ ...formData, attachment_url: e.target.value })}
+              placeholder="https://ejemplo.com/documento.pdf"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+            />
+          </div>
+
+          {formData.attachment_url && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Texto del botón</label>
+              <input
+                type="text"
+                value={formData.attachment_label}
+                onChange={(e) => setFormData({ ...formData, attachment_label: e.target.value })}
+                placeholder="Ver Anexo"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+              />
+              <p className="mt-1 text-xs text-gray-500">Por defecto: "Ver Anexo"</p>
+            </div>
+          )}
+        </div>
       </div>
 
       <button

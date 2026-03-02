@@ -118,7 +118,9 @@ export function AdminPanel() {
     summary: '',
     official_link: '',
     image_url: '',
-    is_hidden: false
+    is_hidden: false,
+    attachment_url: '',
+    attachment_label: 'Ver Anexo'
   });
 
   useEffect(() => {
@@ -545,7 +547,9 @@ export function AdminPanel() {
       summary: '',
       official_link: '',
       image_url: '',
-      is_hidden: false
+      is_hidden: false,
+      attachment_url: '',
+      attachment_label: 'Ver Anexo'
     });
     setShowForm(false);
     setEditingId(null);
@@ -566,7 +570,9 @@ export function AdminPanel() {
       summary: item.summary || '',
       official_link: 'official_link' in item ? item.official_link || '' : '',
       image_url: 'image_url' in item ? item.image_url || '' : '',
-      is_hidden: item.is_hidden || false
+      is_hidden: item.is_hidden || false,
+      attachment_url: 'attachment_url' in item ? item.attachment_url || '' : '',
+      attachment_label: 'attachment_label' in item ? item.attachment_label || 'Ver Anexo' : 'Ver Anexo'
     });
     setEditingId(item.id);
     setShowForm(true);
@@ -1425,6 +1431,40 @@ export function AdminPanel() {
                       <p className="text-xs text-gray-500 mt-1">
                         💡 Puedes usar fotos de Pexels como: https://images.pexels.com/photos/1546168/pexels-photo-1546168.jpeg
                       </p>
+                    </div>
+                  )}
+
+                  {activeTab === 'specials' && (
+                    <div className="border-t pt-4">
+                      <h3 className="text-sm font-medium text-gray-900 mb-3">Anexo o Documento Adicional (Opcional)</h3>
+                      <p className="text-xs text-gray-500 mb-3">Solo para artículos especiales que requieren adjuntar un enlace externo o documento</p>
+
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">URL del Anexo</label>
+                          <input
+                            type="url"
+                            value={formData.attachment_url}
+                            onChange={(e) => setFormData({ ...formData, attachment_url: e.target.value })}
+                            placeholder="https://ejemplo.com/documento.pdf"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                          />
+                        </div>
+
+                        {formData.attachment_url && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Texto del botón</label>
+                            <input
+                              type="text"
+                              value={formData.attachment_label}
+                              onChange={(e) => setFormData({ ...formData, attachment_label: e.target.value })}
+                              placeholder="Ver Anexo"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Por defecto: "Ver Anexo"</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
 
