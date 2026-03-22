@@ -58,8 +58,8 @@ export function MarkdownRenderer({ content, className = '' }: MarkdownRendererPr
 
     html = processedLines.join('\n');
 
-    html = html.replace(/\n\n/g, '</p><p class="mb-4 text-gray-700 leading-relaxed">');
-    html = '<p class="mb-4 text-gray-700 leading-relaxed">' + html + '</p>';
+    html = html.replace(/\n\n/g, '</p><p class="mb-4 text-gray-700 leading-relaxed text-justify">');
+    html = '<p class="mb-4 text-gray-700 leading-relaxed text-justify">' + html + '</p>';
 
     return html;
   };
