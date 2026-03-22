@@ -58,15 +58,16 @@ export function MarkdownRenderer({ content, className = '' }: MarkdownRendererPr
 
     html = processedLines.join('\n');
 
-    html = html.replace(/\n\n/g, '</p><p class="mb-4 text-gray-700 leading-relaxed text-justify">');
-    html = '<p class="mb-4 text-gray-700 leading-relaxed text-justify">' + html + '</p>';
+    html = html.replace(/\n\n/g, '</p><p class="mb-4 text-gray-700 leading-relaxed text-justify break-words">');
+    html = '<p class="mb-4 text-gray-700 leading-relaxed text-justify break-words">' + html + '</p>';
 
     return html;
   };
 
   return (
     <div
-      className={`prose max-w-none ${className}`}
+      className={`prose max-w-none overflow-hidden ${className}`}
+      style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
       dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
     />
   );
