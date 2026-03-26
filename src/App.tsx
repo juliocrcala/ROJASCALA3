@@ -2174,7 +2174,7 @@ const HomePage = () => {
       .select('*')
       .eq('is_hidden', false)
       .order('published_date', { ascending: false })
-      .limit(6);
+      .limit(12);
 
     console.log('HomePage: Articles response:', { data, error });
     if (error) throw error;
