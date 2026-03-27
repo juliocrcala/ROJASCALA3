@@ -489,12 +489,17 @@ const ArticleDetail = () => {
 };
 
 const SpecialsPage = () => {
+  const { t } = useLanguage();
   const [specialArticles, setSpecialArticles] = useState<SpecialArticle[]>([]);
   const [filteredArticles, setFilteredArticles] = useState<SpecialArticle[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
+  const translatedSpecialArticles = useTranslatedArticles(specialArticles);
+  const translatedContacts = useTranslatedContacts(contacts);
+  const translatedCategories = useTranslatedCategories(categories);
+
   // Estados para el buscador y filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todas');
@@ -509,7 +514,7 @@ const SpecialsPage = () => {
 
   useEffect(() => {
     filterAndSortArticles();
-  }, [specialArticles, searchTerm, selectedCategory, selectedAuthor, sortBy, sortOrder]);
+  }, [translatedSpecialArticles, searchTerm, selectedCategory, selectedAuthor, sortBy, sortOrder]);
 
   const fetchData = async () => {
     try {
@@ -1228,12 +1233,18 @@ const ContactPage = () => {
 };
 
 const CategoriesPage = () => {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [articles, setArticles] = useState<Article[]>([]);
   const [specialArticles, setSpecialArticles] = useState<SpecialArticle[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [categories, setCategories] = useState<{ name: string; icon: React.ReactNode }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const translatedArticles = useTranslatedArticles(articles);
+  const translatedSpecialArticles = useTranslatedArticles(specialArticles);
+  const translatedContacts = useTranslatedContacts(contacts);
+  const translatedCategoryNames = useTranslatedCategories(categories.map(c => c.name));
 
   useEffect(() => {
     fetchData();
@@ -1400,11 +1411,16 @@ const CategoriesPage = () => {
 };
 
 const DocumentTypesPage = () => {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [articles, setArticles] = useState<Article[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [documentTypes, setDocumentTypes] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const translatedArticles = useTranslatedArticles(articles);
+  const translatedContacts = useTranslatedContacts(contacts);
+  const translatedDocumentTypes = useTranslatedCategories(documentTypes);
 
   useEffect(() => {
     fetchData();
@@ -1550,11 +1566,15 @@ const DocumentTypesPage = () => {
 };
 
 const CalendarPage = () => {
+  const { t } = useLanguage();
   const today = new Date();
   const [currentDate, setCurrentDate] = useState(today);
   const [selectedDate, setSelectedDate] = useState(today);
   const [articles, setArticles] = useState<Article[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
+
+  const translatedArticles = useTranslatedArticles(articles);
+  const translatedContacts = useTranslatedContacts(contacts);
 
   useEffect(() => {
     fetchData();
@@ -1728,11 +1748,15 @@ const CalendarPage = () => {
 };
 
 const DocumentTypeFilterView = () => {
+  const { t } = useLanguage();
   const { typeName } = useParams<{ typeName: string }>();
   const [articles, setArticles] = useState<Article[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [displayCount, setDisplayCount] = useState(8);
+
+  const translatedArticles = useTranslatedArticles(articles);
+  const translatedContacts = useTranslatedContacts(contacts);
 
   const decodedTypeName = typeName ? decodeURIComponent(typeName) : '';
 
@@ -1912,12 +1936,17 @@ const DocumentTypeFilterView = () => {
 };
 
 const CategoryFilterView = () => {
+  const { t } = useLanguage();
   const { categoryName } = useParams<{ categoryName: string }>();
   const [articles, setArticles] = useState<Article[]>([]);
   const [specialArticles, setSpecialArticles] = useState<SpecialArticle[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [displayCount, setDisplayCount] = useState(8);
+
+  const translatedArticles = useTranslatedArticles(articles);
+  const translatedSpecialArticles = useTranslatedArticles(specialArticles);
+  const translatedContacts = useTranslatedContacts(contacts);
 
   const decodedCategoryName = categoryName ? decodeURIComponent(categoryName) : '';
 
