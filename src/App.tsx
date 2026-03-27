@@ -16,6 +16,8 @@ import { MarkdownRenderer } from './MarkdownRenderer';
 import { useAnalytics } from './useAnalytics';
 import SecureLogin from './SecureLogin';
 import ProtectedRoute from './ProtectedRoute';
+import { useLanguage } from './LanguageContext';
+import LanguageSelector from './LanguageSelector';
 
 
 interface Article {
@@ -189,7 +191,8 @@ const RCLogo = () => (
 
 const Header = ({ isMenuOpen, setIsMenuOpen }) => {
   const location = useLocation();
-  
+  const { t } = useLanguage();
+
   return (
     <header className="bg-red-900 text-white">
       <div className="container mx-auto px-4">
@@ -198,17 +201,17 @@ const Header = ({ isMenuOpen, setIsMenuOpen }) => {
             <RCLogo />
             <h1 className="text-4xl" style={{ fontFamily: 'Brush Script MT, cursive' }}>Rojas Cala</h1>
           </Link>
-          
+
           <nav className="hidden md:flex items-center space-x-6">
-            <Link to="/" className={`hover:text-red-200 ${location.pathname === '/' ? 'text-red-200' : ''}`}>Inicio</Link>
-            <Link to="/normas" className={`hover:text-red-200 ${location.pathname === '/normas' ? 'text-red-200' : ''}`}>Normas</Link>
-            <Link to="/fechas" className={`hover:text-red-200 ${location.pathname === '/fechas' ? 'text-red-200' : ''}`}>Fechas</Link>
-            <Link to="/categorias" className={`hover:text-red-200 ${location.pathname === '/categorias' ? 'text-red-200' : ''}`}>Categorías</Link>
-            <Link to="/especiales" className={`hover:text-red-200 ${location.pathname === '/especiales' ? 'text-red-200' : ''}`}>Especiales</Link>
-            <Link to="/contacto" className={`hover:text-red-200 ${location.pathname === '/contacto' ? 'text-red-200' : ''}`}>Contacto</Link>
+            <Link to="/" className={`hover:text-red-200 ${location.pathname === '/' ? 'text-red-200' : ''}`}>{t('nav_home')}</Link>
+            <Link to="/normas" className={`hover:text-red-200 ${location.pathname === '/normas' ? 'text-red-200' : ''}`}>{t('nav_norms')}</Link>
+            <Link to="/fechas" className={`hover:text-red-200 ${location.pathname === '/fechas' ? 'text-red-200' : ''}`}>{t('nav_dates')}</Link>
+            <Link to="/categorias" className={`hover:text-red-200 ${location.pathname === '/categorias' ? 'text-red-200' : ''}`}>{t('nav_categories')}</Link>
+            <Link to="/especiales" className={`hover:text-red-200 ${location.pathname === '/especiales' ? 'text-red-200' : ''}`}>{t('nav_special')}</Link>
+            <Link to="/contacto" className={`hover:text-red-200 ${location.pathname === '/contacto' ? 'text-red-200' : ''}`}>{t('nav_contact')}</Link>
           </nav>
-          
-          <button 
+
+          <button
             className="md:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
@@ -221,18 +224,19 @@ const Header = ({ isMenuOpen, setIsMenuOpen }) => {
 };
 
 const MobileMenu = ({ isMenuOpen }) => {
+  const { t } = useLanguage();
   if (!isMenuOpen) return null;
 
   return (
     <div className="md:hidden bg-red-800 text-white">
       <div className="container mx-auto px-4 py-2">
         <nav className="flex flex-col space-y-2">
-          <Link to="/" className="py-2 hover:text-red-200">Inicio</Link>
-          <Link to="/normas" className="py-2 hover:text-red-200">Normas</Link>
-          <Link to="/fechas" className="py-2 hover:text-red-200">Fechas</Link>
-          <Link to="/categorias" className="py-2 hover:text-red-200">Categorías</Link>
-          <Link to="/especiales" className="py-2 hover:text-red-200">Especiales</Link>
-          <Link to="/contacto" className="py-2 hover:text-red-200">Contacto</Link>
+          <Link to="/" className="py-2 hover:text-red-200">{t('nav_home')}</Link>
+          <Link to="/normas" className="py-2 hover:text-red-200">{t('nav_norms')}</Link>
+          <Link to="/fechas" className="py-2 hover:text-red-200">{t('nav_dates')}</Link>
+          <Link to="/categorias" className="py-2 hover:text-red-200">{t('nav_categories')}</Link>
+          <Link to="/especiales" className="py-2 hover:text-red-200">{t('nav_special')}</Link>
+          <Link to="/contacto" className="py-2 hover:text-red-200">{t('nav_contact')}</Link>
         </nav>
       </div>
     </div>
@@ -843,7 +847,7 @@ const SpecialsPage = () => {
                     to={`/articulo/special/${article.id}`}
                     className="inline-flex items-center text-red-900 hover:text-red-700 font-medium transition-colors"
                   >
-                    Leer más <BookOpen className="w-4 h-4 ml-1" />
+                    {t('read_more')} <BookOpen className="w-4 h-4 ml-1" />
                   </Link>
                 </div>
 
@@ -855,7 +859,7 @@ const SpecialsPage = () => {
                     className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <ExternalLink className="w-4 h-4 mr-2" />
-                    {article.attachment_label || 'Ver Anexo'}
+                    {article.attachment_label || t('view_attachment')}
                   </a>
                 )}
               </div>
@@ -1697,7 +1701,7 @@ const CalendarPage = () => {
                         to={`/articulo/normal/${article.id}`}
                         className="text-red-900 hover:text-red-700 font-medium"
                       >
-                        Leer más →
+                        {t('read_more')} →
                       </Link>
                       {article.official_link && (
                         <a
@@ -1867,7 +1871,7 @@ const DocumentTypeFilterView = () => {
                         to={`/articulo/${article.type}/${article.id}`}
                         className="text-red-900 hover:text-red-700 font-medium"
                       >
-                        Leer más →
+                        {t('read_more')} →
                       </Link>
                     </div>
                   </div>
@@ -2038,7 +2042,7 @@ const CategoryFilterView = () => {
                         ? 'bg-purple-100 text-purple-900'
                         : 'bg-red-100 text-red-900'
                     }`}>
-                      {article.type === 'normal' ? article.document_type : 'Artículo Especial'}
+                      {article.type === 'normal' ? article.document_type : t('special_article_badge')}
                     </span>
                     <span className="text-sm text-gray-500">{formatDateSafe(article.published_date)}</span>
                   </div>
@@ -2090,14 +2094,14 @@ const CategoryFilterView = () => {
                           className="text-blue-600 hover:text-blue-800 text-sm inline-flex items-center"
                         >
                           <ExternalLink className="w-3 h-3 mr-1" />
-                          {article.attachment_label || 'Ver Anexo'}
+                          {article.attachment_label || t('view_attachment')}
                         </a>
                       )}
                       <Link
                         to={`/articulo/${article.type}/${article.id}`}
                         className="text-red-900 hover:text-red-700 font-medium"
                       >
-                        Leer más →
+                        {t('read_more')} →
                       </Link>
                     </div>
                   </div>
@@ -2138,6 +2142,7 @@ const CategoryFilterView = () => {
 };
 
 const HomePage = () => {
+  const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [selectedType, setSelectedType] = useState("Todos");
   const [articles, setArticles] = useState<Article[]>([]);
@@ -2302,7 +2307,7 @@ const HomePage = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="grid md:grid-cols-2 gap-4 mb-8">
           <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Categorías</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('categories_title')}</h3>
             <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto">
               <button
                 onClick={() => setSelectedCategory("Todos")}
@@ -2312,7 +2317,7 @@ const HomePage = () => {
                     : "bg-gray-100 hover:bg-gray-200"
                 }`}
               >
-                Todos
+                {t('all_filter')}
               </button>
               {categories.map((category) => (
                 <button
@@ -2332,7 +2337,7 @@ const HomePage = () => {
           </div>
 
           <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Tipo de Norma</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('document_type_title')}</h3>
             <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto">
               <button
                 onClick={() => setSelectedType("Todos")}
@@ -2342,7 +2347,7 @@ const HomePage = () => {
                     : "bg-gray-100 hover:bg-gray-200"
                 }`}
               >
-                Todos
+                {t('all_filter')}
               </button>
               <button
                 onClick={() => setSelectedType("Artículo Especial")}
@@ -2353,7 +2358,7 @@ const HomePage = () => {
                 }`}
               >
                 <BookOpen className="w-5 h-5" />
-                <span className="text-sm">Artículo Especial</span>
+                <span className="text-sm">{t('special_article_badge')}</span>
               </button>
               {documentTypes.map((type) => (
                 <button
@@ -2390,7 +2395,7 @@ const HomePage = () => {
                       ? 'bg-purple-100 text-purple-900' 
                       : 'bg-red-100 text-red-900'
                   }`}>
-                    {article.type === 'normal' ? article.document_type : 'Artículo Especial'}
+                    {article.type === 'normal' ? article.document_type : t('special_article_badge')}
                   </span>
                   <span className="text-sm text-gray-500">{formatDateSafe(article.published_date)}</span>
                 </div>
@@ -2437,14 +2442,14 @@ const HomePage = () => {
                         className="text-blue-600 hover:text-blue-800 text-sm inline-flex items-center"
                       >
                         <ExternalLink className="w-3 h-3 mr-1" />
-                        {article.attachment_label || 'Ver Anexo'}
+                        {article.attachment_label || t('view_attachment')}
                       </a>
                     )}
                     <Link
                       to={`/articulo/${article.type}/${article.id}`}
                       className="text-red-900 hover:text-red-700 font-medium"
                     >
-                      Leer más →
+                      {t('read_more')} →
                     </Link>
                   </div>
                 </div>
@@ -2484,6 +2489,7 @@ const HomePage = () => {
 };
 
 const AppContent = () => {
+  const { t } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -2589,11 +2595,11 @@ const AppContent = () => {
                 <h4 className="text-xl italic" style={{ fontFamily: 'Brush Script MT, cursive' }}>Rojas Cala</h4>
               </div>
               <p className="text-gray-400">
-                Manteniéndote actualizado con las últimas normas legales y regulaciones.
+                {t('footer_tagline')}
               </p>
             </div>
             <div>
-              <h4 className="text-xl font-bold mb-4">Enlaces Rápidos</h4>
+              <h4 className="text-xl font-bold mb-4">{t('footer_quick_links')}</h4>
               <ul className="space-y-2">
                 <li>
                   <Link
@@ -2603,23 +2609,23 @@ const AppContent = () => {
                       localStorage.removeItem('cookieConsent');
                     }}
                   >
-                    Inicio
+                    {t('nav_home')}
                   </Link>
                 </li>
-                <li><Link to="/normas" className="text-gray-400 hover:text-white">Normas</Link></li>
-                <li><Link to="/fechas" className="text-gray-400 hover:text-white">Fechas</Link></li>
-                <li><Link to="/categorias" className="text-gray-400 hover:text-white">Categorías</Link></li>
-                <li><Link to="/especiales" className="text-gray-400 hover:text-white">Especiales</Link></li>
-                <li><Link to="/contacto" className="text-gray-400 hover:text-white">Contacto</Link></li>
+                <li><Link to="/normas" className="text-gray-400 hover:text-white">{t('nav_norms')}</Link></li>
+                <li><Link to="/fechas" className="text-gray-400 hover:text-white">{t('nav_dates')}</Link></li>
+                <li><Link to="/categorias" className="text-gray-400 hover:text-white">{t('nav_categories')}</Link></li>
+                <li><Link to="/especiales" className="text-gray-400 hover:text-white">{t('nav_special')}</Link></li>
+                <li><Link to="/contacto" className="text-gray-400 hover:text-white">{t('nav_contact')}</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-xl font-bold mb-4">Contacto</h4>
+              <h4 className="text-xl font-bold mb-4">{t('footer_contact')}</h4>
               <ul className="space-y-2 text-gray-400">
                 <li>Email: julio.cesar@rojascala.org</li>
               </ul>
               <div className="mt-4">
-                <h5 className="text-sm font-semibold text-gray-300 mb-3">Síguenos en:</h5>
+                <h5 className="text-sm font-semibold text-gray-300 mb-3">{t('follow_us')}:</h5>
                 <div className="flex space-x-4">
                   <a
                     href="https://x.com/rojascala_peru"
@@ -2661,6 +2667,7 @@ const AppContent = () => {
                   </a>
                 </div>
               </div>
+              <LanguageSelector />
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
