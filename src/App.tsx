@@ -18,6 +18,7 @@ import SecureLogin from './SecureLogin';
 import ProtectedRoute from './ProtectedRoute';
 import { useLanguage } from './LanguageContext';
 import LanguageSelector from './LanguageSelector';
+import { useTranslatedArticles, useTranslatedCategories, useTranslatedContacts, useTranslatedText } from './useTranslatedContent';
 
 
 interface Article {
@@ -569,7 +570,7 @@ const SpecialsPage = () => {
   };
 
   const filterAndSortArticles = () => {
-    let filtered = [...specialArticles];
+    let filtered = [...translatedSpecialArticles];
 
     // Filtrar por término de búsqueda
     if (searchTerm.trim()) {
@@ -635,7 +636,7 @@ const SpecialsPage = () => {
 
   // Obtener autores únicos
   const getUniqueAuthors = () => {
-    const allAuthors = specialArticles.map(article => {
+    const allAuthors = translatedSpecialArticles.map(article => {
       return Array.isArray(article.author) ? article.author[0] : article.author;
     }).filter(Boolean);
     return [...new Set(allAuthors)].sort();
@@ -1329,13 +1330,13 @@ const CategoriesPage = () => {
   );
 
   const getArticlesByCategory = (categoryName: string) => {
-    const normalArticles = articles.filter(article => 
-      Array.isArray(article.category) 
+    const normalArticles = translatedArticles.filter(article =>
+      Array.isArray(article.category)
         ? article.category.includes(categoryName)
         : article.category === categoryName
     );
-    const specials = specialArticles.filter(article => 
-      Array.isArray(article.category) 
+    const specials = translatedSpecialArticles.filter(article =>
+      Array.isArray(article.category)
         ? article.category.includes(categoryName)
         : article.category === categoryName
     );
@@ -1494,7 +1495,7 @@ const DocumentTypesPage = () => {
   );
 
   const getArticlesByType = (typeName: string) => {
-    return articles.filter(article => article.document_type === typeName);
+    return translatedArticles.filter(article => article.document_type === typeName);
   };
 
   if (isLoading) {
@@ -1614,8 +1615,8 @@ const CalendarPage = () => {
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
   const filteredArticles = selectedDate
-    ? articles.filter(article => 
-        format(parse(article.published_date, 'yyyy-MM-dd', new Date()), 'yyyy-MM-dd') === 
+    ? translatedArticles.filter(article =>
+        format(parse(article.published_date, 'yyyy-MM-dd', new Date()), 'yyyy-MM-dd') ===
         format(selectedDate, 'yyyy-MM-dd')
       )
     : [];
@@ -1799,7 +1800,7 @@ const DocumentTypeFilterView = () => {
     setContacts(data || []);
   };
 
-  const filteredArticles = articles.map(article => ({ ...article, type: 'normal' as const }));
+  const filteredArticles = translatedArticles.map(article => ({ ...article, type: 'normal' as const }));
   const displayedArticles = filteredArticles.slice(0, displayCount);
   const hasMore = filteredArticles.length > displayCount;
   const canShowLess = displayCount > 8;
@@ -2000,11 +2001,11 @@ const CategoryFilterView = () => {
   };
 
   const getFilteredArticles = () => {
-    const normalArticlesWithType = articles
+    const normalArticlesWithType = translatedArticles
       .filter(article => article.category && article.category.includes(decodedCategoryName))
       .map(article => ({ ...article, type: 'normal' as const }));
 
-    const specialArticlesWithType = specialArticles
+    const specialArticlesWithType = translatedSpecialArticles
       .filter(article => article.category && article.category.includes(decodedCategoryName))
       .map(article => ({ ...article, type: 'special' as const, document_type: 'Artículo Especial' }));
 
@@ -2181,6 +2182,12 @@ const HomePage = () => {
   const [documentTypes, setDocumentTypes] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const translatedArticles = useTranslatedArticles(articles);
+  const translatedSpecialArticles = useTranslatedArticles(specialArticles);
+  const translatedContacts = useTranslatedContacts(contacts);
+  const translatedCategoryNames = useTranslatedCategories(categories.map(c => c.name));
+  const translatedDocumentTypes = useTranslatedCategories(documentTypes);
+
   useAnalytics('Página Principal');
 
   useEffect(() => {
@@ -2296,8 +2303,8 @@ const HomePage = () => {
 
   // Combinar artículos normales y especiales, ordenados por fecha
   const allArticles = [
-    ...articles.map(article => ({ ...article, type: 'normal' as const })),
-    ...specialArticles.map(article => ({ ...article, type: 'special' as const, document_type: 'Artículo Especial' }))
+    ...translatedArticles.map(article => ({ ...article, type: 'normal' as const })),
+    ...translatedSpecialArticles.map(article => ({ ...article, type: 'special' as const, document_type: 'Artículo Especial' }))
   ].sort((a, b) => new Date(b.published_date).getTime() - new Date(a.published_date).getTime());
 
   const filteredArticles = allArticles.filter(article => {
