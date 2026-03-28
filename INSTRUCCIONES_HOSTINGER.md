@@ -7,7 +7,9 @@
 Los archivos que necesitas subir están en la carpeta `dist/`:
 - `dist/index.html`
 - `dist/assets/` (toda la carpeta)
-- `public/.htaccess`
+- `dist/.htaccess`
+- `dist/robots.txt`
+- `dist/sitemap.xml`
 
 ### 2. Conectar por FTP a Hostinger
 
@@ -38,6 +40,8 @@ Tu carpeta `public_html` debe verse así:
 public_html/
 ├── index.html
 ├── .htaccess
+├── robots.txt
+├── sitemap.xml
 └── assets/
     ├── index-Ck6ae498.css
     └── index-BYwfBDJ_.js
@@ -56,6 +60,8 @@ public_html/
 1. Visita tu dominio (ej: `https://tudominio.com`)
 2. Verifica que el sitio carga correctamente
 3. Prueba el panel de administración en `https://tudominio.com/admin`
+4. Verifica que el sitemap funciona en `https://tudominio.com/sitemap.xml`
+5. Verifica que robots.txt funciona en `https://tudominio.com/robots.txt`
 
 ### 7. Panel de Administración
 
@@ -72,7 +78,7 @@ public_html/
 ✅ **Consultas** - Gestionar solicitudes de consultas legales
 ✅ **Newsletter** - Ver y gestionar suscriptores
 ✅ **Analytics** - Estadísticas de visitas y páginas más vistas
-✅ **SEO** - Meta tags y optimización para buscadores
+✅ **SEO** - Meta tags, sitemap.xml automático y optimización para buscadores
 ✅ **Modo Mantenimiento** - Activar/desactivar el sitio temporalmente
 ✅ **Banner de Cookies** - Cumplimiento GDPR
 
@@ -81,6 +87,20 @@ public_html/
 Tu base de datos está en Supabase y funcionará automáticamente. No necesitas configurar nada en Hostinger relacionado con la base de datos.
 
 **URL de Supabase:** https://wckamhympcjsryqztwfz.supabase.co
+
+## SEO y Sitemap
+
+El sitio genera automáticamente un `sitemap.xml` con todas las páginas y artículos cada vez que haces un build.
+
+### Para enviar tu sitemap a Google:
+
+1. Ve a [Google Search Console](https://search.google.com/search-console)
+2. Selecciona tu propiedad (rojascalaperu.com)
+3. En el menú lateral, ve a "Sitemaps"
+4. Ingresa: `https://rojascalaperu.com/sitemap.xml`
+5. Haz clic en "Enviar"
+
+**Importante:** Cada vez que publiques nuevos artículos, debes hacer un nuevo `npm run build` y subir los archivos actualizados. El sitemap se regenerará automáticamente con los nuevos artículos.
 
 ## Resolución de Problemas
 
