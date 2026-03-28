@@ -19,7 +19,7 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const SITE_URL = 'https://rojascalaperu.com';
+const SITE_URL = 'https://rojascala.org';
 
 const staticPages = [
   { url: '/', priority: '1.0', changefreq: 'daily' },
