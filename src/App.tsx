@@ -254,6 +254,13 @@ const MobileMenu = ({ isMenuOpen }) => {
   );
 };
 
+const normalizeText = (text: string): string =>
+  (text || '')
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
 const isInternalLink = (link?: string): boolean => !!link && link.startsWith('/');
 
 const OfficialLinkButton = ({ href, className, children }: { href: string; className: string; children: React.ReactNode }) => {
@@ -625,15 +632,15 @@ const SpecialsPage = () => {
 
     // Filtrar por término de búsqueda
     if (searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase();
+      const searchLower = normalizeText(searchTerm);
       filtered = filtered.filter(article => {
         const authorName = Array.isArray(article.author) ? article.author[0] : article.author;
-        return article.title.toLowerCase().includes(searchLower) ||
-          article.content.toLowerCase().includes(searchLower) ||
-          (authorName && authorName.toLowerCase().includes(searchLower)) ||
-          (article.summary && article.summary.toLowerCase().includes(searchLower)) ||
+        return normalizeText(article.title).includes(searchLower) ||
+          normalizeText(article.content).includes(searchLower) ||
+          (authorName && normalizeText(authorName).includes(searchLower)) ||
+          (article.summary && normalizeText(article.summary).includes(searchLower)) ||
           (Array.isArray(article.category) ? article.category : [article.category])
-            .some(cat => cat.toLowerCase().includes(searchLower));
+            .some(cat => normalizeText(cat || '').includes(searchLower));
       });
     }
 
@@ -1371,7 +1378,7 @@ const CategoriesPage = () => {
   };
   
   const filteredCategories = categories.filter(category =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase())
+    normalizeText(category.name).includes(normalizeText(searchTerm))
   );
 
   const getArticlesByCategory = (categoryName: string) => {
@@ -1531,7 +1538,7 @@ const DocumentTypesPage = () => {
   };
   
   const filteredTypes = documentTypes.filter(type =>
-    type.toLowerCase().includes(searchTerm.toLowerCase())
+    normalizeText(type).includes(normalizeText(searchTerm))
   );
 
   const getArticlesByType = (typeName: string) => {
@@ -2324,9 +2331,10 @@ const HomePage = () => {
     const matchesCategory = selectedCategory === "Todos" || articleCategories.includes(selectedCategory);
     const matchesType = selectedType === "Todos" || 
       (article.type === 'normal' ? article.document_type === selectedType : selectedType === 'Artículo Especial');
-    const matchesSearch = searchTerm === "" || 
-      article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      article.content.toLowerCase().includes(searchTerm.toLowerCase());
+    const normalizedSearch = normalizeText(searchTerm);
+    const matchesSearch = searchTerm === "" ||
+      normalizeText(article.title).includes(normalizedSearch) ||
+      normalizeText(article.content).includes(normalizedSearch);
     
     return matchesCategory && matchesType && matchesSearch;
   });

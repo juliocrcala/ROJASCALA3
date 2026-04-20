@@ -194,14 +194,16 @@ export function RepositoryManager() {
     setShowForm(false);
   };
 
+  const normalize = (t: string) => (t || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
   const filtered = norms.filter((n) => {
     if (!search.trim()) return true;
-    const q = search.toLowerCase();
+    const q = normalize(search);
     return (
-      n.title.toLowerCase().includes(q) ||
-      n.norm_number.toLowerCase().includes(q) ||
-      n.norm_type.toLowerCase().includes(q) ||
-      n.slug.toLowerCase().includes(q)
+      normalize(n.title).includes(q) ||
+      normalize(n.norm_number).includes(q) ||
+      normalize(n.norm_type).includes(q) ||
+      normalize(n.slug).includes(q)
     );
   });
 

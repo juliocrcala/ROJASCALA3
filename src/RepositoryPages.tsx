@@ -19,6 +19,13 @@ interface RepositoryNorm {
   updated_at: string;
 }
 
+const normalizeText = (text: string): string =>
+  (text || '')
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
 const formatDateSafe = (dateString: string): string => {
   try {
     const [year, month, day] = dateString.split('-').map(Number);
@@ -63,12 +70,13 @@ export function RepositoryPage() {
   const filtered = useMemo(() => {
     return norms.filter((n) => {
       if (search.trim()) {
-        const q = search.toLowerCase();
+        const q = normalizeText(search);
         const hit =
-          n.title.toLowerCase().includes(q) ||
-          n.norm_number.toLowerCase().includes(q) ||
-          n.norm_type.toLowerCase().includes(q) ||
-          (n.summary || '').toLowerCase().includes(q);
+          normalizeText(n.title).includes(q) ||
+          normalizeText(n.norm_number).includes(q) ||
+          normalizeText(n.norm_type).includes(q) ||
+          normalizeText(n.summary || '').includes(q) ||
+          normalizeText(n.content || '').includes(q);
         if (!hit) return false;
       }
       if (selectedDate) {
