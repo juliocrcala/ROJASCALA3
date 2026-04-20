@@ -7,6 +7,7 @@ import { ConsultationsManager } from './ConsultationsManager';
 import { CategoriesManager } from './CategoriesManager';
 import { NewsletterManager } from './NewsletterManager';
 import { AnalyticsManager } from './AnalyticsManager';
+import { RepositoryManager } from './RepositoryManager';
 import { RichTextEditor } from './RichTextEditor';
 
 interface Article {
@@ -69,7 +70,7 @@ const formatDateSafe = (dateString: string): string => {
 export function AdminPanel() {
   const { logout } = useAuth();
   
-  const [activeTab, setActiveTab] = useState<'articles' | 'specials' | 'contacts' | 'consultations' | 'categories' | 'newsletter' | 'analytics' | 'settings'>('articles');
+  const [activeTab, setActiveTab] = useState<'articles' | 'specials' | 'contacts' | 'consultations' | 'categories' | 'newsletter' | 'analytics' | 'repository' | 'settings'>('articles');
   const [articles, setArticles] = useState<Article[]>([]);
   const [specialArticles, setSpecialArticles] = useState<SpecialArticle[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -701,7 +702,7 @@ export function AdminPanel() {
             <span>Cerrar Sesión</span>
           </button>
         </div>
-        {activeTab !== 'contacts' && activeTab !== 'consultations' && activeTab !== 'categories' && activeTab !== 'newsletter' && activeTab !== 'analytics' && (
+        {activeTab !== 'contacts' && activeTab !== 'consultations' && activeTab !== 'categories' && activeTab !== 'newsletter' && activeTab !== 'analytics' && activeTab !== 'repository' && activeTab !== 'settings' && (
           <button
             onClick={() => setShowForm(true)}
             className="bg-red-900 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-red-800"
@@ -905,6 +906,17 @@ export function AdminPanel() {
               <span>Estadísticas</span>
             </button>
             <button
+              onClick={() => setActiveTab('repository')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+                activeTab === 'repository'
+                  ? 'border-red-500 text-red-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              <span>Repositorio</span>
+            </button>
+            <button
               onClick={() => setActiveTab('settings')}
               className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
                 activeTab === 'settings'
@@ -920,7 +932,7 @@ export function AdminPanel() {
       </div>
 
       {/* Controles de visibilidad para artículos */}
-      {activeTab !== 'contacts' && activeTab !== 'consultations' && activeTab !== 'categories' && activeTab !== 'newsletter' && activeTab !== 'analytics' && activeTab !== 'settings' && (
+      {activeTab !== 'contacts' && activeTab !== 'consultations' && activeTab !== 'categories' && activeTab !== 'newsletter' && activeTab !== 'analytics' && activeTab !== 'repository' && activeTab !== 'settings' && (
         <div className="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-4">
@@ -984,6 +996,8 @@ export function AdminPanel() {
         <NewsletterManager />
       ) : activeTab === 'analytics' ? (
         <AnalyticsManager />
+      ) : activeTab === 'repository' ? (
+        <RepositoryManager />
       ) : activeTab === 'settings' ? (
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-2xl font-bold mb-6 text-gray-800">Configuración del Sitio</h2>
@@ -1414,12 +1428,15 @@ export function AdminPanel() {
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Enlace Oficial (opcional)</label>
                       <input
-                        type="url"
+                        type="text"
                         value={formData.official_link}
                         onChange={(e) => setFormData({ ...formData, official_link: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                        placeholder="https://..."
+                        placeholder="https://... o /repositorio/tu-slug"
                       />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Para apuntar al repositorio interno, usa una ruta como <code>/repositorio/ley-31234</code>.
+                      </p>
                     </div>
                   )}
 

@@ -16,6 +16,7 @@ import { MarkdownRenderer } from './MarkdownRenderer';
 import { useAnalytics } from './useAnalytics';
 import SecureLogin from './SecureLogin';
 import ProtectedRoute from './ProtectedRoute';
+import { RepositoryPage, RepositoryDetailPage } from './RepositoryPages';
 
 
 interface Article {
@@ -209,6 +210,13 @@ const Header = ({ isMenuOpen, setIsMenuOpen }) => {
             <Link to="/categorias" className={`hover:text-red-200 ${location.pathname === '/categorias' ? 'text-red-200' : ''}`}>Categorías</Link>
             <Link to="/especiales" className={`hover:text-red-200 ${location.pathname === '/especiales' ? 'text-red-200' : ''}`}>Especiales</Link>
             <Link to="/contacto" className={`hover:text-red-200 ${location.pathname === '/contacto' ? 'text-red-200' : ''}`}>Contacto</Link>
+            <Link
+              to="/repositorio"
+              className={`flex flex-col items-center px-3 py-1.5 rounded-md border border-red-300 bg-red-800/40 hover:bg-red-700 transition-colors leading-tight ${location.pathname.startsWith('/repositorio') ? 'bg-red-700 border-red-200' : ''}`}
+            >
+              <span className="text-sm font-semibold">Repositorio</span>
+              <span className="text-[10px] text-red-200 -mt-0.5">(by RC)</span>
+            </Link>
           </nav>
           
           <button 
@@ -236,9 +244,24 @@ const MobileMenu = ({ isMenuOpen }) => {
           <Link to="/categorias" className="py-2 hover:text-red-200">Categorías</Link>
           <Link to="/especiales" className="py-2 hover:text-red-200">Especiales</Link>
           <Link to="/contacto" className="py-2 hover:text-red-200">Contacto</Link>
+          <Link to="/repositorio" className="py-2 hover:text-red-200 flex items-center gap-2">
+            <span className="font-semibold">Repositorio</span>
+            <span className="text-xs text-red-200">(by RC)</span>
+          </Link>
         </nav>
       </div>
     </div>
+  );
+};
+
+const isInternalLink = (link?: string): boolean => !!link && link.startsWith('/');
+
+const OfficialLinkButton = ({ href, className, children }: { href: string; className: string; children: React.ReactNode }) => {
+  if (isInternalLink(href)) {
+    return <Link to={href} className={className}>{children}</Link>;
+  }
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" className={className}>{children}</a>
   );
 };
 
@@ -415,15 +438,13 @@ const ArticleDetail = () => {
             </div>
             
             {type !== 'special' && 'official_link' in article && article.official_link && (
-              <a
+              <OfficialLinkButton
                 href={article.official_link}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
                 Ver norma oficial
-              </a>
+              </OfficialLinkButton>
             )}
 
             {type === 'special' && 'attachment_url' in article && article.attachment_url && (
@@ -1740,14 +1761,12 @@ const CalendarPage = () => {
                         Leer más →
                       </Link>
                       {article.official_link && (
-                        <a
+                        <OfficialLinkButton
                           href={article.official_link}
-                          target="_blank"
-                          rel="noopener noreferrer"
                           className="inline-block text-blue-600 hover:text-blue-800"
                         >
                           Ver norma oficial →
-                        </a>
+                        </OfficialLinkButton>
                       )}
                     </div>
                   </div>
@@ -1894,14 +1913,12 @@ const DocumentTypeFilterView = () => {
                     </div>
                     <div className="flex space-x-2">
                       {article.official_link && (
-                        <a
+                        <OfficialLinkButton
                           href={article.official_link}
-                          target="_blank"
-                          rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 text-sm"
                         >
                           Ver oficial
-                        </a>
+                        </OfficialLinkButton>
                       )}
                       <Link
                         to={`/articulo/${article.type}/${article.slug || article.id}`}
@@ -2113,14 +2130,12 @@ const CategoryFilterView = () => {
                     </div>
                     <div className="flex flex-col items-end space-y-2">
                       {article.type === 'normal' && 'official_link' in article && article.official_link && (
-                        <a
+                        <OfficialLinkButton
                           href={article.official_link}
-                          target="_blank"
-                          rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 text-sm"
                         >
                           Ver oficial
-                        </a>
+                        </OfficialLinkButton>
                       )}
                       {article.type === 'special' && 'attachment_url' in article && article.attachment_url && (
                         <a
@@ -2461,14 +2476,12 @@ const HomePage = () => {
                   </div>
                   <div className="flex flex-col items-end space-y-2">
                     {article.type === 'normal' && 'official_link' in article && article.official_link && (
-                      <a
+                      <OfficialLinkButton
                         href={article.official_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
                         className="text-blue-600 hover:text-blue-800 text-sm"
                       >
                         Ver oficial
-                      </a>
+                      </OfficialLinkButton>
                     )}
                     {article.type === 'special' && 'attachment_url' in article && article.attachment_url && (
                       <a
@@ -2615,6 +2628,8 @@ const AppContent = () => {
         <Route path="/contacto" element={<ContactPage />} />
         <Route path="/contacto/:id" element={<ContactPage />} />
         <Route path="/articulo/:type/:id" element={<ArticleDetail />} />
+        <Route path="/repositorio" element={<RepositoryPage />} />
+        <Route path="/repositorio/:slug" element={<RepositoryDetailPage />} />
       </Routes>
 
       <FloatingHelpWidget />
