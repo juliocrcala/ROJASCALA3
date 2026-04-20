@@ -2212,8 +2212,7 @@ const HomePage = () => {
       .from('articles')
       .select('*')
       .eq('is_hidden', false)
-      .order('published_date', { ascending: false })
-      .limit(12);
+      .order('published_date', { ascending: false });
 
     console.log('HomePage: Articles response:', { data, error });
     if (error) throw error;
@@ -2226,8 +2225,7 @@ const HomePage = () => {
       .from('special_articles')
       .select('*')
       .eq('is_hidden', false)
-      .order('published_date', { ascending: false })
-      .limit(3);
+      .order('published_date', { ascending: false });
 
     console.log('HomePage: Special articles response:', { data, error });
     if (error && error.code !== 'PGRST116') throw error;
@@ -2413,7 +2411,10 @@ const HomePage = () => {
         </div>
 
         <section className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredArticles.slice(0, 9).map((article) => (
+          {(searchTerm.trim() !== "" || selectedCategory !== "Todos" || selectedType !== "Todos"
+            ? filteredArticles
+            : filteredArticles.slice(0, 9)
+          ).map((article) => (
             <article key={`${article.type}-${article.id}`} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
               {article.type === 'special' && 'image_url' in article && article.image_url && (
                 <img 
