@@ -208,6 +208,7 @@ const Header = ({ isMenuOpen, setIsMenuOpen }) => {
             <Link to="/normas" className={`hover:text-red-200 ${location.pathname === '/normas' ? 'text-red-200' : ''}`}>Normas</Link>
             <Link to="/fechas" className={`hover:text-red-200 ${location.pathname === '/fechas' ? 'text-red-200' : ''}`}>Fechas</Link>
             <Link to="/categorias" className={`hover:text-red-200 ${location.pathname === '/categorias' ? 'text-red-200' : ''}`}>Categorías</Link>
+            <Link to="/entidades" className={`hover:text-red-200 ${location.pathname === '/entidades' || location.pathname.startsWith('/entidad/') ? 'text-red-200' : ''}`}>Entidad</Link>
             <Link to="/especiales" className={`hover:text-red-200 ${location.pathname === '/especiales' ? 'text-red-200' : ''}`}>Especiales</Link>
             <Link to="/contacto" className={`hover:text-red-200 ${location.pathname === '/contacto' ? 'text-red-200' : ''}`}>Contacto</Link>
             <Link
@@ -242,6 +243,7 @@ const MobileMenu = ({ isMenuOpen }) => {
           <Link to="/normas" className="py-2 hover:text-red-200">Normas</Link>
           <Link to="/fechas" className="py-2 hover:text-red-200">Fechas</Link>
           <Link to="/categorias" className="py-2 hover:text-red-200">Categorías</Link>
+          <Link to="/entidades" className="py-2 hover:text-red-200">Entidad</Link>
           <Link to="/especiales" className="py-2 hover:text-red-200">Especiales</Link>
           <Link to="/contacto" className="py-2 hover:text-red-200">Contacto</Link>
           <Link to="/repositorio" className="py-2 hover:text-red-200 flex items-center gap-2">
@@ -2199,6 +2201,316 @@ const CategoryFilterView = () => {
   );
 };
 
+const EntitiesPage = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [specialArticles, setSpecialArticles] = useState<SpecialArticle[]>([]);
+  const [entities, setEntities] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useAnalytics('Entidades');
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [artsRes, specRes, entRes] = await Promise.all([
+          supabase.from('articles').select('*').eq('is_hidden', false).order('published_date', { ascending: false }),
+          supabase.from('special_articles').select('*').eq('is_hidden', false).order('published_date', { ascending: false }),
+          supabase.from('categories_config').select('name').eq('type', 'entity').eq('is_active', true).order('display_order')
+        ]);
+        if (artsRes.error) throw artsRes.error;
+        setArticles(artsRes.data || []);
+        if (!specRes.error) setSpecialArticles(specRes.data || []);
+        if (!entRes.error) setEntities((entRes.data || []).map((r: any) => r.name));
+      } catch (error) {
+        console.error('Error fetching entities:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const filteredEntities = entities.filter(e =>
+    normalizeText(e).includes(normalizeText(searchTerm))
+  );
+
+  const countForEntity = (name: string) => {
+    const a = articles.filter(art => Array.isArray((art as any).entity) && (art as any).entity.includes(name)).length;
+    const s = specialArticles.filter(art => Array.isArray((art as any).entity) && (art as any).entity.includes(name)).length;
+    return a + s;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-12">
+        <LoadingSpinner message="Cargando entidades..." size="large" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-12">
+      <h2 className="text-3xl font-bold mb-8 text-center">Entidades</h2>
+
+      <div className="max-w-md mx-auto mb-8">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <input
+            type="text"
+            placeholder="Buscar entidades..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+          />
+        </div>
+      </div>
+
+      {filteredEntities.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">
+            {entities.length === 0
+              ? 'Aún no hay entidades configuradas. Puedes agregarlas desde el panel de administración.'
+              : 'No se encontraron entidades que coincidan con la búsqueda.'}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredEntities.map((entity) => {
+            const count = countForEntity(entity);
+            return (
+              <Link
+                key={entity}
+                to={`/entidad/${encodeURIComponent(entity)}`}
+                className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-red-900 rounded-full flex items-center justify-center text-white">
+                      <Building2 className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold">{entity}</h3>
+                      {count > 0 && (
+                        <p className="text-sm text-gray-500">{count} artículo{count === 1 ? '' : 's'}</p>
+                      )}
+                    </div>
+                  </div>
+                  <ChevronRight className="w-6 h-6 text-red-900" />
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+
+      {entities.length > 0 && (
+        <div className="mt-12 text-center">
+          <p className="text-gray-600">
+            <strong>{entities.length}</strong> entidad{entities.length === 1 ? '' : 'es'} disponible{entities.length === 1 ? '' : 's'}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const EntityFilterView = () => {
+  const { entityName } = useParams<{ entityName: string }>();
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [specialArticles, setSpecialArticles] = useState<SpecialArticle[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [displayCount, setDisplayCount] = useState(8);
+
+  const decodedEntityName = entityName ? decodeURIComponent(entityName) : '';
+
+  useAnalytics(`Entidad: ${decodedEntityName}`);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [artsRes, specRes, contRes] = await Promise.all([
+          supabase.from('articles').select('*').eq('is_hidden', false).order('published_date', { ascending: false }),
+          supabase.from('special_articles').select('*').eq('is_hidden', false).order('published_date', { ascending: false }),
+          supabase.from('contacts').select('*').eq('is_active', true)
+        ]);
+        if (artsRes.error) throw artsRes.error;
+        setArticles(artsRes.data || []);
+        if (!specRes.error) setSpecialArticles(specRes.data || []);
+        if (!contRes.error) setContacts(contRes.data || []);
+      } catch (error) {
+        console.error('Error fetching entity data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [entityName]);
+
+  const getFilteredArticles = () => {
+    const normal = articles
+      .filter(a => Array.isArray((a as any).entity) && (a as any).entity.includes(decodedEntityName))
+      .map(a => ({ ...a, type: 'normal' as const }));
+    const specials = specialArticles
+      .filter(a => Array.isArray((a as any).entity) && (a as any).entity.includes(decodedEntityName))
+      .map(a => ({ ...a, type: 'special' as const, document_type: 'Artículo Especial' }));
+    return [...normal, ...specials]
+      .sort((a, b) => new Date(b.published_date).getTime() - new Date(a.published_date).getTime());
+  };
+
+  const filteredArticles = getFilteredArticles();
+  const displayedArticles = filteredArticles.slice(0, displayCount);
+  const hasMore = filteredArticles.length > displayCount;
+  const canShowLess = displayCount > 8;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner message="Cargando artículos..." size="large" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="mb-8">
+        <Link
+          to="/entidades"
+          className="inline-flex items-center text-red-900 hover:text-red-700 mb-4"
+        >
+          <ChevronLeft className="w-5 h-5 mr-1" />
+          Volver a Entidades
+        </Link>
+        <div className="flex items-center space-x-4 mb-2">
+          <div className="w-16 h-16 bg-red-900 rounded-full flex items-center justify-center text-white">
+            <Building2 className="w-8 h-8" />
+          </div>
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900">{decodedEntityName}</h1>
+            <p className="text-gray-600 mt-2">
+              {filteredArticles.length} {filteredArticles.length === 1 ? 'artículo' : 'artículos'} encontrados
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {filteredArticles.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">No hay artículos disponibles para esta entidad.</p>
+        </div>
+      ) : (
+        <>
+          <section className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {displayedArticles.map((article) => (
+              <article key={`${article.type}-${article.id}`} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                {'image_url' in article && article.image_url && (
+                  <img
+                    src={article.image_url}
+                    alt={article.title}
+                    className="w-full h-48 object-cover"
+                  />
+                )}
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <span className={`inline-block px-3 py-1 text-sm rounded-full ${
+                      article.type === 'special'
+                        ? 'bg-purple-100 text-purple-900'
+                        : 'bg-red-100 text-red-900'
+                    }`}>
+                      {article.type === 'normal' ? article.document_type : 'Artículo Especial'}
+                    </span>
+                    <span className="text-sm text-gray-500">{formatDateSafe(article.published_date)}</span>
+                  </div>
+                  <Link to={`/articulo/${article.type}/${article.slug || article.id}`}>
+                    <h3 className="text-xl font-semibold mb-2 hover:text-red-900">{article.title}</h3>
+                  </Link>
+                  <p className="text-gray-600 mb-4 text-justify line-clamp-3">
+                    {article.summary || article.content.substring(0, 150) + '...'}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <div className="flex flex-wrap gap-1 mb-1">
+                        {(Array.isArray((article as any).entity) ? (article as any).entity : [])
+                          .filter(Boolean)
+                          .slice(0, 2)
+                          .map((ent: string) => (
+                            <span key={ent} className="inline-block px-2 py-1 text-xs bg-amber-100 text-amber-800 rounded">
+                              {ent}
+                            </span>
+                          ))}
+                      </div>
+                      <AuthorLink
+                        author={article.author}
+                        authorContactId={article.author_contact_id}
+                        contacts={contacts}
+                      />
+                    </div>
+                    <div className="flex flex-col items-end space-y-2">
+                      {article.type === 'normal' && 'official_link' in article && article.official_link && (
+                        <OfficialLinkButton
+                          href={article.official_link}
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          Ver oficial
+                        </OfficialLinkButton>
+                      )}
+                      {article.type === 'special' && 'attachment_url' in article && article.attachment_url && (
+                        <a
+                          href={article.attachment_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 text-sm inline-flex items-center"
+                        >
+                          <ExternalLink className="w-3 h-3 mr-1" />
+                          {article.attachment_label || 'Ver Anexo'}
+                        </a>
+                      )}
+                      <Link
+                        to={`/articulo/${article.type}/${article.slug || article.id}`}
+                        className="text-red-900 hover:text-red-700 font-medium"
+                      >
+                        Leer más →
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </section>
+
+          {(hasMore || canShowLess) && (
+            <div className="text-center py-8 space-y-4">
+              <p className="text-gray-600">
+                Mostrando {displayedArticles.length} de {filteredArticles.length} artículos
+              </p>
+              <div className="flex justify-center space-x-4">
+                {canShowLess && (
+                  <button
+                    onClick={() => setDisplayCount(8)}
+                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                  >
+                    Mostrar menos
+                  </button>
+                )}
+                {hasMore && (
+                  <button
+                    onClick={() => setDisplayCount(displayCount + 8)}
+                    className="px-6 py-2 bg-red-900 text-white rounded-lg hover:bg-red-800 transition-colors"
+                  >
+                    Mostrar más
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
 const HomePage = () => {
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [selectedType, setSelectedType] = useState("Todos");
@@ -2558,6 +2870,8 @@ const AppContent = () => {
         <Route path="/fechas" element={<CalendarPage />} />
         <Route path="/categorias" element={<CategoriesPage />} />
         <Route path="/categoria/:categoryName" element={<CategoryFilterView />} />
+        <Route path="/entidades" element={<EntitiesPage />} />
+        <Route path="/entidad/:entityName" element={<EntityFilterView />} />
         <Route path="/norma/:typeName" element={<DocumentTypeFilterView />} />
         <Route path="/especiales" element={<SpecialsPage />} />
         <Route path="/contacto" element={<ContactPage />} />

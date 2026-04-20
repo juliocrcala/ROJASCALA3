@@ -17,6 +17,7 @@ interface Article {
   document_type: string;
   published_date: string;
   category: string[];
+  entity?: string[];
   content: string;
   summary?: string;
   official_link?: string;
@@ -32,6 +33,7 @@ interface SpecialArticle {
   author: string[] | null;
   published_date: string;
   category: string[];
+  entity?: string[];
   content: string;
   summary?: string;
   image_url?: string;
@@ -76,6 +78,7 @@ export function AdminPanel() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [documentTypes, setDocumentTypes] = useState<string[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const [entities, setEntities] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -115,6 +118,7 @@ export function AdminPanel() {
     document_type: '',
     published_date: new Date().toISOString().split('T')[0],
     category: [] as string[],
+    entity: [] as string[],
     content: '',
     summary: '',
     official_link: '',
@@ -269,6 +273,7 @@ export function AdminPanel() {
       const allData = data || [];
       setDocumentTypes(allData.filter(item => item.type === 'document_type').map(item => item.name));
       setCategories(allData.filter(item => item.type === 'category').map(item => item.name));
+      setEntities(allData.filter(item => item.type === 'entity').map(item => item.name));
     } catch (error: any) {
       console.error('Error fetching categories config:', error);
       // Fallback to hardcoded values if table doesn't exist
@@ -418,8 +423,17 @@ export function AdminPanel() {
       const newCategories = prev.category.includes(categoryName)
         ? prev.category.filter(cat => cat !== categoryName)
         : [...prev.category, categoryName];
-      
+
       return { ...prev, category: newCategories };
+    });
+  };
+
+  const handleEntityChange = (entityName: string) => {
+    setFormData(prev => {
+      const newEntities = prev.entity.includes(entityName)
+        ? prev.entity.filter(en => en !== entityName)
+        : [...prev.entity, entityName];
+      return { ...prev, entity: newEntities };
     });
   };
 
@@ -460,6 +474,7 @@ export function AdminPanel() {
         author_photo_url: null,
         published_date: formData.published_date,
         category: formData.category,
+        entity: formData.entity,
         content: formData.content.trim(),
         summary: formData.summary.trim() || null,
         is_hidden: formData.is_hidden
@@ -547,6 +562,7 @@ export function AdminPanel() {
       document_type: '',
       published_date: new Date().toISOString().split('T')[0],
       category: [],
+      entity: [],
       content: '',
       summary: '',
       official_link: '',
@@ -570,6 +586,7 @@ export function AdminPanel() {
       document_type: 'document_type' in item ? item.document_type : '',
       published_date: item.published_date,
       category: Array.isArray(item.category) ? item.category : [item.category].filter(Boolean),
+      entity: Array.isArray((item as any).entity) ? (item as any).entity : [],
       content: item.content,
       summary: item.summary || '',
       official_link: 'official_link' in item ? item.official_link || '' : '',
@@ -1383,6 +1400,43 @@ export function AdminPanel() {
                             {formData.category.map(cat => (
                               <span key={cat} className="inline-block px-2 py-1 text-xs bg-red-100 text-red-800 rounded">
                                 {cat}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Entidades involucradas (opcional)
+                      </label>
+                      <div className="border border-gray-300 rounded-md p-3 max-h-48 overflow-y-auto">
+                        {entities.length === 0 ? (
+                          <p className="text-sm text-gray-500">Agrega entidades desde la sección de Categorías.</p>
+                        ) : (
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            {entities.map(en => (
+                              <label key={en} className="flex items-center space-x-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={formData.entity.includes(en)}
+                                  onChange={() => handleEntityChange(en)}
+                                  className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                                />
+                                <span className="text-sm">{en}</span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {formData.entity.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-600">Entidades seleccionadas:</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {formData.entity.map(en => (
+                              <span key={en} className="inline-block px-2 py-1 text-xs bg-amber-100 text-amber-800 rounded">
+                                {en}
                               </span>
                             ))}
                           </div>

@@ -9,7 +9,6 @@ interface RepositoryNorm {
   title: string;
   norm_type: string;
   norm_number: string;
-  entity: string;
   published_date: string;
   content: string;
   summary: string;
@@ -35,7 +34,6 @@ const emptyForm = () => ({
   title: '',
   norm_type: '',
   norm_number: '',
-  entity: '',
   published_date: new Date().toISOString().split('T')[0],
   content: '',
   summary: '',
@@ -66,29 +64,10 @@ export function RepositoryManager() {
   const [success, setSuccess] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [formData, setFormData] = useState(emptyForm());
-  const [entities, setEntities] = useState<string[]>([]);
-  const [documentTypes, setDocumentTypes] = useState<string[]>([]);
 
   useEffect(() => {
     fetchNorms();
-    fetchCategoryOptions();
   }, []);
-
-  const fetchCategoryOptions = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('categories_config')
-        .select('name, type, display_order, is_active')
-        .eq('is_active', true)
-        .order('display_order', { ascending: true });
-      if (error) throw error;
-      const items = data || [];
-      setEntities(items.filter((i: any) => i.type === 'entity').map((i: any) => i.name));
-      setDocumentTypes(items.filter((i: any) => i.type === 'document_type').map((i: any) => i.name));
-    } catch (err: any) {
-      console.error('Error fetching category options:', err);
-    }
-  };
 
   const showMessage = (msg: string, type: 'success' | 'error') => {
     if (type === 'success') {
@@ -136,7 +115,6 @@ export function RepositoryManager() {
         title: formData.title.trim(),
         norm_type: formData.norm_type.trim(),
         norm_number: formData.norm_number.trim(),
-        entity: formData.entity.trim(),
         published_date: formData.published_date,
         content: formData.content,
         summary: formData.summary.trim(),
@@ -173,7 +151,6 @@ export function RepositoryManager() {
       title: norm.title,
       norm_type: norm.norm_type || '',
       norm_number: norm.norm_number || '',
-      entity: norm.entity || '',
       published_date: norm.published_date,
       content: norm.content,
       summary: norm.summary || '',
@@ -226,7 +203,6 @@ export function RepositoryManager() {
       normalize(n.title).includes(q) ||
       normalize(n.norm_number).includes(q) ||
       normalize(n.norm_type).includes(q) ||
-      normalize(n.entity).includes(q) ||
       normalize(n.slug).includes(q)
     );
   });
@@ -277,53 +253,16 @@ export function RepositoryManager() {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Norma</label>
-                {documentTypes.length > 0 ? (
-                  <select
-                    value={formData.norm_type}
-                    onChange={(e) => setFormData({ ...formData, norm_type: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
-                  >
-                    <option value="">Selecciona un tipo</option>
-                    {documentTypes.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    value={formData.norm_type}
-                    onChange={(e) => setFormData({ ...formData, norm_type: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="Ej: Ley, Decreto Supremo"
-                  />
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Entidad</label>
-                {entities.length > 0 ? (
-                  <select
-                    value={formData.entity}
-                    onChange={(e) => setFormData({ ...formData, entity: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
-                  >
-                    <option value="">Selecciona una entidad</option>
-                    {entities.map((en) => (
-                      <option key={en} value={en}>{en}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    value={formData.entity}
-                    onChange={(e) => setFormData({ ...formData, entity: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="Ej: SUNAT, MINEM, INGEMMET"
-                  />
-                )}
-                <p className="text-xs text-gray-500 mt-1">Agrega entidades en el panel de Categorías.</p>
+                <input
+                  type="text"
+                  value={formData.norm_type}
+                  onChange={(e) => setFormData({ ...formData, norm_type: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="Ej: Ley, Decreto Supremo"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Numero</label>
@@ -428,7 +367,6 @@ export function RepositoryManager() {
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Norma</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Entidad</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Numero</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
@@ -440,7 +378,6 @@ export function RepositoryManager() {
                 <tr key={n.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm text-gray-900 font-medium">{n.title}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{n.norm_type || '-'}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{n.entity || '-'}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{n.norm_number || '-'}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{formatDateSafe(n.published_date)}</td>
                   <td className="px-4 py-3 text-sm">
