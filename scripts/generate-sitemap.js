@@ -63,7 +63,7 @@ async function generateSitemap() {
 
   const { data: articles, error: articlesError } = await supabase
     .from('articles')
-    .select('id, updated_at, published_date')
+    .select('id, slug, updated_at, published_date')
     .eq('is_hidden', false);
 
   if (articlesError) {
@@ -71,7 +71,7 @@ async function generateSitemap() {
   } else if (articles) {
     articles.forEach(article => {
       urls.push({
-        url: `${SITE_URL}/articulo/normal/${article.id}`,
+        url: `${SITE_URL}/articulo/normal/${article.slug || article.id}`,
         lastmod: formatDate(article.updated_at || article.published_date),
         priority: '0.7',
         changefreq: 'monthly',
@@ -82,7 +82,7 @@ async function generateSitemap() {
 
   const { data: specialArticles, error: specialError } = await supabase
     .from('special_articles')
-    .select('id, updated_at, published_date')
+    .select('id, slug, updated_at, published_date')
     .eq('is_hidden', false);
 
   if (specialError) {
@@ -90,7 +90,7 @@ async function generateSitemap() {
   } else if (specialArticles) {
     specialArticles.forEach(article => {
       urls.push({
-        url: `${SITE_URL}/articulo/especial/${article.id}`,
+        url: `${SITE_URL}/articulo/special/${article.slug || article.id}`,
         lastmod: formatDate(article.updated_at || article.published_date),
         priority: '0.8',
         changefreq: 'monthly',

@@ -20,6 +20,7 @@ import ProtectedRoute from './ProtectedRoute';
 
 interface Article {
   id: string;
+  slug?: string;
   title: string;
   author: string[] | null;
   document_type: string;
@@ -36,6 +37,7 @@ interface Article {
 
 interface SpecialArticle {
   id: string;
+  slug?: string;
   title: string;
   author: string[] | null;
   published_date: string;
@@ -270,6 +272,25 @@ const ArticleDetail = () => {
     fetchArticleAndContacts();
   }, [id, type]);
 
+  useEffect(() => {
+    if (article?.title) {
+      document.title = `${article.title} | RojasCala`;
+      const metaDescription = document.querySelector('meta[name="description"]');
+      const descContent = article.summary || article.title;
+      if (metaDescription) {
+        metaDescription.setAttribute('content', descContent);
+      } else {
+        const meta = document.createElement('meta');
+        meta.name = 'description';
+        meta.content = descContent;
+        document.head.appendChild(meta);
+      }
+    }
+    return () => {
+      document.title = 'RojasCala - Análisis de Normas Legales';
+    };
+  }, [article?.title, article?.summary]);
+
   const fetchArticleAndContacts = async () => {
     try {
       await Promise.all([fetchArticle(), fetchContacts()]);
@@ -280,16 +301,34 @@ const ArticleDetail = () => {
     }
   };
 
+  const isUuid = (value: string | undefined) => {
+    if (!value) return false;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+  };
+
   const fetchArticle = async () => {
     const table = type === 'special' ? 'special_articles' : 'articles';
+    const column = isUuid(id) ? 'id' : 'slug';
+
     const { data, error } = await supabase
       .from(table)
       .select('*')
-      .eq('id', id)
-      .eq('is_hidden', false) // Solo mostrar artículos visibles
-      .single();
+      .eq(column, id)
+      .eq('is_hidden', false)
+      .maybeSingle();
 
     if (error) throw error;
+    if (!data && column === 'slug') {
+      const fallback = await supabase
+        .from(table)
+        .select('*')
+        .eq('id', id)
+        .eq('is_hidden', false)
+        .maybeSingle();
+      if (fallback.error) throw fallback.error;
+      setArticle(fallback.data);
+      return;
+    }
     setArticle(data);
   };
 
@@ -840,7 +879,7 @@ const SpecialsPage = () => {
                     />
                   </div>
                   <Link
-                    to={`/articulo/special/${article.id}`}
+                    to={`/articulo/special/${article.slug || article.id}`}
                     className="inline-flex items-center text-red-900 hover:text-red-700 font-medium transition-colors"
                   >
                     Leer más <BookOpen className="w-4 h-4 ml-1" />
@@ -1681,7 +1720,7 @@ const CalendarPage = () => {
                       </span>
                       <span className="text-sm text-gray-500">{formatDateSafe(article.published_date)}</span>
                     </div>
-                    <Link to={`/articulo/normal/${article.id}`}>
+                    <Link to={`/articulo/normal/${article.slug || article.id}`}>
                       <h4 className="text-xl font-semibold mb-2 hover:text-red-900">{article.title}</h4>
                     </Link>
                     <p className="text-gray-600 mb-2 text-justify">{article.summary || article.content.substring(0, 200) + '...'}</p>
@@ -1694,7 +1733,7 @@ const CalendarPage = () => {
                     </div>
                     <div className="flex justify-between items-center">
                       <Link 
-                        to={`/articulo/normal/${article.id}`}
+                        to={`/articulo/normal/${article.slug || article.id}`}
                         className="text-red-900 hover:text-red-700 font-medium"
                       >
                         Leer más →
@@ -1823,7 +1862,7 @@ const DocumentTypeFilterView = () => {
                     </span>
                     <span className="text-sm text-gray-500">{formatDateSafe(article.published_date)}</span>
                   </div>
-                  <Link to={`/articulo/${article.type}/${article.id}`}>
+                  <Link to={`/articulo/${article.type}/${article.slug || article.id}`}>
                     <h3 className="text-xl font-semibold mb-2 hover:text-red-900">{article.title}</h3>
                   </Link>
                   <p className="text-gray-600 mb-4 text-justify line-clamp-3">
@@ -1864,7 +1903,7 @@ const DocumentTypeFilterView = () => {
                         </a>
                       )}
                       <Link
-                        to={`/articulo/${article.type}/${article.id}`}
+                        to={`/articulo/${article.type}/${article.slug || article.id}`}
                         className="text-red-900 hover:text-red-700 font-medium"
                       >
                         Leer más →
@@ -2042,7 +2081,7 @@ const CategoryFilterView = () => {
                     </span>
                     <span className="text-sm text-gray-500">{formatDateSafe(article.published_date)}</span>
                   </div>
-                  <Link to={`/articulo/${article.type}/${article.id}`}>
+                  <Link to={`/articulo/${article.type}/${article.slug || article.id}`}>
                     <h3 className="text-xl font-semibold mb-2 hover:text-red-900">{article.title}</h3>
                   </Link>
                   <p className="text-gray-600 mb-4 text-justify line-clamp-3">
@@ -2094,7 +2133,7 @@ const CategoryFilterView = () => {
                         </a>
                       )}
                       <Link
-                        to={`/articulo/${article.type}/${article.id}`}
+                        to={`/articulo/${article.type}/${article.slug || article.id}`}
                         className="text-red-900 hover:text-red-700 font-medium"
                       >
                         Leer más →
@@ -2394,7 +2433,7 @@ const HomePage = () => {
                   </span>
                   <span className="text-sm text-gray-500">{formatDateSafe(article.published_date)}</span>
                 </div>
-                <Link to={`/articulo/${article.type}/${article.id}`}>
+                <Link to={`/articulo/${article.type}/${article.slug || article.id}`}>
                   <h3 className="text-xl font-semibold mb-2 hover:text-red-900">{article.title}</h3>
                 </Link>
                 <p className="text-gray-600 mb-4 text-justify">{article.summary || article.content.substring(0, 150) + '...'}</p>
@@ -2441,7 +2480,7 @@ const HomePage = () => {
                       </a>
                     )}
                     <Link
-                      to={`/articulo/${article.type}/${article.id}`}
+                      to={`/articulo/${article.type}/${article.slug || article.id}`}
                       className="text-red-900 hover:text-red-700 font-medium"
                     >
                       Leer más →
