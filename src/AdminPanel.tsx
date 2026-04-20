@@ -472,7 +472,8 @@ export function AdminPanel() {
         const articleData = {
           ...baseData,
           document_type: formData.document_type,
-          official_link: formData.official_link.trim() || null
+          official_link: formData.official_link.trim() || null,
+          image_url: formData.image_url.trim() || null
         };
 
         if (editingId) {
@@ -1409,7 +1410,7 @@ export function AdminPanel() {
                     />
                   </div>
 
-                  {activeTab === 'articles' ? (
+                  {activeTab === 'articles' && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Enlace Oficial (opcional)</label>
                       <input
@@ -1420,21 +1421,21 @@ export function AdminPanel() {
                         placeholder="https://..."
                       />
                     </div>
-                  ) : (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">URL de Imagen (opcional)</label>
-                      <input
-                        type="url"
-                        value={formData.image_url}
-                        onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                        placeholder="https://images.pexels.com/..."
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        💡 Puedes usar fotos de Pexels como: https://images.pexels.com/photos/1546168/pexels-photo-1546168.jpeg
-                      </p>
-                    </div>
                   )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">URL de Imagen (opcional)</label>
+                    <input
+                      type="url"
+                      value={formData.image_url}
+                      onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                      placeholder="https://images.pexels.com/..."
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Puedes usar fotos de Pexels como: https://images.pexels.com/photos/1546168/pexels-photo-1546168.jpeg
+                    </p>
+                  </div>
 
                   {activeTab === 'specials' && (
                     <div className="border-t pt-4">

@@ -29,6 +29,7 @@ interface Article {
   content: string;
   summary?: string;
   official_link?: string;
+  image_url?: string;
   author_contact_id?: string[] | null;
   author_photo_url?: string[] | null;
   is_hidden?: boolean;
@@ -373,11 +374,11 @@ const ArticleDetail = () => {
           </Link>
         </div>
 
-        {/* Imagen para artículos especiales */}
-        {type === 'special' && 'image_url' in article && article.image_url && (
+        {/* Imagen destacada */}
+        {'image_url' in article && article.image_url && (
           <div className="mb-8">
-            <img 
-              src={article.image_url} 
+            <img
+              src={article.image_url}
               alt={article.title}
               className="w-full h-64 md:h-96 object-cover rounded-lg shadow-lg"
             />
@@ -2063,7 +2064,7 @@ const CategoryFilterView = () => {
           <section className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {displayedArticles.map((article) => (
               <article key={`${article.type}-${article.id}`} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                {article.type === 'special' && 'image_url' in article && article.image_url && (
+                {'image_url' in article && article.image_url && (
                   <img
                     src={article.image_url}
                     alt={article.title}
@@ -2416,9 +2417,9 @@ const HomePage = () => {
             : filteredArticles.slice(0, 9)
           ).map((article) => (
             <article key={`${article.type}-${article.id}`} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-              {article.type === 'special' && 'image_url' in article && article.image_url && (
-                <img 
-                  src={article.image_url} 
+              {'image_url' in article && article.image_url && (
+                <img
+                  src={article.image_url}
                   alt={article.title}
                   className="w-full h-48 object-cover"
                 />
