@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Search, Calendar, FileText, ArrowLeft, ChevronRight } from 'lucide-react';
+import { Search, Calendar, FileText, ArrowLeft, ChevronRight, Tag, Building2 } from 'lucide-react';
 import { supabase } from './supabase';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { LoadingSpinner } from './LoadingSpinner';
@@ -11,6 +11,7 @@ interface RepositoryNorm {
   title: string;
   norm_type: string;
   norm_number: string;
+  entity: string;
   published_date: string;
   content: string;
   summary: string;
@@ -47,17 +48,31 @@ export function RepositoryPage() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
+  const [selectedType, setSelectedType] = useState<string>('Todos');
+  const [selectedEntity, setSelectedEntity] = useState<string>('Todas');
+  const [documentTypes, setDocumentTypes] = useState<string[]>([]);
+  const [entities, setEntities] = useState<string[]>([]);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const { data, error } = await supabase
-          .from('repository_norms')
-          .select('*')
-          .eq('is_hidden', false)
-          .order('published_date', { ascending: false });
-        if (error) throw error;
-        setNorms(data || []);
+        const [normsRes, optionsRes] = await Promise.all([
+          supabase
+            .from('repository_norms')
+            .select('*')
+            .eq('is_hidden', false)
+            .order('published_date', { ascending: false }),
+          supabase
+            .from('categories_config')
+            .select('name, type, display_order, is_active')
+            .eq('is_active', true)
+            .order('display_order', { ascending: true })
+        ]);
+        if (normsRes.error) throw normsRes.error;
+        setNorms(normsRes.data || []);
+        const opts = optionsRes.data || [];
+        setDocumentTypes(opts.filter((i: any) => i.type === 'document_type').map((i: any) => i.name));
+        setEntities(opts.filter((i: any) => i.type === 'entity').map((i: any) => i.name));
       } catch (err) {
         console.error('Error fetching repository norms:', err);
       } finally {
@@ -85,15 +100,19 @@ export function RepositoryPage() {
         if (dateFrom && n.published_date < dateFrom) return false;
         if (dateTo && n.published_date > dateTo) return false;
       }
+      if (selectedType !== 'Todos' && n.norm_type !== selectedType) return false;
+      if (selectedEntity !== 'Todas' && n.entity !== selectedEntity) return false;
       return true;
     });
-  }, [norms, search, dateFrom, dateTo, selectedDate]);
+  }, [norms, search, dateFrom, dateTo, selectedDate, selectedType, selectedEntity]);
 
   const clearFilters = () => {
     setSearch('');
     setDateFrom('');
     setDateTo('');
     setSelectedDate('');
+    setSelectedType('Todos');
+    setSelectedEntity('Todas');
   };
 
   return (
@@ -112,6 +131,70 @@ export function RepositoryPage() {
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        <div className="grid md:grid-cols-2 gap-4 mb-6">
+          <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
+            <div className="flex items-center gap-2 mb-4">
+              <Tag className="w-5 h-5 text-red-900" />
+              <h3 className="text-lg font-semibold text-gray-900">Categorías</h3>
+            </div>
+            <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto">
+              <button
+                onClick={() => setSelectedType('Todos')}
+                className={`px-4 py-2 rounded text-sm ${
+                  selectedType === 'Todos' ? 'bg-red-900 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
+                }`}
+              >
+                Todos
+              </button>
+              {documentTypes.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setSelectedType(t)}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded text-sm ${
+                    selectedType === t ? 'bg-red-900 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
+                  }`}
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>{t}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
+            <div className="flex items-center gap-2 mb-4">
+              <Building2 className="w-5 h-5 text-red-900" />
+              <h3 className="text-lg font-semibold text-gray-900">Entidad</h3>
+            </div>
+            <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto">
+              <button
+                onClick={() => setSelectedEntity('Todas')}
+                className={`px-4 py-2 rounded text-sm ${
+                  selectedEntity === 'Todas' ? 'bg-red-900 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
+                }`}
+              >
+                Todas
+              </button>
+              {entities.length === 0 ? (
+                <span className="text-sm text-gray-500 self-center">Agrega entidades desde el panel de administración</span>
+              ) : (
+                entities.map((en) => (
+                  <button
+                    key={en}
+                    onClick={() => setSelectedEntity(en)}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded text-sm ${
+                      selectedEntity === en ? 'bg-red-900 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
+                    }`}
+                  >
+                    <Building2 className="w-4 h-4" />
+                    <span>{en}</span>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
             <div className="md:col-span-6 relative">
@@ -198,6 +281,11 @@ export function RepositoryPage() {
                       {n.norm_number && (
                         <span className="inline-block text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded">
                           N {n.norm_number}
+                        </span>
+                      )}
+                      {n.entity && (
+                        <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-amber-100 text-amber-800 rounded">
+                          <Building2 className="w-3 h-3" /> {n.entity}
                         </span>
                       )}
                       <span className="inline-flex items-center text-xs text-gray-500 gap-1">
@@ -289,6 +377,11 @@ export function RepositoryDetailPage() {
             )}
             {norm.norm_number && (
               <span className="inline-block text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded">N {norm.norm_number}</span>
+            )}
+            {norm.entity && (
+              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-amber-100 text-amber-800 rounded">
+                <Building2 className="w-3 h-3" /> {norm.entity}
+              </span>
             )}
             <span className="inline-flex items-center text-xs text-gray-500 gap-1">
               <Calendar className="w-3 h-3" /> {formatDateSafe(norm.published_date)}

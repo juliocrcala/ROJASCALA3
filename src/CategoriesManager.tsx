@@ -1,33 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabase';
-import { Plus, Edit, Trash2, Save, X, AlertCircle, Tag, FileText, RefreshCw, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, CreditCard as Edit, Trash2, Save, X, AlertCircle, Tag, FileText, RefreshCw, ArrowUp, ArrowDown, Building2 } from 'lucide-react';
 
 interface Category {
   id: string;
   name: string;
-  type: 'category' | 'document_type';
+  type: 'category' | 'document_type' | 'entity';
   display_order: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
 }
 
+type TabKey = 'categories' | 'document_types' | 'entities';
+
 export function CategoriesManager() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [documentTypes, setDocumentTypes] = useState<Category[]>([]);
+  const [entities, setEntities] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [activeTab, setActiveTab] = useState<'categories' | 'document_types'>('categories');
+  const [activeTab, setActiveTab] = useState<TabKey>('categories');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    type: 'category' as 'category' | 'document_type',
+    type: 'category' as 'category' | 'document_type' | 'entity',
     display_order: 999,
     is_active: true
   });
+
+  const tabTypeMap: Record<TabKey, 'category' | 'document_type' | 'entity'> = {
+    categories: 'category',
+    document_types: 'document_type',
+    entities: 'entity'
+  };
+
+  const tabSingularLabel: Record<TabKey, string> = {
+    categories: 'Categoría',
+    document_types: 'Tipo de Norma',
+    entities: 'Entidad'
+  };
+
+  const tabPluralTitle: Record<TabKey, string> = {
+    categories: 'Categorías',
+    document_types: 'Tipos de Normas',
+    entities: 'Entidades'
+  };
 
   useEffect(() => {
     fetchData();
@@ -48,6 +69,7 @@ export function CategoriesManager() {
       const allData = data || [];
       setCategories(allData.filter(item => item.type === 'category'));
       setDocumentTypes(allData.filter(item => item.type === 'document_type'));
+      setEntities(allData.filter(item => item.type === 'entity'));
     } catch (error: any) {
       console.error('Error fetching data:', error);
       setError('Error al cargar los datos. Verifica tu conexión a internet.');
@@ -71,8 +93,14 @@ export function CategoriesManager() {
     }, 5000);
   };
 
+  const getCurrentList = (): Category[] => {
+    if (activeTab === 'categories') return categories;
+    if (activeTab === 'document_types') return documentTypes;
+    return entities;
+  };
+
   const getNextOrderNumber = () => {
-    const currentList = activeTab === 'categories' ? categories : documentTypes;
+    const currentList = getCurrentList();
     if (currentList.length === 0) return 1;
     const maxOrder = Math.max(...currentList.map(item => item.display_order));
     return maxOrder + 1;
@@ -91,7 +119,7 @@ export function CategoriesManager() {
 
       const itemData = {
         name: formData.name.trim(),
-        type: activeTab === 'categories' ? 'category' : 'document_type',
+        type: tabTypeMap[activeTab],
         display_order: formData.display_order,
         is_active: formData.is_active
       };
@@ -105,7 +133,7 @@ export function CategoriesManager() {
           .single();
 
         if (error) throw error;
-        showMessage(`${activeTab === 'categories' ? 'Categoría' : 'Tipo de norma'} actualizado exitosamente`, 'success');
+        showMessage(`${tabSingularLabel[activeTab]} actualizado exitosamente`, 'success');
       } else {
         const { data, error } = await supabase
           .from('categories_config')
@@ -114,7 +142,7 @@ export function CategoriesManager() {
           .single();
 
         if (error) throw error;
-        showMessage(`${activeTab === 'categories' ? 'Categoría' : 'Tipo de norma'} creado exitosamente`, 'success');
+        showMessage(`${tabSingularLabel[activeTab]} creado exitosamente`, 'success');
       }
 
       await fetchData();
@@ -134,7 +162,7 @@ export function CategoriesManager() {
   const resetForm = () => {
     setFormData({
       name: '',
-      type: activeTab === 'categories' ? 'category' : 'document_type',
+      type: tabTypeMap[activeTab],
       display_order: getNextOrderNumber(),
       is_active: true
     });
@@ -199,7 +227,7 @@ export function CategoriesManager() {
   const moveItem = async (id: string, direction: 'up' | 'down') => {
     try {
       setError(null);
-      const currentList = activeTab === 'categories' ? categories : documentTypes;
+      const currentList = getCurrentList();
       const sortedList = [...currentList].sort((a, b) => a.display_order - b.display_order);
       const currentIndex = sortedList.findIndex(item => item.id === id);
       
@@ -245,9 +273,9 @@ export function CategoriesManager() {
     );
   }
 
-  const currentList = activeTab === 'categories' ? categories : documentTypes;
-  const currentTitle = activeTab === 'categories' ? 'Categorías' : 'Tipos de Normas';
-  const currentIcon = activeTab === 'categories' ? Tag : FileText;
+  const currentList = getCurrentList();
+  const currentTitle = tabPluralTitle[activeTab];
+  const currentIcon = activeTab === 'categories' ? Tag : activeTab === 'document_types' ? FileText : Building2;
 
   return (
     <div className="space-y-6">
@@ -265,7 +293,7 @@ export function CategoriesManager() {
             onClick={() => {
               setFormData({
                 name: '',
-                type: activeTab === 'categories' ? 'category' : 'document_type',
+                type: tabTypeMap[activeTab],
                 display_order: getNextOrderNumber(),
                 is_active: true
               });
@@ -274,7 +302,7 @@ export function CategoriesManager() {
             className="bg-red-900 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-red-800"
           >
             <Plus className="w-5 h-5" />
-            <span>Nuevo {activeTab === 'categories' ? 'Categoría' : 'Tipo'}</span>
+            <span>Nuevo {tabSingularLabel[activeTab]}</span>
           </button>
         </div>
       </div>
@@ -304,6 +332,17 @@ export function CategoriesManager() {
             <FileText className="w-4 h-4" />
             <span>Tipos de Normas ({documentTypes.length})</span>
           </button>
+          <button
+            onClick={() => setActiveTab('entities')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+              activeTab === 'entities'
+                ? 'border-red-500 text-red-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <Building2 className="w-4 h-4" />
+            <span>Entidades ({entities.length})</span>
+          </button>
         </nav>
       </div>
 
@@ -330,7 +369,7 @@ export function CategoriesManager() {
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold">
-                {editingId ? 'Editar' : 'Nuevo'} {activeTab === 'categories' ? 'Categoría' : 'Tipo de Norma'}
+                {editingId ? 'Editar' : 'Nuevo'} {tabSingularLabel[activeTab]}
               </h3>
               <button onClick={resetForm} className="text-gray-500 hover:text-gray-700">
                 <X className="w-6 h-6" />
@@ -348,7 +387,7 @@ export function CategoriesManager() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                  placeholder={`Nombre de la ${activeTab === 'categories' ? 'categoría' : 'tipo de norma'}`}
+                  placeholder={`Nombre de ${activeTab === 'document_types' ? 'el tipo de norma' : activeTab === 'entities' ? 'la entidad' : 'la categoría'}`}
                 />
               </div>
 
@@ -483,13 +522,13 @@ export function CategoriesManager() {
               No hay {currentTitle.toLowerCase()} configuradas
             </h3>
             <p className="text-gray-600 mb-4">
-              Crea tu primera {activeTab === 'categories' ? 'categoría' : 'tipo de norma'} para comenzar.
+              Crea tu primera {tabSingularLabel[activeTab].toLowerCase()} para comenzar.
             </p>
             <button
               onClick={() => {
                 setFormData({
                   name: '',
-                  type: activeTab === 'categories' ? 'category' : 'document_type',
+                  type: tabTypeMap[activeTab],
                   display_order: 1,
                   is_active: true
                 });
@@ -497,7 +536,7 @@ export function CategoriesManager() {
               }}
               className="bg-red-900 text-white px-6 py-3 rounded-lg hover:bg-red-800"
             >
-              Crear primera {activeTab === 'categories' ? 'categoría' : 'tipo de norma'}
+              Crear primera {tabSingularLabel[activeTab].toLowerCase()}
             </button>
           </div>
         )}
