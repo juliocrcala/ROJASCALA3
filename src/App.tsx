@@ -263,6 +263,22 @@ const normalizeText = (text: string): string =>
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
 
+const stripForSearch = (text: string): string =>
+  normalizeText(text)
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const fuzzyMatch = (text: string, term: string): boolean => {
+  if (!term || !term.trim()) return true;
+  const target = stripForSearch(text);
+  const tokens = stripForSearch(term).split(' ').filter(Boolean);
+  if (tokens.length === 0) return true;
+  const matched = tokens.filter(tok => target.includes(tok)).length;
+  const required = Math.max(1, Math.ceil(tokens.length * 0.7));
+  return matched >= required;
+};
+
 const isInternalLink = (link?: string): boolean => !!link && link.startsWith('/');
 
 const OfficialLinkButton = ({ href, className, children }: { href: string; className: string; children: React.ReactNode }) => {
@@ -634,15 +650,13 @@ const SpecialsPage = () => {
 
     // Filtrar por término de búsqueda
     if (searchTerm.trim()) {
-      const searchLower = normalizeText(searchTerm);
       filtered = filtered.filter(article => {
         const authorName = Array.isArray(article.author) ? article.author[0] : article.author;
-        return normalizeText(article.title).includes(searchLower) ||
-          normalizeText(article.content).includes(searchLower) ||
-          (authorName && normalizeText(authorName).includes(searchLower)) ||
-          (article.summary && normalizeText(article.summary).includes(searchLower)) ||
-          (Array.isArray(article.category) ? article.category : [article.category])
-            .some(cat => normalizeText(cat || '').includes(searchLower));
+        const cats = (Array.isArray(article.category) ? article.category : [article.category])
+          .filter(Boolean)
+          .join(' ');
+        const combined = [article.title, article.content, article.summary || '', authorName || '', cats].join(' ');
+        return fuzzyMatch(combined, searchTerm);
       });
     }
 
@@ -2643,10 +2657,10 @@ const HomePage = () => {
     const matchesCategory = selectedCategory === "Todos" || articleCategories.includes(selectedCategory);
     const matchesType = selectedType === "Todos" || 
       (article.type === 'normal' ? article.document_type === selectedType : selectedType === 'Artículo Especial');
-    const normalizedSearch = normalizeText(searchTerm);
     const matchesSearch = searchTerm === "" ||
-      normalizeText(article.title).includes(normalizedSearch) ||
-      normalizeText(article.content).includes(normalizedSearch);
+      fuzzyMatch(article.title, searchTerm) ||
+      fuzzyMatch(article.content, searchTerm) ||
+      fuzzyMatch(article.summary || '', searchTerm);
     
     return matchesCategory && matchesType && matchesSearch;
   });

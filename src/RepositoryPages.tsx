@@ -26,6 +26,22 @@ const normalizeText = (text: string): string =>
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
 
+const stripForSearch = (text: string): string =>
+  normalizeText(text)
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const fuzzyMatch = (text: string, term: string): boolean => {
+  if (!term || !term.trim()) return true;
+  const target = stripForSearch(text);
+  const tokens = stripForSearch(term).split(' ').filter(Boolean);
+  if (tokens.length === 0) return true;
+  const matched = tokens.filter(tok => target.includes(tok)).length;
+  const required = Math.max(1, Math.ceil(tokens.length * 0.7));
+  return matched >= required;
+};
+
 const formatDateSafe = (dateString: string): string => {
   try {
     const [year, month, day] = dateString.split('-').map(Number);
@@ -70,14 +86,8 @@ export function RepositoryPage() {
   const filtered = useMemo(() => {
     return norms.filter((n) => {
       if (search.trim()) {
-        const q = normalizeText(search);
-        const hit =
-          normalizeText(n.title).includes(q) ||
-          normalizeText(n.norm_number).includes(q) ||
-          normalizeText(n.norm_type).includes(q) ||
-          normalizeText(n.summary || '').includes(q) ||
-          normalizeText(n.content || '').includes(q);
-        if (!hit) return false;
+        const combined = [n.title, n.norm_number, n.norm_type, n.summary || '', n.content || ''].join(' ');
+        if (!fuzzyMatch(combined, search)) return false;
       }
       if (selectedDate) {
         if (n.published_date !== selectedDate) return false;
