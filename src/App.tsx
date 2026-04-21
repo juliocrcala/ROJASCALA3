@@ -281,6 +281,74 @@ const fuzzyMatch = (text: string, term: string): boolean => {
 
 const isInternalLink = (link?: string): boolean => !!link && link.startsWith('/');
 
+const getPageNumbers = (current: number, total: number): (number | '...')[] => {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages: (number | '...')[] = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  if (start > 2) pages.push('...');
+  for (let i = start; i <= end; i++) pages.push(i);
+  if (end < total - 1) pages.push('...');
+  pages.push(total);
+  return pages;
+};
+
+type PaginationProps = {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  onPageChange: (page: number) => void;
+};
+
+const Pagination = ({ currentPage, totalPages, totalItems, itemsPerPage, onPageChange }: PaginationProps) => {
+  if (totalPages <= 1) return null;
+  const start = (currentPage - 1) * itemsPerPage + 1;
+  const end = Math.min(currentPage * itemsPerPage, totalItems);
+  const pages = getPageNumbers(currentPage, totalPages);
+
+  return (
+    <div className="flex flex-col items-center gap-3 py-8">
+      <p className="text-sm text-gray-600">
+        Mostrando {start}-{end} de {totalItems} resultados
+      </p>
+      <div className="flex items-center gap-1 flex-wrap justify-center">
+        <button
+          onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+          disabled={currentPage === 1}
+          className="px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm"
+        >
+          Anterior
+        </button>
+        {pages.map((p, idx) =>
+          p === '...' ? (
+            <span key={`e-${idx}`} className="px-2 text-gray-500">...</span>
+          ) : (
+            <button
+              key={p}
+              onClick={() => onPageChange(p)}
+              className={`min-w-[40px] px-3 py-2 rounded-md text-sm border transition-colors ${
+                p === currentPage
+                  ? 'bg-red-900 text-white border-red-900'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {p}
+            </button>
+          )
+        )}
+        <button
+          onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+          disabled={currentPage === totalPages}
+          className="px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm"
+        >
+          Siguiente
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const OfficialLinkButton = ({ href, className, children }: { href: string; className: string; children: React.ReactNode }) => {
   if (isInternalLink(href)) {
     return <Link to={href} className={className}>{children}</Link>;
@@ -2534,8 +2602,14 @@ const HomePage = () => {
   const [categories, setCategories] = useState<{ name: string; icon: React.ReactNode }[]>([]);
   const [documentTypes, setDocumentTypes] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 9;
 
   useAnalytics('Página Principal');
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategory, selectedType]);
 
   useEffect(() => {
     fetchData();
@@ -2688,10 +2762,15 @@ const HomePage = () => {
 
       <main className="container mx-auto px-4 py-8">
         <section className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {(searchTerm.trim() !== "" || selectedCategory !== "Todos" || selectedType !== "Todos"
-            ? filteredArticles
-            : filteredArticles.slice(0, 9)
-          ).map((article) => (
+          {(() => {
+            const isFiltering = searchTerm.trim() !== "" || selectedCategory !== "Todos" || selectedType !== "Todos";
+            const totalPages = Math.max(1, Math.ceil(filteredArticles.length / ITEMS_PER_PAGE));
+            const safePage = Math.min(currentPage, totalPages);
+            const pageItems = isFiltering
+              ? filteredArticles.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE)
+              : filteredArticles.slice(0, 9);
+            return pageItems;
+          })().map((article) => (
             <article key={`${article.type}-${article.id}`} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
               {'image_url' in article && article.image_url && (
                 <img
@@ -2768,25 +2847,50 @@ const HomePage = () => {
           ))}
         </section>
 
-        {filteredArticles.length > 9 && (
-          <div className="text-center py-8">
-            <p className="text-gray-600 mb-4">Mostrando los 9 artículos más recientes</p>
-            <div className="flex justify-center space-x-4">
-              <Link
-                to="/normas"
-                className="px-6 py-2 bg-red-900 text-white rounded-lg hover:bg-red-800 transition-colors"
-              >
-                Ver todas las normas
-              </Link>
-              <Link
-                to="/especiales"
-                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-              >
-                Ver artículos especiales
-              </Link>
-            </div>
-          </div>
-        )}
+        {(() => {
+          const isFiltering = searchTerm.trim() !== "" || selectedCategory !== "Todos" || selectedType !== "Todos";
+          const totalPages = Math.max(1, Math.ceil(filteredArticles.length / ITEMS_PER_PAGE));
+          const safePage = Math.min(currentPage, totalPages);
+
+          if (!isFiltering && filteredArticles.length > 9) {
+            return (
+              <div className="text-center py-8">
+                <p className="text-gray-600 mb-4">Mostrando los 9 artículos más recientes</p>
+                <div className="flex justify-center space-x-4">
+                  <Link
+                    to="/normas"
+                    className="px-6 py-2 bg-red-900 text-white rounded-lg hover:bg-red-800 transition-colors"
+                  >
+                    Ver todas las normas
+                  </Link>
+                  <Link
+                    to="/especiales"
+                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    Ver artículos especiales
+                  </Link>
+                </div>
+              </div>
+            );
+          }
+
+          if (isFiltering && filteredArticles.length > ITEMS_PER_PAGE) {
+            return (
+              <Pagination
+                currentPage={safePage}
+                totalPages={totalPages}
+                totalItems={filteredArticles.length}
+                itemsPerPage={ITEMS_PER_PAGE}
+                onPageChange={(p) => {
+                  setCurrentPage(p);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
+            );
+          }
+
+          return null;
+        })()}
 
         {filteredArticles.length === 0 && (
           <div className="text-center py-12">

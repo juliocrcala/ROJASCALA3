@@ -42,6 +42,74 @@ const fuzzyMatch = (text: string, term: string): boolean => {
   return matched >= required;
 };
 
+const getPageNumbers = (current: number, total: number): (number | '...')[] => {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages: (number | '...')[] = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  if (start > 2) pages.push('...');
+  for (let i = start; i <= end; i++) pages.push(i);
+  if (end < total - 1) pages.push('...');
+  pages.push(total);
+  return pages;
+};
+
+type RepoPaginationProps = {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  onPageChange: (page: number) => void;
+};
+
+const RepoPagination = ({ currentPage, totalPages, totalItems, itemsPerPage, onPageChange }: RepoPaginationProps) => {
+  if (totalPages <= 1) return null;
+  const start = (currentPage - 1) * itemsPerPage + 1;
+  const end = Math.min(currentPage * itemsPerPage, totalItems);
+  const pages = getPageNumbers(currentPage, totalPages);
+
+  return (
+    <div className="flex flex-col items-center gap-3 pt-6">
+      <p className="text-sm text-gray-600">
+        Mostrando {start}-{end} de {totalItems} resultados
+      </p>
+      <div className="flex items-center gap-1 flex-wrap justify-center">
+        <button
+          onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+          disabled={currentPage === 1}
+          className="px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm"
+        >
+          Anterior
+        </button>
+        {pages.map((p, idx) =>
+          p === '...' ? (
+            <span key={`e-${idx}`} className="px-2 text-gray-500">...</span>
+          ) : (
+            <button
+              key={p}
+              onClick={() => onPageChange(p)}
+              className={`min-w-[40px] px-3 py-2 rounded-md text-sm border transition-colors ${
+                p === currentPage
+                  ? 'bg-red-900 text-white border-red-900'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {p}
+            </button>
+          )
+        )}
+        <button
+          onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+          disabled={currentPage === totalPages}
+          className="px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm"
+        >
+          Siguiente
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const formatDateSafe = (dateString: string): string => {
   try {
     const [year, month, day] = dateString.split('-').map(Number);
@@ -63,6 +131,12 @@ export function RepositoryPage() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, dateFrom, dateTo, selectedDate]);
 
   useEffect(() => {
     const load = async () => {
@@ -191,7 +265,7 @@ export function RepositoryPage() {
         ) : (
           <div className="space-y-3">
             <p className="text-sm text-gray-600 mb-2">{filtered.length} norma(s) encontrada(s)</p>
-            {filtered.map((n) => (
+            {filtered.slice((Math.min(currentPage, Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))) - 1) * ITEMS_PER_PAGE, Math.min(currentPage, Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))) * ITEMS_PER_PAGE).map((n) => (
               <Link
                 key={n.id}
                 to={`/repositorio/${n.slug}`}
@@ -223,6 +297,18 @@ export function RepositoryPage() {
                 </div>
               </Link>
             ))}
+            {filtered.length > ITEMS_PER_PAGE && (
+              <RepoPagination
+                currentPage={Math.min(currentPage, Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE)))}
+                totalPages={Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))}
+                totalItems={filtered.length}
+                itemsPerPage={ITEMS_PER_PAGE}
+                onPageChange={(p) => {
+                  setCurrentPage(p);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
+            )}
           </div>
         )}
       </div>
