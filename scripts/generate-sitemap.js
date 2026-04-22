@@ -27,6 +27,7 @@ const staticPages = [
   { url: '/fechas', priority: '0.9', changefreq: 'weekly' },
   { url: '/categorias', priority: '0.9', changefreq: 'weekly' },
   { url: '/especiales', priority: '0.9', changefreq: 'weekly' },
+  { url: '/repositorio', priority: '0.9', changefreq: 'weekly' },
   { url: '/contacto', priority: '0.8', changefreq: 'monthly' },
 ];
 
@@ -97,6 +98,26 @@ async function generateSitemap() {
       });
     });
     console.log(`✓ ${specialArticles.length} artículos especiales agregados`);
+  }
+
+  const { data: repoNorms, error: repoError } = await supabase
+    .from('repository_norms')
+    .select('id, slug, updated_at, published_date')
+    .eq('is_hidden', false);
+
+  if (repoError) {
+    console.error('Error al obtener normas del repositorio:', repoError);
+  } else if (repoNorms) {
+    repoNorms.forEach(norm => {
+      if (!norm.slug) return;
+      urls.push({
+        url: `${SITE_URL}/repositorio/${norm.slug}`,
+        lastmod: formatDate(norm.updated_at || norm.published_date),
+        priority: '0.7',
+        changefreq: 'monthly',
+      });
+    });
+    console.log(`✓ ${repoNorms.length} normas del repositorio agregadas`);
   }
 
   const sitemapXML = generateSitemapXML(urls);
