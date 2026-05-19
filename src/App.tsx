@@ -497,6 +497,7 @@ const ArticleDetail = () => {
               src={article.image_url}
               alt={article.title}
               className="w-full h-64 md:h-96 object-cover rounded-lg shadow-lg"
+              onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }}
             />
           </div>
         )}
@@ -945,10 +946,11 @@ const SpecialsPage = () => {
           <article key={article.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
             {article.image_url && (
               <div className="relative">
-                <img 
-                  src={article.image_url} 
+                <img
+                  src={article.image_url}
                   alt={article.title}
                   className="w-full h-48 object-cover"
+                  onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }}
                 />
                 <div className="absolute top-4 left-4">
                   <span className="inline-block px-3 py-1 text-xs font-medium bg-purple-600 text-white rounded-full">
@@ -2177,6 +2179,7 @@ const CategoryFilterView = () => {
                     src={article.image_url}
                     alt={article.title}
                     className="w-full h-48 object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
                 )}
                 <div className="p-6">
@@ -2492,6 +2495,7 @@ const EntityFilterView = () => {
                     src={article.image_url}
                     alt={article.title}
                     className="w-full h-48 object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
                 )}
                 <div className="p-6">

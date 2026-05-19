@@ -111,6 +111,9 @@ export function AdminPanel() {
   const [cookiePrivacyTitle, setCookiePrivacyTitle] = useState('Privacidad');
   const [cookiePrivacyText, setCookiePrivacyText] = useState('No recopilamos datos personales identificables. Todo es anónimo.');
   const [cookieFooterText, setCookieFooterText] = useState('Al aceptar, reconoces los términos de uso y derechos de autor.');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     author: 'Julio Cesar Rojas Cala',
@@ -437,6 +440,37 @@ export function AdminPanel() {
     });
   };
 
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    setFormData(prev => ({ ...prev, image_url: '' }));
+  };
+
+  const removeImageFile = () => {
+    setImageFile(null);
+    setImagePreview('');
+  };
+
+  const uploadImage = async (file: File): Promise<string> => {
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+    const filePath = `articles/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from('article-images')
+      .upload(filePath, file, { cacheControl: '31536000', upsert: false });
+
+    if (error) throw new Error(`Error al subir imagen: ${error.message}`);
+
+    const { data: urlData } = supabase.storage
+      .from('article-images')
+      .getPublicUrl(filePath);
+
+    return urlData.publicUrl;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -454,6 +488,16 @@ export function AdminPanel() {
       }
       if (!formData.content.trim()) {
         throw new Error('El contenido es requerido');
+      }
+
+      let finalImageUrl = formData.image_url.trim() || null;
+      if (imageFile) {
+        setUploadingImage(true);
+        try {
+          finalImageUrl = await uploadImage(imageFile);
+        } finally {
+          setUploadingImage(false);
+        }
       }
 
       // Determinar el autor basado en la selección
@@ -489,7 +533,7 @@ export function AdminPanel() {
           ...baseData,
           document_type: formData.document_type,
           official_link: formData.official_link.trim() || null,
-          image_url: formData.image_url.trim() || null
+          image_url: finalImageUrl
         };
 
         if (editingId) {
@@ -516,7 +560,7 @@ export function AdminPanel() {
       } else if (activeTab === 'specials') {
         const specialData = {
           ...baseData,
-          image_url: formData.image_url.trim() || null,
+          image_url: finalImageUrl,
           attachment_url: formData.attachment_url.trim() || null,
           attachment_label: formData.attachment_url.trim() ? (formData.attachment_label.trim() || 'Ver Anexo') : null
         };
@@ -573,6 +617,8 @@ export function AdminPanel() {
     });
     setShowForm(false);
     setEditingId(null);
+    setImageFile(null);
+    setImagePreview('');
   };
 
   const handleEdit = (item: Article | SpecialArticle) => {
@@ -599,6 +645,8 @@ export function AdminPanel() {
     setShowForm(true);
     setError(null);
     setSuccess(null);
+    setImageFile(null);
+    setImagePreview('image_url' in item && item.image_url ? item.image_url : '');
   };
 
   const handleDelete = async (id: string, type: 'articles' | 'specials') => {
@@ -1495,17 +1543,59 @@ export function AdminPanel() {
                   )}
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">URL de Imagen (opcional)</label>
-                    <input
-                      type="url"
-                      value={formData.image_url}
-                      onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                      placeholder="https://images.pexels.com/..."
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Puedes usar fotos de Pexels como: https://images.pexels.com/photos/1546168/pexels-photo-1546168.jpeg
-                    </p>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Imagen del Artículo (opcional)</label>
+
+                    {(imagePreview || (!imageFile && formData.image_url)) && (
+                      <div className="relative mb-3 inline-block">
+                        <img
+                          src={imageFile ? imagePreview : formData.image_url}
+                          alt="Vista previa"
+                          className="w-full max-w-xs h-40 object-cover rounded-lg border border-gray-200"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            removeImageFile();
+                            setFormData(prev => ({ ...prev, image_url: '' }));
+                          }}
+                          className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-700"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="flex items-center gap-2 px-4 py-3 bg-red-50 text-red-800 rounded-lg border-2 border-dashed border-red-300 cursor-pointer hover:bg-red-100 transition-colors">
+                          <Image className="w-5 h-5" />
+                          <span className="text-sm font-medium">
+                            {imageFile ? imageFile.name : 'Subir imagen desde tu dispositivo'}
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/gif,image/webp"
+                            onChange={handleImageFileChange}
+                            className="hidden"
+                          />
+                        </label>
+                        <p className="text-xs text-gray-500 mt-1">JPG, PNG, GIF o WebP. Maximo 5MB.</p>
+                      </div>
+
+                      {!imageFile && (
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">O pega una URL externa:</p>
+                          <input
+                            type="url"
+                            value={formData.image_url}
+                            onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                            placeholder="https://..."
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {activeTab === 'specials' && (
@@ -1578,7 +1668,7 @@ export function AdminPanel() {
                       {isSaving ? (
                         <>
                           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          <span>Guardando...</span>
+                          <span>{uploadingImage ? 'Subiendo imagen...' : 'Guardando...'}</span>
                         </>
                       ) : (
                         <>
