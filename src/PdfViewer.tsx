@@ -1,17 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, AlertCircle } from 'lucide-react';
-import { supabase } from './supabase';
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 interface PdfViewerProps {
   url: string;
-}
-
-function extractStoragePath(url: string): string | null {
-  const match = url.match(/\/storage\/v1\/object\/public\/repository-pdfs\/(.+)$/);
-  return match ? match[1] : null;
 }
 
 export function PdfViewer({ url }: PdfViewerProps) {
@@ -31,24 +25,9 @@ export function PdfViewer({ url }: PdfViewerProps) {
 
     const loadPdf = async () => {
       try {
-        let arrayBuffer: ArrayBuffer;
-
-        const storagePath = extractStoragePath(url);
-        if (storagePath) {
-          const { data, error: dlError } = await supabase.storage
-            .from('repository-pdfs')
-            .download(storagePath);
-          if (dlError || !data) {
-            console.error('Supabase download error:', dlError);
-            throw new Error(dlError?.message || 'Download failed');
-          }
-          arrayBuffer = await data.arrayBuffer();
-        } else {
-          const response = await fetch(url);
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          arrayBuffer = await response.arrayBuffer();
-        }
-
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const arrayBuffer = await response.arrayBuffer();
         if (cancelled) return;
 
         const loadingTask = pdfjsLib.getDocument({
@@ -61,11 +40,9 @@ export function PdfViewer({ url }: PdfViewerProps) {
         setPdf(doc);
         setTotalPages(doc.numPages);
         setCurrentPage(1);
-      } catch (err: any) {
-        console.error('PDF load error:', err);
-        if (!cancelled) {
-          setUseFallback(true);
-        }
+      } catch (err) {
+        console.error('PDF.js load error, falling back to embed:', err);
+        if (!cancelled) setUseFallback(true);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -114,14 +91,10 @@ export function PdfViewer({ url }: PdfViewerProps) {
 
   if (useFallback) {
     return (
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border-b border-amber-200">
-          <AlertCircle className="w-4 h-4 text-amber-600" />
-          <span className="text-xs text-amber-700">Usando visor alternativo del navegador</span>
-        </div>
-        <embed
+      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+        <iframe
           src={url}
-          type="application/pdf"
+          title="Documento PDF"
           className="w-full"
           style={{ height: '80vh', minHeight: '600px' }}
         />
