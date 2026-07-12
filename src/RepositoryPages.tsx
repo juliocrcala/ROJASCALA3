@@ -400,20 +400,29 @@ export function RepositoryDetailPage() {
 
           {norm.pdf_url && (
             <div className="mb-8">
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                 <h2 className="text-lg font-semibold text-gray-900">Documento PDF</h2>
-                <a
-                  href={norm.pdf_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-red-900 text-white rounded-md hover:bg-red-800 transition-colors"
-                >
-                  <Download className="w-4 h-4" /> Descargar PDF
-                </a>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={norm.pdf_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                  >
+                    <FileText className="w-4 h-4" /> Abrir en nueva pestana
+                  </a>
+                  <a
+                    href={norm.pdf_url}
+                    download
+                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-red-900 text-white rounded-md hover:bg-red-800 transition-colors"
+                  >
+                    <Download className="w-4 h-4" /> Descargar
+                  </a>
+                </div>
               </div>
-              <div className="border border-gray-200 rounded-lg overflow-hidden bg-gray-100">
+              <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
                 <iframe
-                  src={norm.pdf_url}
+                  src={`https://docs.google.com/gview?url=${encodeURIComponent(norm.pdf_url)}&embedded=true`}
                   title={norm.title}
                   className="w-full"
                   style={{ height: '80vh', minHeight: '600px' }}
