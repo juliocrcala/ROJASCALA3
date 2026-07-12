@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabase';
-import { Plus, CreditCard as Edit, Trash2, Save, X, AlertCircle, CheckCircle, FileText, Search, Eye, EyeOff } from 'lucide-react';
+import { Plus, CreditCard as Edit, Trash2, Save, X, AlertCircle, CheckCircle, FileText, Search, Eye, EyeOff, Upload } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
 
 interface RepositoryNorm {
@@ -12,6 +12,7 @@ interface RepositoryNorm {
   published_date: string;
   content: string;
   summary: string;
+  pdf_url: string | null;
   is_hidden: boolean;
   created_at: string;
   updated_at: string;
@@ -37,6 +38,7 @@ const emptyForm = () => ({
   published_date: new Date().toISOString().split('T')[0],
   content: '',
   summary: '',
+  pdf_url: '',
   is_hidden: false
 });
 
@@ -64,6 +66,8 @@ export function RepositoryManager() {
   const [success, setSuccess] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [formData, setFormData] = useState(emptyForm());
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
 
   useEffect(() => {
     fetchNorms();
@@ -98,6 +102,24 @@ export function RepositoryManager() {
     }
   };
 
+  const uploadPdf = async (file: File): Promise<string> => {
+    const ext = 'pdf';
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+    const filePath = `norms/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from('repository-pdfs')
+      .upload(filePath, file, { cacheControl: '31536000', upsert: false });
+
+    if (error) throw new Error(`Error al subir PDF: ${error.message}`);
+
+    const { data: urlData } = supabase.storage
+      .from('repository-pdfs')
+      .getPublicUrl(filePath);
+
+    return urlData.publicUrl;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
@@ -110,14 +132,31 @@ export function RepositoryManager() {
         return;
       }
 
+      if (!pdfFile && !formData.pdf_url && !formData.content.trim()) {
+        showMessage('Debes subir un PDF o escribir el contenido de la norma', 'error');
+        setIsSaving(false);
+        return;
+      }
+
+      let finalPdfUrl = formData.pdf_url || null;
+      if (pdfFile) {
+        setUploadingPdf(true);
+        try {
+          finalPdfUrl = await uploadPdf(pdfFile);
+        } finally {
+          setUploadingPdf(false);
+        }
+      }
+
       const payload = {
         slug: finalSlug,
         title: formData.title.trim(),
         norm_type: formData.norm_type.trim(),
         norm_number: formData.norm_number.trim(),
         published_date: formData.published_date,
-        content: formData.content,
+        content: formData.content || '',
         summary: formData.summary.trim(),
+        pdf_url: finalPdfUrl,
         is_hidden: formData.is_hidden
       };
 
@@ -152,10 +191,12 @@ export function RepositoryManager() {
       norm_type: norm.norm_type || '',
       norm_number: norm.norm_number || '',
       published_date: norm.published_date,
-      content: norm.content,
+      content: norm.content || '',
       summary: norm.summary || '',
+      pdf_url: norm.pdf_url || '',
       is_hidden: norm.is_hidden || false
     });
+    setPdfFile(null);
     setEditingId(norm.id);
     setShowForm(true);
   };
@@ -190,6 +231,7 @@ export function RepositoryManager() {
 
   const resetForm = () => {
     setFormData(emptyForm());
+    setPdfFile(null);
     setEditingId(null);
     setShowForm(false);
   };
@@ -308,12 +350,62 @@ export function RepositoryManager() {
               />
             </div>
 
+            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <label className="block text-sm font-medium text-gray-900 mb-3">Documento PDF de la norma (recomendado)</label>
+              <p className="text-xs text-gray-500 mb-3">Sube el PDF original de la norma. Se mostrara completo al usuario con todos sus cuadros y formato.</p>
+
+              {(pdfFile || formData.pdf_url) && (
+                <div className="mb-3 flex items-center gap-3 p-3 bg-white rounded-md border border-gray-200">
+                  <FileText className="w-5 h-5 text-red-700 flex-shrink-0" />
+                  <span className="text-sm text-gray-700 truncate flex-1">
+                    {pdfFile ? pdfFile.name : 'PDF cargado anteriormente'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPdfFile(null);
+                      setFormData(prev => ({ ...prev, pdf_url: '' }));
+                    }}
+                    className="text-red-600 hover:text-red-800 p-1"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              {!pdfFile && !formData.pdf_url && (
+                <label className="flex items-center gap-3 px-4 py-4 bg-white border-2 border-dashed border-red-300 rounded-lg cursor-pointer hover:bg-red-50 transition-colors">
+                  <Upload className="w-6 h-6 text-red-700" />
+                  <div>
+                    <span className="text-sm font-medium text-red-800">Subir PDF de la norma</span>
+                    <p className="text-xs text-gray-500">Maximo 20MB</p>
+                  </div>
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) setPdfFile(file);
+                    }}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Contenido completo de la norma *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Contenido en texto {(pdfFile || formData.pdf_url) ? '(opcional - complemento al PDF)' : '*'}
+              </label>
+              <p className="text-xs text-gray-500 mb-2">
+                {(pdfFile || formData.pdf_url)
+                  ? 'Si subiste PDF, este campo es opcional. Puedes agregar notas adicionales.'
+                  : 'Si no subes PDF, el contenido en texto es obligatorio.'}
+              </p>
               <RichTextEditor
                 value={formData.content}
                 onChange={(content) => setFormData({ ...formData, content })}
-                placeholder="Pega aqui el texto tal cual de la norma publicada en El Peruano..."
+                placeholder="Pega aqui el texto de la norma o notas adicionales..."
               />
             </div>
 
@@ -335,7 +427,7 @@ export function RepositoryManager() {
                 disabled={isSaving}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-red-900 hover:bg-red-800 text-white rounded-md text-sm font-medium disabled:opacity-50"
               >
-                <Save className="w-4 h-4" /> {isSaving ? 'Guardando...' : 'Guardar'}
+                <Save className="w-4 h-4" /> {isSaving ? (uploadingPdf ? 'Subiendo PDF...' : 'Guardando...') : 'Guardar'}
               </button>
             </div>
           </form>
@@ -376,7 +468,10 @@ export function RepositoryManager() {
             <tbody className="divide-y divide-gray-200">
               {filtered.map((n) => (
                 <tr key={n.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm text-gray-900 font-medium">{n.title}</td>
+                  <td className="px-4 py-3 text-sm text-gray-900 font-medium">
+                    {n.title}
+                    {n.pdf_url && <span className="ml-2 inline-flex items-center gap-1 text-xs px-1.5 py-0.5 bg-red-100 text-red-700 rounded"><FileText className="w-3 h-3" />PDF</span>}
+                  </td>
                   <td className="px-4 py-3 text-sm text-gray-600">{n.norm_type || '-'}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{n.norm_number || '-'}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{formatDateSafe(n.published_date)}</td>

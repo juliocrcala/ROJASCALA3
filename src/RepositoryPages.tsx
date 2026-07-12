@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Search, Calendar, FileText, ArrowLeft, ChevronRight } from 'lucide-react';
+import { Search, Calendar, FileText, ArrowLeft, ChevronRight, Download } from 'lucide-react';
 import { supabase } from './supabase';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { LoadingSpinner } from './LoadingSpinner';
@@ -14,6 +14,7 @@ interface RepositoryNorm {
   published_date: string;
   content: string;
   summary: string;
+  pdf_url: string | null;
   is_hidden: boolean;
   created_at: string;
   updated_at: string;
@@ -397,9 +398,35 @@ export function RepositoryDetailPage() {
             <p className="text-gray-700 italic border-l-4 border-red-200 pl-4 mb-6">{norm.summary}</p>
           )}
 
-          <div className="prose prose-sm md:prose max-w-none text-gray-800">
-            <MarkdownRenderer content={norm.content} />
-          </div>
+          {norm.pdf_url && (
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-semibold text-gray-900">Documento PDF</h2>
+                <a
+                  href={norm.pdf_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-red-900 text-white rounded-md hover:bg-red-800 transition-colors"
+                >
+                  <Download className="w-4 h-4" /> Descargar PDF
+                </a>
+              </div>
+              <div className="border border-gray-200 rounded-lg overflow-hidden bg-gray-100">
+                <iframe
+                  src={norm.pdf_url}
+                  title={norm.title}
+                  className="w-full"
+                  style={{ height: '80vh', minHeight: '600px' }}
+                />
+              </div>
+            </div>
+          )}
+
+          {norm.content && (
+            <div className="prose prose-sm md:prose max-w-none text-gray-800">
+              <MarkdownRenderer content={norm.content} />
+            </div>
+          )}
         </article>
       </div>
     </div>
