@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, AlertCircle } from 'lucide-react';
 import { supabase } from './supabase';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
@@ -20,14 +20,14 @@ export function PdfViewer({ url }: PdfViewerProps) {
   const [totalPages, setTotalPages] = useState(0);
   const [scale, setScale] = useState(1.5);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [useFallback, setUseFallback] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
-    setError(null);
+    setUseFallback(false);
 
     const loadPdf = async () => {
       try {
@@ -38,7 +38,10 @@ export function PdfViewer({ url }: PdfViewerProps) {
           const { data, error: dlError } = await supabase.storage
             .from('repository-pdfs')
             .download(storagePath);
-          if (dlError || !data) throw new Error(dlError?.message || 'Download failed');
+          if (dlError || !data) {
+            console.error('Supabase download error:', dlError);
+            throw new Error(dlError?.message || 'Download failed');
+          }
           arrayBuffer = await data.arrayBuffer();
         } else {
           const response = await fetch(url);
@@ -59,9 +62,9 @@ export function PdfViewer({ url }: PdfViewerProps) {
         setTotalPages(doc.numPages);
         setCurrentPage(1);
       } catch (err: any) {
+        console.error('PDF load error:', err);
         if (!cancelled) {
-          setError('No se pudo cargar el PDF. Intenta descargarlo directamente.');
-          console.error('PDF load error:', err);
+          setUseFallback(true);
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -109,10 +112,19 @@ export function PdfViewer({ url }: PdfViewerProps) {
     );
   }
 
-  if (error) {
+  if (useFallback) {
     return (
-      <div className="flex items-center justify-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-        <p className="text-sm text-gray-600">{error}</p>
+      <div className="border border-gray-200 rounded-lg overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border-b border-amber-200">
+          <AlertCircle className="w-4 h-4 text-amber-600" />
+          <span className="text-xs text-amber-700">Usando visor alternativo del navegador</span>
+        </div>
+        <embed
+          src={url}
+          type="application/pdf"
+          className="w-full"
+          style={{ height: '80vh', minHeight: '600px' }}
+        />
       </div>
     );
   }
