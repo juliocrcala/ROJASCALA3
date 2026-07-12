@@ -1,9 +1,11 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Search, Calendar, FileText, ArrowLeft, ChevronRight, Download } from 'lucide-react';
 import { supabase } from './supabase';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { LoadingSpinner } from './LoadingSpinner';
+
+const PdfViewer = lazy(() => import('./PdfViewer').then(m => ({ default: m.PdfViewer })));
 
 interface RepositoryNorm {
   id: string;
@@ -420,14 +422,16 @@ export function RepositoryDetailPage() {
                   </a>
                 </div>
               </div>
-              <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
-                <iframe
-                  src={`https://docs.google.com/gview?url=${encodeURIComponent(norm.pdf_url)}&embedded=true`}
-                  title={norm.title}
-                  className="w-full"
-                  style={{ height: '80vh', minHeight: '600px' }}
-                />
-              </div>
+              <Suspense fallback={
+                <div className="flex items-center justify-center py-20 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="text-center">
+                    <div className="w-8 h-8 border-3 border-red-900 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                    <p className="text-sm text-gray-600">Cargando visor PDF...</p>
+                  </div>
+                </div>
+              }>
+                <PdfViewer url={norm.pdf_url} />
+              </Suspense>
             </div>
           )}
 
