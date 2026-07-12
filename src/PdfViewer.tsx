@@ -1,11 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
+import { supabase } from './supabase';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 interface PdfViewerProps {
   url: string;
+}
+
+function extractStoragePath(url: string): string | null {
+  const match = url.match(/\/storage\/v1\/object\/public\/repository-pdfs\/(.+)$/);
+  return match ? match[1] : null;
 }
 
 export function PdfViewer({ url }: PdfViewerProps) {
@@ -25,8 +31,25 @@ export function PdfViewer({ url }: PdfViewerProps) {
 
     const loadPdf = async () => {
       try {
+        let arrayBuffer: ArrayBuffer;
+
+        const storagePath = extractStoragePath(url);
+        if (storagePath) {
+          const { data, error: dlError } = await supabase.storage
+            .from('repository-pdfs')
+            .download(storagePath);
+          if (dlError || !data) throw new Error(dlError?.message || 'Download failed');
+          arrayBuffer = await data.arrayBuffer();
+        } else {
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          arrayBuffer = await response.arrayBuffer();
+        }
+
+        if (cancelled) return;
+
         const loadingTask = pdfjsLib.getDocument({
-          url,
+          data: arrayBuffer,
           cMapUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/cmaps/`,
           cMapPacked: true,
         });
