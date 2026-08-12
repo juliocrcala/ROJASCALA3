@@ -950,7 +950,7 @@ const SpecialsPage = () => {
                   src={article.image_url}
                   alt={article.title}
                   className="w-full h-48 object-cover"
-                  onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }}
+                  onError={(e) => { const wrapper = (e.target as HTMLImageElement).closest('.relative'); if (wrapper) wrapper.remove(); }}
                 />
                 <div className="absolute top-4 left-4">
                   <span className="inline-block px-3 py-1 text-xs font-medium bg-purple-600 text-white rounded-full">
@@ -2175,12 +2175,14 @@ const CategoryFilterView = () => {
             {displayedArticles.map((article) => (
               <article key={`${article.type}-${article.id}`} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                 {'image_url' in article && article.image_url && (
-                  <img
-                    src={article.image_url}
-                    alt={article.title}
-                    className="w-full h-48 object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                  />
+                  <div className="relative">
+                    <img
+                      src={article.image_url}
+                      alt={article.title}
+                      className="w-full h-48 object-cover"
+                      onError={(e) => { const parent = (e.target as HTMLImageElement).closest('.relative'); if (parent) parent.remove(); }}
+                    />
+                  </div>
                 )}
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
@@ -2491,12 +2493,14 @@ const EntityFilterView = () => {
             {displayedArticles.map((article) => (
               <article key={`${article.type}-${article.id}`} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                 {'image_url' in article && article.image_url && (
-                  <img
-                    src={article.image_url}
-                    alt={article.title}
-                    className="w-full h-48 object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                  />
+                  <div className="relative">
+                    <img
+                      src={article.image_url}
+                      alt={article.title}
+                      className="w-full h-48 object-cover"
+                      onError={(e) => { const parent = (e.target as HTMLImageElement).closest('.relative'); if (parent) parent.remove(); }}
+                    />
+                  </div>
                 )}
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
@@ -2777,11 +2781,14 @@ const HomePage = () => {
           })().map((article) => (
             <article key={`${article.type}-${article.id}`} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
               {'image_url' in article && article.image_url && (
-                <img
-                  src={article.image_url}
-                  alt={article.title}
-                  className="w-full h-48 object-cover"
-                />
+                <div className="relative">
+                  <img
+                    src={article.image_url}
+                    alt={article.title}
+                    className="w-full h-48 object-cover"
+                    onError={(e) => { const parent = (e.target as HTMLImageElement).closest('.relative'); if (parent) parent.remove(); }}
+                  />
+                </div>
               )}
               <div className="p-6">
                 <div className="flex justify-between items-start mb-4">
