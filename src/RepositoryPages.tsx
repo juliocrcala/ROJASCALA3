@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo, useState, lazy, Suspense } from 'react';
+import React, { useEffect, useMemo, useState, Suspense } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Search, Calendar, FileText, ArrowLeft, ChevronRight, Download } from 'lucide-react';
 import { supabase } from './supabase';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { LoadingSpinner } from './LoadingSpinner';
 
-const PdfViewer = lazy(() => import('./PdfViewer').then(m => ({ default: m.PdfViewer })));
+import { PdfViewer } from './PdfViewer';
 
 interface RepositoryNorm {
   id: string;
