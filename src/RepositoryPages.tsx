@@ -1,11 +1,9 @@
-import React, { useEffect, useMemo, useState, Suspense } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Search, Calendar, FileText, ArrowLeft, ChevronRight, Download } from 'lucide-react';
+import { Search, Calendar, FileText, ArrowLeft, ChevronRight, Download, AlertTriangle, ExternalLink } from 'lucide-react';
 import { supabase } from './supabase';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { LoadingSpinner } from './LoadingSpinner';
-
-import { PdfViewer } from './PdfViewer';
 
 interface RepositoryNorm {
   id: string;
@@ -20,6 +18,13 @@ interface RepositoryNorm {
   is_hidden: boolean;
   created_at: string;
   updated_at: string;
+}
+
+interface NormAttachment {
+  id: string;
+  label: string;
+  pdf_url: string;
+  sort_order: number;
 }
 
 const normalizeText = (text: string): string =>
@@ -322,6 +327,7 @@ export function RepositoryPage() {
 export function RepositoryDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const [norm, setNorm] = useState<RepositoryNorm | null>(null);
+  const [attachments, setAttachments] = useState<NormAttachment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -340,6 +346,13 @@ export function RepositoryDetailPage() {
           setNotFound(true);
         } else {
           setNorm(data);
+          // Fetch attachments
+          const { data: attData } = await supabase
+            .from('repository_norm_attachments')
+            .select('*')
+            .eq('norm_id', data.id)
+            .order('sort_order', { ascending: true });
+          setAttachments(attData || []);
         }
       } catch (err) {
         console.error('Error fetching norm:', err);
@@ -374,6 +387,8 @@ export function RepositoryDetailPage() {
     );
   }
 
+  const hasAnyPdf = norm.pdf_url || attachments.length > 0;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
@@ -400,44 +415,71 @@ export function RepositoryDetailPage() {
             <p className="text-gray-700 italic border-l-4 border-red-200 pl-4 mb-6">{norm.summary}</p>
           )}
 
-          {norm.pdf_url && (
-            <div className="mb-8">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Documento PDF</h2>
-                <div className="flex items-center gap-2">
+          {/* PDF Downloads Section */}
+          {hasAnyPdf && (
+            <div className="mb-8 bg-gray-50 rounded-lg border border-gray-200 p-5">
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">Documentos PDF</h2>
+              <div className="flex flex-wrap gap-3">
+                {norm.pdf_url && (
+                  <>
+                    <a
+                      href={norm.pdf_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 text-sm bg-red-900 text-white rounded-lg hover:bg-red-800 transition-colors font-medium shadow-sm"
+                    >
+                      <ExternalLink className="w-4 h-4" /> Abrir norma completa
+                    </a>
+                    <a
+                      href={norm.pdf_url}
+                      download
+                      className="inline-flex items-center gap-2 px-4 py-2.5 text-sm border border-red-300 text-red-800 bg-white rounded-lg hover:bg-red-50 transition-colors font-medium"
+                    >
+                      <Download className="w-4 h-4" /> Descargar norma
+                    </a>
+                  </>
+                )}
+                {attachments.map((att) => (
                   <a
-                    href={norm.pdf_url}
+                    key={att.id}
+                    href={att.pdf_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 text-sm border border-blue-300 text-blue-800 bg-white rounded-lg hover:bg-blue-50 transition-colors font-medium"
                   >
-                    <FileText className="w-4 h-4" /> Abrir en nueva pestana
+                    <FileText className="w-4 h-4" /> {att.label || 'Documento adjunto'}
                   </a>
-                  <a
-                    href={norm.pdf_url}
-                    download
-                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-red-900 text-white rounded-md hover:bg-red-800 transition-colors"
-                  >
-                    <Download className="w-4 h-4" /> Descargar
-                  </a>
-                </div>
+                ))}
               </div>
-              <Suspense fallback={
-                <div className="flex items-center justify-center py-20 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="text-center">
-                    <div className="w-8 h-8 border-3 border-red-900 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                    <p className="text-sm text-gray-600">Cargando visor PDF...</p>
-                  </div>
-                </div>
-              }>
-                <PdfViewer url={norm.pdf_url} />
-              </Suspense>
             </div>
           )}
 
+          {/* Content notice + text */}
           {norm.content && (
-            <div className="prose prose-sm md:prose max-w-none text-gray-800">
-              <MarkdownRenderer content={norm.content} />
+            <>
+              {hasAnyPdf && (
+                <div className="mb-6 flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-amber-800">
+                    <p className="font-medium mb-1">Aviso sobre el contenido</p>
+                    <p>
+                      El siguiente texto corresponde a la norma indicada. Sin embargo, contenido como cuadros, graficos
+                      o formatos especiales no son posibles de adaptar a esta version web. Para ver el documento completo
+                      con todo su formato original, se recomienda descargar o abrir el PDF.
+                    </p>
+                  </div>
+                </div>
+              )}
+              <div className="prose prose-sm md:prose max-w-none text-gray-800">
+                <MarkdownRenderer content={norm.content} />
+              </div>
+            </>
+          )}
+
+          {!norm.content && !hasAnyPdf && (
+            <div className="text-center py-8 text-gray-500">
+              <FileText className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+              <p>Esta norma no tiene contenido disponible todavia.</p>
             </div>
           )}
         </article>

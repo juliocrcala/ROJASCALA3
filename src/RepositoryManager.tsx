@@ -3,6 +3,14 @@ import { supabase } from './supabase';
 import { Plus, CreditCard as Edit, Trash2, Save, X, AlertCircle, CheckCircle, FileText, Search, Eye, EyeOff, Upload } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
 
+interface NormAttachment {
+  id?: string;
+  label: string;
+  pdf_url: string;
+  file?: File;
+  sort_order: number;
+}
+
 interface RepositoryNorm {
   id: string;
   slug: string;
@@ -68,6 +76,7 @@ export function RepositoryManager() {
   const [formData, setFormData] = useState(emptyForm());
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [attachments, setAttachments] = useState<NormAttachment[]>([]);
 
   useEffect(() => {
     fetchNorms();
@@ -102,9 +111,23 @@ export function RepositoryManager() {
     }
   };
 
+  const fetchAttachments = async (normId: string): Promise<NormAttachment[]> => {
+    const { data, error } = await supabase
+      .from('repository_norm_attachments')
+      .select('*')
+      .eq('norm_id', normId)
+      .order('sort_order', { ascending: true });
+    if (error) throw error;
+    return (data || []).map((a: any) => ({
+      id: a.id,
+      label: a.label,
+      pdf_url: a.pdf_url,
+      sort_order: a.sort_order
+    }));
+  };
+
   const uploadPdf = async (file: File): Promise<string> => {
-    const ext = 'pdf';
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.pdf`;
     const filePath = `norms/${fileName}`;
 
     const { error } = await supabase.storage
@@ -132,7 +155,7 @@ export function RepositoryManager() {
         return;
       }
 
-      if (!pdfFile && !formData.pdf_url && !formData.content.trim()) {
+      if (!pdfFile && !formData.pdf_url && !formData.content.trim() && attachments.length === 0) {
         showMessage('Debes subir un PDF o escribir el contenido de la norma', 'error');
         setIsSaving(false);
         return;
@@ -160,31 +183,73 @@ export function RepositoryManager() {
         is_hidden: formData.is_hidden
       };
 
+      let normId = editingId;
+
       if (editingId) {
         const { error } = await supabase
           .from('repository_norms')
           .update({ ...payload, updated_at: new Date().toISOString() })
           .eq('id', editingId);
         if (error) throw error;
-        showMessage('Norma actualizada exitosamente', 'success');
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('repository_norms')
-          .insert([payload]);
+          .insert([payload])
+          .select('id')
+          .single();
         if (error) throw error;
-        showMessage('Norma agregada al repositorio', 'success');
+        normId = data.id;
       }
 
+      // Save attachments
+      if (normId) {
+        // Delete old attachments
+        await supabase
+          .from('repository_norm_attachments')
+          .delete()
+          .eq('norm_id', normId);
+
+        // Upload new files and save all attachments
+        const attachmentsToSave: { norm_id: string; label: string; pdf_url: string; sort_order: number }[] = [];
+
+        for (let i = 0; i < attachments.length; i++) {
+          const att = attachments[i];
+          let url = att.pdf_url;
+          if (att.file) {
+            setUploadingPdf(true);
+            url = await uploadPdf(att.file);
+            setUploadingPdf(false);
+          }
+          if (url) {
+            attachmentsToSave.push({
+              norm_id: normId,
+              label: att.label,
+              pdf_url: url,
+              sort_order: i
+            });
+          }
+        }
+
+        if (attachmentsToSave.length > 0) {
+          const { error: attError } = await supabase
+            .from('repository_norm_attachments')
+            .insert(attachmentsToSave);
+          if (attError) throw attError;
+        }
+      }
+
+      showMessage(editingId ? 'Norma actualizada exitosamente' : 'Norma agregada al repositorio', 'success');
       resetForm();
       await fetchNorms();
     } catch (err: any) {
       showMessage(`Error: ${err.message}`, 'error');
     } finally {
       setIsSaving(false);
+      setUploadingPdf(false);
     }
   };
 
-  const handleEdit = (norm: RepositoryNorm) => {
+  const handleEdit = async (norm: RepositoryNorm) => {
     setFormData({
       slug: norm.slug,
       title: norm.title,
@@ -199,6 +264,13 @@ export function RepositoryManager() {
     setPdfFile(null);
     setEditingId(norm.id);
     setShowForm(true);
+
+    try {
+      const atts = await fetchAttachments(norm.id);
+      setAttachments(atts);
+    } catch {
+      setAttachments([]);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -232,8 +304,25 @@ export function RepositoryManager() {
   const resetForm = () => {
     setFormData(emptyForm());
     setPdfFile(null);
+    setAttachments([]);
     setEditingId(null);
     setShowForm(false);
+  };
+
+  const addAttachment = () => {
+    setAttachments(prev => [...prev, { label: '', pdf_url: '', sort_order: prev.length }]);
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updateAttachmentLabel = (index: number, label: string) => {
+    setAttachments(prev => prev.map((a, i) => i === index ? { ...a, label } : a));
+  };
+
+  const updateAttachmentFile = (index: number, file: File) => {
+    setAttachments(prev => prev.map((a, i) => i === index ? { ...a, file, pdf_url: a.pdf_url || 'pending' } : a));
   };
 
   const normalize = (t: string) => (t || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -257,7 +346,7 @@ export function RepositoryManager() {
           <p className="text-sm text-gray-500">Copia y publica las normas de El Peruano para indexarlas en tu sitio.</p>
         </div>
         <button
-          onClick={() => { setShowForm(true); setEditingId(null); setFormData(emptyForm()); }}
+          onClick={() => { setShowForm(true); setEditingId(null); setFormData(emptyForm()); setAttachments([]); }}
           className="inline-flex items-center gap-2 px-4 py-2 bg-red-900 hover:bg-red-800 text-white rounded-md text-sm font-medium"
         >
           <Plus className="w-4 h-4" /> Nueva Norma
@@ -350,9 +439,10 @@ export function RepositoryManager() {
               />
             </div>
 
+            {/* PDF Principal */}
             <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-              <label className="block text-sm font-medium text-gray-900 mb-3">Documento PDF de la norma (recomendado)</label>
-              <p className="text-xs text-gray-500 mb-3">Sube el PDF original de la norma. Se mostrara completo al usuario con todos sus cuadros y formato.</p>
+              <label className="block text-sm font-medium text-gray-900 mb-3">PDF principal de la norma</label>
+              <p className="text-xs text-gray-500 mb-3">Este es el documento principal. Los visitantes podran descargarlo o abrirlo en una nueva pestana.</p>
 
               {(pdfFile || formData.pdf_url) && (
                 <div className="mb-3 flex items-center gap-3 p-3 bg-white rounded-md border border-gray-200">
@@ -393,13 +483,87 @@ export function RepositoryManager() {
               )}
             </div>
 
+            {/* Documentos adicionales (Anexos) */}
+            <div className="border border-gray-200 rounded-lg p-4 bg-blue-50">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-900">Documentos adicionales</label>
+                  <p className="text-xs text-gray-500 mt-1">Agrega anexos, exposiciones de motivos u otros documentos relacionados.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={addAttachment}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-700 hover:bg-blue-600 text-white rounded-md font-medium"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Agregar documento
+                </button>
+              </div>
+
+              {attachments.length === 0 && (
+                <p className="text-sm text-gray-500 italic text-center py-3">No hay documentos adicionales. Usa el boton para agregar anexos u otros PDFs.</p>
+              )}
+
+              <div className="space-y-3">
+                {attachments.map((att, index) => (
+                  <div key={index} className="bg-white rounded-md border border-gray-200 p-3">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-1 space-y-2">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Nombre del boton de descarga</label>
+                          <input
+                            type="text"
+                            value={att.label}
+                            onChange={(e) => updateAttachmentLabel(index, e.target.value)}
+                            placeholder="Ej: Anexo 1, Exposicion de Motivos, Anexo 3..."
+                            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        {att.file ? (
+                          <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
+                            <FileText className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                            <span className="text-xs text-gray-600 truncate">{att.file.name}</span>
+                          </div>
+                        ) : att.pdf_url && att.pdf_url !== 'pending' ? (
+                          <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
+                            <FileText className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                            <span className="text-xs text-gray-600 truncate">PDF cargado</span>
+                          </div>
+                        ) : (
+                          <label className="flex items-center gap-2 px-3 py-2 bg-gray-50 border-2 border-dashed border-blue-300 rounded cursor-pointer hover:bg-blue-50 transition-colors">
+                            <Upload className="w-4 h-4 text-blue-700" />
+                            <span className="text-xs font-medium text-blue-800">Subir PDF</span>
+                            <input
+                              type="file"
+                              accept="application/pdf"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) updateAttachmentFile(index, file);
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeAttachment(index)}
+                        className="p-1 text-red-500 hover:text-red-700 mt-5"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Contenido en texto {(pdfFile || formData.pdf_url) ? '(opcional - complemento al PDF)' : '*'}
               </label>
               <p className="text-xs text-gray-500 mb-2">
                 {(pdfFile || formData.pdf_url)
-                  ? 'Si subiste PDF, este campo es opcional. Puedes agregar notas adicionales.'
+                  ? 'Si subiste PDF, este campo es opcional. Puedes pegar el texto de la norma para que sea buscable.'
                   : 'Si no subes PDF, el contenido en texto es obligatorio.'}
               </p>
               <RichTextEditor
