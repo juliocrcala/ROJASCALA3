@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Search, Calendar, FileText, ArrowLeft, ChevronRight, Download, AlertTriangle, ExternalLink } from 'lucide-react';
 import { supabase } from './supabase';
-import { MarkdownRenderer } from './MarkdownRenderer';
 import { LoadingSpinner } from './LoadingSpinner';
 
 interface RepositoryNorm {
@@ -470,8 +469,8 @@ export function RepositoryDetailPage() {
                   </div>
                 </div>
               )}
-              <div className="prose prose-sm md:prose max-w-none text-gray-800">
-                <MarkdownRenderer content={norm.content} />
+              <div className="max-w-none text-gray-800 whitespace-pre-wrap leading-relaxed text-justify break-words font-serif text-[15px]">
+                {norm.content}
               </div>
             </>
           )}
