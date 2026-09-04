@@ -3023,7 +3023,7 @@ const AppContent = () => {
                 <h4 className="text-xl italic" style={{ fontFamily: 'Brush Script MT, cursive' }}>Rojas Cala</h4>
               </div>
               <p className="text-gray-400">
-                Manteniéndote actualizado con las últimas normas legales y regulaciones.
+                Comprender el presente. Anticipar el cambio.
               </p>
             </div>
             <div>
