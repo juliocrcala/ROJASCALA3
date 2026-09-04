@@ -115,7 +115,7 @@ export function AdminLogin({ onLogin, error }: AdminLoginProps) {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-sm text-gray-500">
-            © 2025 Rojas Cala - Panel de Administración
+            © 2026 Rojas Cala - Panel de Administración
           </p>
         </div>
       </div>

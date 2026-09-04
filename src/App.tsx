@@ -2753,7 +2753,7 @@ const HomePage = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-4xl font-bold mb-4">Análisis de Normas Legales</h2>
-            <p className="text-xl mb-8">Mantente informado sobre las últimas normativas y regulaciones legales</p>
+            <p className="text-xl mb-8">Comprender el presente. Anticipar el cambio.</p>
             <div className="flex items-center bg-white rounded-lg p-2">
               <Search className="w-5 h-5 text-gray-500 mx-2" />
               <input
@@ -3098,7 +3098,7 @@ const AppContent = () => {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 Rojas Cala. Todos los derechos reservados.</p>
+            <p>&copy; 2026 Rojas Cala. Todos los derechos reservados.</p>
           </div>
         </div>
       </footer>
