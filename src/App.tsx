@@ -1704,6 +1704,7 @@ const CalendarPage = () => {
   const [currentDate, setCurrentDate] = useState(today);
   const [selectedDate, setSelectedDate] = useState(today);
   const [articles, setArticles] = useState<Article[]>([]);
+  const [norms, setNorms] = useState<{id: string; slug: string; title: string; norm_type: string; norm_number: string; published_date: string; summary: string;}[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
 
   useEffect(() => {
@@ -1712,7 +1713,7 @@ const CalendarPage = () => {
 
   const fetchData = async () => {
     try {
-      await Promise.all([fetchArticles(), fetchContacts()]);
+      await Promise.all([fetchArticles(), fetchContacts(), fetchNorms()]);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -1722,11 +1723,22 @@ const CalendarPage = () => {
     const { data, error } = await supabase
       .from('articles')
       .select('*')
-      .eq('is_hidden', false) // Solo mostrar artículos visibles
+      .eq('is_hidden', false)
       .order('published_date', { ascending: false });
 
     if (error) throw error;
     setArticles(data || []);
+  };
+
+  const fetchNorms = async () => {
+    const { data, error } = await supabase
+      .from('repository_norms')
+      .select('id, slug, title, norm_type, norm_number, published_date, summary')
+      .eq('is_hidden', false)
+      .order('published_date', { ascending: false });
+
+    if (error) throw error;
+    setNorms(data || []);
   };
 
   const fetchContacts = async () => {
@@ -1746,6 +1758,13 @@ const CalendarPage = () => {
   const filteredArticles = selectedDate
     ? articles.filter(article => 
         format(parse(article.published_date, 'yyyy-MM-dd', new Date()), 'yyyy-MM-dd') === 
+        format(selectedDate, 'yyyy-MM-dd')
+      )
+    : [];
+
+  const filteredNorms = selectedDate
+    ? norms.filter(norm => 
+        format(parse(norm.published_date, 'yyyy-MM-dd', new Date()), 'yyyy-MM-dd') === 
         format(selectedDate, 'yyyy-MM-dd')
       )
     : [];
@@ -1789,9 +1808,10 @@ const CalendarPage = () => {
                 </div>
               ))}
               {daysInMonth.map((day, index) => {
-                const hasArticles = articles.some(
-                  article => article.published_date === format(day, 'yyyy-MM-dd')
-                );
+                const dayStr = format(day, 'yyyy-MM-dd');
+                const hasArticles = articles.some(a => a.published_date === dayStr);
+                const hasNorms = norms.some(n => n.published_date === dayStr);
+                const hasContent = hasArticles || hasNorms;
                 return (
                   <button
                     key={day.toString()}
@@ -1800,10 +1820,10 @@ const CalendarPage = () => {
                       p-2 text-center rounded-full
                       ${isToday(day) ? 'bg-red-100 text-red-900' : ''}
                       ${!isSameMonth(day, currentDate) ? 'text-gray-300' : ''}
-                      ${hasArticles ? 'font-bold text-red-900' : ''}
+                      ${hasContent ? 'font-bold text-red-900' : ''}
                       ${
                         selectedDate &&
-                        format(day, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
+                        dayStr === format(selectedDate, 'yyyy-MM-dd')
                           ? 'bg-red-900 text-white'
                           : 'hover:bg-gray-100'
                       }
@@ -1820,53 +1840,99 @@ const CalendarPage = () => {
         {selectedDate && (
           <div className="mt-8">
             <h3 className="text-xl font-bold mb-4">
-              Normas del {format(selectedDate, 'd \'de\' MMMM, yyyy', { locale: es })}
+              Publicaciones del {format(selectedDate, 'd \'de\' MMMM, yyyy', { locale: es })}
             </h3>
-            {filteredArticles.length > 0 ? (
-              <div className="space-y-4">
-                {filteredArticles.map(article => (
-                  <div
-                    key={article.id}
-                    className="bg-white p-6 rounded-lg shadow-md"
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <span className="inline-block px-3 py-1 text-sm bg-red-100 text-red-900 rounded-full">
-                        {article.document_type}
-                      </span>
-                      <span className="text-sm text-gray-500">{formatDateSafe(article.published_date)}</span>
+
+            {filteredArticles.length === 0 && filteredNorms.length === 0 && (
+              <p className="text-gray-600">No hay publicaciones en esta fecha.</p>
+            )}
+
+            {filteredArticles.length > 0 && (
+              <>
+                {filteredNorms.length > 0 && (
+                  <div className="flex items-center gap-3 mb-4">
+                    <BookOpen className="w-5 h-5 text-red-900" />
+                    <h4 className="text-lg font-semibold text-red-900">Articulos</h4>
+                    <div className="flex-1 h-px bg-red-200" />
+                  </div>
+                )}
+                <div className="space-y-4 mb-8">
+                  {filteredArticles.map(article => (
+                    <div key={article.id} className="bg-white p-6 rounded-lg shadow-md">
+                      <div className="flex justify-between items-start mb-4">
+                        <span className="inline-block px-3 py-1 text-sm bg-red-100 text-red-900 rounded-full">
+                          {article.document_type}
+                        </span>
+                        <span className="text-sm text-gray-500">{formatDateSafe(article.published_date)}</span>
+                      </div>
+                      <Link to={`/articulo/normal/${article.slug || article.id}`}>
+                        <h4 className="text-xl font-semibold mb-2 hover:text-red-900">{article.title}</h4>
+                      </Link>
+                      <p className="text-gray-600 mb-2 text-justify">{article.summary || article.content.substring(0, 200) + '...'}</p>
+                      <div className="text-sm mb-2">
+                        <AuthorLink 
+                          author={article.author} 
+                          authorContactId={article.author_contact_id} 
+                          contacts={contacts} 
+                        />
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <Link 
+                          to={`/articulo/normal/${article.slug || article.id}`}
+                          className="text-red-900 hover:text-red-700 font-medium"
+                        >
+                          Leer mas →
+                        </Link>
+                        {article.official_link && (
+                          <OfficialLinkButton
+                            href={article.official_link}
+                            className="inline-block text-blue-600 hover:text-blue-800"
+                          >
+                            Ver norma oficial →
+                          </OfficialLinkButton>
+                        )}
+                      </div>
                     </div>
-                    <Link to={`/articulo/normal/${article.slug || article.id}`}>
-                      <h4 className="text-xl font-semibold mb-2 hover:text-red-900">{article.title}</h4>
-                    </Link>
-                    <p className="text-gray-600 mb-2 text-justify">{article.summary || article.content.substring(0, 200) + '...'}</p>
-                    <div className="text-sm mb-2">
-                      <AuthorLink 
-                        author={article.author} 
-                        authorContactId={article.author_contact_id} 
-                        contacts={contacts} 
-                      />
-                    </div>
-                    <div className="flex justify-between items-center">
+                  ))}
+                </div>
+              </>
+            )}
+
+            {filteredNorms.length > 0 && (
+              <>
+                <div className="flex items-center gap-3 mb-4">
+                  <Database className="w-5 h-5 text-red-900" />
+                  <h4 className="text-lg font-semibold text-red-900">Repositorio</h4>
+                  <div className="flex-1 h-px bg-red-200" />
+                </div>
+                <div className="space-y-4">
+                  {filteredNorms.map(norm => (
+                    <div key={norm.id} className="bg-white p-6 rounded-lg shadow-md border-l-4 border-red-800">
+                      <div className="flex justify-between items-start mb-3">
+                        <span className="inline-block px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full">
+                          {norm.norm_type}
+                        </span>
+                        <span className="text-sm text-gray-500">{formatDateSafe(norm.published_date)}</span>
+                      </div>
+                      <Link to={`/repositorio/${norm.slug || norm.id}`}>
+                        <h4 className="text-xl font-semibold mb-2 hover:text-red-900">{norm.title}</h4>
+                      </Link>
+                      {norm.norm_number && (
+                        <p className="text-sm text-gray-500 mb-2">{norm.norm_number}</p>
+                      )}
+                      {norm.summary && (
+                        <p className="text-gray-600 mb-3 text-justify">{norm.summary}</p>
+                      )}
                       <Link 
-                        to={`/articulo/normal/${article.slug || article.id}`}
+                        to={`/repositorio/${norm.slug || norm.id}`}
                         className="text-red-900 hover:text-red-700 font-medium"
                       >
-                        Leer más →
+                        Ver norma completa →
                       </Link>
-                      {article.official_link && (
-                        <OfficialLinkButton
-                          href={article.official_link}
-                          className="inline-block text-blue-600 hover:text-blue-800"
-                        >
-                          Ver norma oficial →
-                        </OfficialLinkButton>
-                      )}
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-600">No hay normas publicadas en esta fecha.</p>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         )}
