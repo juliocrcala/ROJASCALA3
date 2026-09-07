@@ -945,7 +945,7 @@ const SpecialsPage = () => {
         {filteredArticles.map((article) => (
           <article key={article.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
             {article.image_url && (
-              <div className="relative">
+              <Link to={`/articulo/special/${article.slug || article.id}`} className="block relative">
                 <img
                   src={article.image_url}
                   alt={article.title}
@@ -957,7 +957,7 @@ const SpecialsPage = () => {
                     Artículo Especial
                   </span>
                 </div>
-              </div>
+              </Link>
             )}
             <div className="p-6">
               <div className="flex items-center justify-between mb-3">
@@ -978,11 +978,15 @@ const SpecialsPage = () => {
                 </span>
               </div>
               
-              <h3 className="text-xl font-bold mb-3 line-clamp-2 hover:text-red-900 transition-colors">
-                {article.title}
-              </h3>
+              <Link to={`/articulo/special/${article.slug || article.id}`}>
+                <h3 className="text-xl font-bold mb-3 line-clamp-2 hover:text-red-900 transition-colors">
+                  {article.title}
+                </h3>
+              </Link>
               
-              <p className="text-gray-600 mb-4 line-clamp-3 text-justify">{article.summary}</p>
+              <Link to={`/articulo/special/${article.slug || article.id}`} className="block">
+                <p className="text-gray-600 mb-4 line-clamp-3 text-justify hover:text-gray-800 transition-colors">{article.summary}</p>
+              </Link>
 
               <div className="flex flex-col space-y-3">
                 <div className="flex items-center justify-between">
