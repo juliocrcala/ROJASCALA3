@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://rojascala.org/sitemap.xml
+Sitemap: https://dzqwatrhficgrioidxnw.supabase.co/functions/v1/sitemap
