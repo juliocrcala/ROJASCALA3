@@ -340,7 +340,7 @@ Deno.serve(async (req: Request) => {
               ? `${norm.sector} — Importado de El Peruano (${date}).`
               : `Importado automaticamente de El Peruano (${date}).`,
             pdf_url: norm.url || null,
-            is_hidden: true,
+            is_hidden: false,
           });
 
         if (insertError) {
