@@ -1,0 +1,8 @@
+[functions.newsletter]
+verify_jwt = false
+
+[functions.update-maintenance]
+verify_jwt = true
+
+[functions.fetch-normas]
+verify_jwt = true

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabase';
-import { Plus, CreditCard as Edit, Trash2, Save, X, AlertCircle, CheckCircle, FileText, Search, Eye, EyeOff, Upload } from 'lucide-react';
+import { Plus, CreditCard as Edit, Trash2, Save, X, AlertCircle, CheckCircle, FileText, Search, Eye, EyeOff, Upload, Download, Calendar, Loader2 } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
 
 interface NormAttachment {
@@ -77,6 +77,10 @@ export function RepositoryManager() {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [uploadingPdf, setUploadingPdf] = useState(false);
   const [attachments, setAttachments] = useState<NormAttachment[]>([]);
+  const [importDate, setImportDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [showImport, setShowImport] = useState(false);
 
   useEffect(() => {
     fetchNorms();
@@ -345,13 +349,100 @@ export function RepositoryManager() {
           <h2 className="text-2xl font-bold text-gray-900">Repositorio de Normas</h2>
           <p className="text-sm text-gray-500">Copia y publica las normas de El Peruano para indexarlas en tu sitio.</p>
         </div>
-        <button
-          onClick={() => { setShowForm(true); setEditingId(null); setFormData(emptyForm()); setAttachments([]); }}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-red-900 hover:bg-red-800 text-white rounded-md text-sm font-medium"
-        >
-          <Plus className="w-4 h-4" /> Nueva Norma
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowImport(!showImport)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-700 hover:bg-blue-600 text-white rounded-md text-sm font-medium"
+          >
+            <Download className="w-4 h-4" /> Importar de El Peruano
+          </button>
+          <button
+            onClick={() => { setShowForm(true); setEditingId(null); setFormData(emptyForm()); setAttachments([]); }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-red-900 hover:bg-red-800 text-white rounded-md text-sm font-medium"
+          >
+            <Plus className="w-4 h-4" /> Nueva Norma
+          </button>
+        </div>
       </div>
+
+      {showImport && (
+        <div className="mb-6 bg-blue-50 rounded-lg border border-blue-200 p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Download className="w-5 h-5 text-blue-700" /> Importar normas de El Peruano
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Selecciona una fecha para importar automaticamente las normas publicadas ese dia. Se importan como ocultas para que las revises antes de publicarlas.
+              </p>
+            </div>
+            <button onClick={() => { setShowImport(false); setImportResult(null); }} className="text-gray-400 hover:text-gray-600">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de publicacion</label>
+              <div className="relative">
+                <Calendar className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <input
+                  type="date"
+                  value={importDate}
+                  onChange={(e) => setImportDate(e.target.value)}
+                  max={new Date().toISOString().split('T')[0]}
+                  className="pl-9 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            <button
+              onClick={async () => {
+                setIsImporting(true);
+                setImportResult(null);
+                try {
+                  const { data: { session } } = await supabase.auth.getSession();
+                  if (!session) throw new Error('No autenticado');
+                  const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-normas/import`;
+                  const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Authorization: `Bearer ${session.access_token}`,
+                    },
+                    body: JSON.stringify({ date: importDate }),
+                  });
+                  const result = await response.json();
+                  if (!response.ok) throw new Error(result.error || 'Error al importar');
+                  const msgType = result.imported > 0 ? 'success' : 'info';
+                  setImportResult({ message: result.message, type: msgType });
+                  if (result.imported > 0) await fetchNorms();
+                } catch (err: any) {
+                  setImportResult({ message: err.message, type: 'error' });
+                } finally {
+                  setIsImporting(false);
+                }
+              }}
+              disabled={isImporting || !importDate}
+              className="inline-flex items-center gap-2 px-5 py-2 bg-blue-700 hover:bg-blue-600 text-white rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isImporting ? <><Loader2 className="w-4 h-4 animate-spin" /> Importando...</> : <><Download className="w-4 h-4" /> Importar normas</>}
+            </button>
+          </div>
+
+          {importResult && (
+            <div className={`mt-4 p-3 rounded-md text-sm flex items-start gap-2 ${
+              importResult.type === 'success' ? 'bg-green-50 border border-green-200 text-green-800' :
+              importResult.type === 'error' ? 'bg-red-50 border border-red-200 text-red-800' :
+              'bg-yellow-50 border border-yellow-200 text-yellow-800'
+            }`}>
+              {importResult.type === 'success' ? <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" /> :
+               importResult.type === 'error' ? <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" /> :
+               <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />}
+              <span>{importResult.message}</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 flex items-start gap-2 p-3 rounded-md bg-red-50 border border-red-200 text-red-800">
