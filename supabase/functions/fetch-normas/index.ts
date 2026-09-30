@@ -2,6 +2,8 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const ADMIN_EMAIL = "rojas.ca.la.admi@gmail.com";
+const BASE_URL = "https://busquedas.elperuano.pe";
+const PAGE_SIZE = 20;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,29 +35,48 @@ function slugify(text: string): string {
     .slice(0, 120);
 }
 
-function parseNormType(title: string): { norm_type: string; norm_number: string } {
-  const patterns = [
-    /^(LEY)\s+N[°ºo.]?\s*(\d[\d.-]*)/i,
-    /^(DECRETO\s+SUPREMO)\s+N[°ºo.]?\s*(\d[\d.-]*\S*)/i,
-    /^(DECRETO\s+LEGISLATIVO)\s+N[°ºo.]?\s*(\d[\d.-]*)/i,
-    /^(DECRETO\s+DE\s+URGENCIA)\s+N[°ºo.]?\s*(\d[\d.-]*\S*)/i,
-    /^(RESOLUCI[OÓ]N\s+MINISTERIAL)\s+N[°ºo.]?\s*(\d[\d.-]*\S*)/i,
-    /^(RESOLUCI[OÓ]N\s+SUPREMA)\s+N[°ºo.]?\s*(\d[\d.-]*\S*)/i,
-    /^(RESOLUCI[OÓ]N\s+DIRECTORAL)\s+N[°ºo.]?\s*(\d[\d.-]*\S*)/i,
-    /^(RESOLUCI[OÓ]N\s+(?:DE\s+)?(?:SUPERINTENDENCIA|JEFATURAL|ADMINISTRATIVA|VICEMINISTERIAL|GERENCIA\s+GENERAL|PRESIDENCIA\s+EJECUTIVA))\s+N[°ºo.]?\s*(\d[\d.-]*\S*)/i,
-    /^(ORDENANZA)\s+N[°ºo.]?\s*(\d[\d.-]*\S*)/i,
-    /^(ACUERDO)\s+N[°ºo.]?\s*(\d[\d.-]*\S*)/i,
-    /^(FE\s+DE\s+ERRATAS)/i,
-    /^(ANEXO)\s*/i,
-    /^(COMUNICADO)\s*/i,
+function cleanHtml(text: string): string {
+  return text
+    .replace(/<[^>]*>/g, "")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function parseNormType(title: string): {
+  norm_type: string;
+  norm_number: string;
+} {
+  const patterns: [RegExp, boolean][] = [
+    [/^(LEY)\s+N[°ºo.]?\s*(\d[\d.-]*)/i, true],
+    [/^(DECRETO\s+SUPREMO)\s+N[°ºo.]?\s*(\d[\d.-]*\S*)/i, true],
+    [/^(DECRETO\s+LEGISLATIVO)\s+N[°ºo.]?\s*(\d[\d.-]*)/i, true],
+    [/^(DECRETO\s+DE\s+URGENCIA)\s+N[°ºo.]?\s*(\d[\d.-]*\S*)/i, true],
+    [/^(RESOLUCI[OÓ]N\s+MINISTERIAL)\s+N[°ºo.]?\s*(\d[\d.-]*\S*)/i, true],
+    [/^(RESOLUCI[OÓ]N\s+SUPREMA)\s+N[°ºo.]?\s*(\d[\d.-]*\S*)/i, true],
+    [/^(RESOLUCI[OÓ]N\s+DIRECTORAL)\s+N[°ºo.]?\s*(\d[\d.-]*\S*)/i, true],
+    [
+      /^(RESOLUCI[OÓ]N\s+(?:DE\s+)?(?:SUPERINTENDENCIA|JEFATURAL|ADMINISTRATIVA|VICEMINISTERIAL|GERENCIA\s+GENERAL|PRESIDENCIA\s+EJECUTIVA))\s+N[°ºo.]?\s*(\d[\d.-]*\S*)/i,
+      true,
+    ],
+    [/^(ORDENANZA)\s+N[°ºo.]?\s*(\d[\d.-]*\S*)/i, true],
+    [/^(ACUERDO)\s+N[°ºo.]?\s*(\d[\d.-]*\S*)/i, true],
+    [/^(FE\s+DE\s+ERRATAS)/i, false],
+    [/^(ANEXO)\s*/i, false],
+    [/^(COMUNICADO)\s*/i, false],
   ];
 
-  for (const pattern of patterns) {
+  for (const [pattern, hasNumber] of patterns) {
     const match = title.match(pattern);
     if (match) {
       return {
         norm_type: match[1].trim(),
-        norm_number: match[2]?.trim() || "",
+        norm_number: hasNumber ? match[2]?.trim() || "" : "",
       };
     }
   }
@@ -63,127 +84,149 @@ function parseNormType(title: string): { norm_type: string; norm_number: string 
   return { norm_type: "", norm_number: "" };
 }
 
-interface ElPeruanoNorm {
-  edicionId: string;
-  nombre: string;
-  slug?: string;
-  fechaPublicacion?: string;
-  urlPdf?: string;
+interface ParsedNorm {
+  op: string;
+  sector: string;
+  tipo_dispositivo: string;
+  numero: string;
+  fecha: string;
+  titulo: string;
+  url: string;
 }
 
-async function fetchNormsFromElPeruano(dateStr: string): Promise<ElPeruanoNorm[]> {
-  // dateStr format: "2026-09-29" -> needs "29/09/2026"
-  const [y, m, d] = dateStr.split("-");
-  const formattedDate = `${d}/${m}/${y}`;
+async function fetchSearchPage(
+  fecha: string,
+  start: number
+): Promise<string> {
+  const params = new URLSearchParams({
+    tipoPublicacion: "NL",
+    ci: "ONLY",
+    fecha: fecha,
+    start: String(start),
+  });
 
-  // El Peruano uses an internal API for their search page
-  const searchUrl = `https://busquedas.elperuano.pe/api/v1/normaslegales?page=1&perpage=100&fechaPublicacionInicio=${formattedDate}&fechaPublicacionFin=${formattedDate}`;
+  const url = `${BASE_URL}/?${params.toString()}`;
 
-  const response = await fetch(searchUrl, {
+  const response = await fetch(url, {
     headers: {
-      Accept: "application/json",
-      "User-Agent": "Mozilla/5.0 (compatible; NormBot/1.0)",
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+      Accept:
+        "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "Accept-Language": "es-PE,es;q=0.9,en;q=0.8",
     },
   });
 
-  if (response.ok) {
-    const data = await response.json();
-    if (data?.data && Array.isArray(data.data)) {
-      return data.data.map((item: any) => ({
-        edicionId: item.edicionId || item.id || "",
-        nombre: item.nombre || item.titulo || item.title || "",
-        fechaPublicacion: dateStr,
-        urlPdf: item.urlPdf || item.url || null,
-      }));
-    }
-    if (Array.isArray(data)) {
-      return data.map((item: any) => ({
-        edicionId: item.edicionId || item.id || "",
-        nombre: item.nombre || item.titulo || item.title || "",
-        fechaPublicacion: dateStr,
-        urlPdf: item.urlPdf || item.url || null,
-      }));
-    }
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} from El Peruano`);
   }
 
-  // Fallback: try the search page with different endpoint patterns
-  const altUrls = [
-    `https://busquedas.elperuano.pe/api/v1/normaslegales?fechaInicio=${formattedDate}&fechaFin=${formattedDate}&page=1&size=100`,
-    `https://busquedas.elperuano.pe/normaslegales/api?page=1&rows=100&fechaPublicacion=${formattedDate}`,
-    `https://diariooficial.elperuano.pe/Normas/GetNormasList?fecha=${formattedDate}`,
-    `https://diariooficial.elperuano.pe/Normas/GetNormasList?fechaInicio=${formattedDate}&fechaFin=${formattedDate}`,
-  ];
+  const text = await response.text();
+  const mainEnd = text.indexOf("</main>");
+  if (mainEnd > 0) {
+    return text.slice(0, mainEnd + 7);
+  }
+  return text.slice(0, 2 * 1024 * 1024);
+}
 
-  for (const altUrl of altUrls) {
-    try {
-      const altResponse = await fetch(altUrl, {
-        headers: {
-          Accept: "application/json, text/html, */*",
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-          "X-Requested-With": "XMLHttpRequest",
-          Referer: "https://diariooficial.elperuano.pe/Normas",
-        },
-      });
+function parseTotal(body: string): number | null {
+  const m = body.match(/(\d+)\s*(?:<!--\s*-->\s*){1,2}[a-zA-Z ]*?encontrad[oa]s?/);
+  return m ? parseInt(m[1], 10) : null;
+}
 
-      if (!altResponse.ok) continue;
+function parseCards(body: string): ParsedNorm[] {
+  const cardSplitRe =
+    /<div class="rounded-xl border bg-card text-card-foreground shadow flex h-full flex-col/g;
+  const chunks: string[] = [];
+  let lastIndex = 0;
+  let match;
 
-      const contentType = altResponse.headers.get("content-type") || "";
-      if (!contentType.includes("json")) continue;
-
-      const altData = await altResponse.json();
-
-      const items = altData?.data || altData?.normas || altData?.result || altData?.items || altData?.Data || (Array.isArray(altData) ? altData : null);
-
-      if (items && Array.isArray(items) && items.length > 0) {
-        return items.map((item: any) => ({
-          edicionId: item.edicionId || item.EdicionId || item.id || item.Id || "",
-          nombre: item.nombre || item.Nombre || item.titulo || item.Titulo || item.title || "",
-          fechaPublicacion: dateStr,
-          urlPdf: item.urlPdf || item.UrlPdf || item.url || item.Url || null,
-        }));
-      }
-    } catch {
-      // try next URL
-    }
+  const splitPositions: number[] = [];
+  while ((match = cardSplitRe.exec(body)) !== null) {
+    splitPositions.push(match.index);
   }
 
-  // Last resort: try scraping the cuadernillo page
-  try {
-    const cuadernilloUrl = `https://busquedas.elperuano.pe/cuadernillo/NL/${y}${m}${d}`;
-    const htmlResponse = await fetch(cuadernilloUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-      },
+  for (let i = 0; i < splitPositions.length; i++) {
+    const start = splitPositions[i];
+    const end =
+      i + 1 < splitPositions.length ? splitPositions[i + 1] : body.length;
+    chunks.push(body.slice(start, end));
+  }
+
+  const results: ParsedNorm[] = [];
+
+  const linkRe = /href="\/dispositivo\/([A-Z]{2})\/(\d+-\d+)"/;
+  const sectorRe =
+    /<p class="text-sm font-semibold text-primary">([^<]*)<\/p>/;
+  const tipoDispRe =
+    /<p class="text-xs text-muted-foreground">([^<]*)<\/p>/;
+  const numeroRe =
+    /<p class="text-xs font-medium text-muted-foreground">([^<]*)<\/p>/;
+  const spansRe = /<span>([^<]*)<\/span>\s*<span>([^<]*)<\/span>/;
+  const snippetRe =
+    /<a class="[^"]*(?:line-clamp-2|line-clamp-3)[^"]*"[^>]*>([\s\S]*?)<\/a>/;
+
+  for (const chunk of chunks) {
+    const lnk = chunk.match(linkRe);
+    if (!lnk) continue;
+
+    const sectorMatch = chunk.match(sectorRe);
+    const tipoMatch = chunk.match(tipoDispRe);
+    const numMatch = chunk.match(numeroRe);
+    const spanMatch = chunk.match(spansRe);
+    const snipMatch = chunk.match(snippetRe);
+
+    results.push({
+      op: lnk[2],
+      sector: cleanHtml(sectorMatch?.[1] || ""),
+      tipo_dispositivo: cleanHtml(tipoMatch?.[1] || ""),
+      numero: cleanHtml(numMatch?.[1] || ""),
+      fecha: cleanHtml(spanMatch?.[2] || spanMatch?.[1] || ""),
+      titulo: cleanHtml(snipMatch?.[1] || ""),
+      url: `${BASE_URL}/dispositivo/${lnk[1]}/${lnk[2]}`,
     });
-
-    if (htmlResponse.ok) {
-      const html = await htmlResponse.text();
-      const norms: ElPeruanoNorm[] = [];
-
-      // Extract norm entries from HTML using regex patterns
-      const titleRegex = /<a[^>]*href="([^"]*\/dispositivo\/NL\/[^"]*)"[^>]*>([^<]+)<\/a>/gi;
-      let match;
-      while ((match = titleRegex.exec(html)) !== null) {
-        const url = match[1];
-        const title = match[2].trim();
-        if (title.length > 10) {
-          const edicionMatch = url.match(/\/(\d+-\d+)$/);
-          norms.push({
-            edicionId: edicionMatch ? edicionMatch[1] : "",
-            nombre: title,
-            fechaPublicacion: dateStr,
-            urlPdf: url.startsWith("http") ? url : `https://busquedas.elperuano.pe${url}`,
-          });
-        }
-      }
-
-      if (norms.length > 0) return norms;
-    }
-  } catch {
-    // scraping failed
   }
 
-  return [];
+  return results;
+}
+
+async function fetchNormsFromElPeruano(
+  dateStr: string
+): Promise<ParsedNorm[]> {
+  // dateStr: "2026-09-29" -> "20260929"
+  const fechaParam = dateStr.replace(/-/g, "");
+
+  const allNorms: ParsedNorm[] = [];
+  const seenOps = new Set<string>();
+  let start = 0;
+  let maxPages = 15;
+
+  for (let page = 0; page < maxPages; page++) {
+    const body = await fetchSearchPage(fechaParam, start);
+
+    if (page === 0) {
+      const total = parseTotal(body);
+      if (total !== null && total > 0) {
+        maxPages = Math.min(15, Math.ceil(total / PAGE_SIZE));
+      }
+    }
+
+    const cards = parseCards(body);
+    if (cards.length === 0) break;
+
+    for (const card of cards) {
+      if (!seenOps.has(card.op)) {
+        seenOps.add(card.op);
+        allNorms.push(card);
+      }
+    }
+
+    const hasMore = body.includes(`start=${start + PAGE_SIZE}`);
+    if (!hasMore) break;
+    start += PAGE_SIZE;
+  }
+
+  return allNorms;
 }
 
 Deno.serve(async (req: Request) => {
@@ -207,14 +250,18 @@ Deno.serve(async (req: Request) => {
     const url = new URL(req.url);
     const path = url.pathname.replace("/fetch-normas", "");
 
-    // POST /import — fetch norms for a specific date and import them
-    if (req.method === "POST" && (path === "/import" || path === "" || path === "/")) {
+    if (
+      req.method === "POST" &&
+      (path === "/import" || path === "" || path === "/")
+    ) {
       const body = await req.json();
       const { date } = body;
 
       if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
         return new Response(
-          JSON.stringify({ error: "Se requiere una fecha valida (YYYY-MM-DD)" }),
+          JSON.stringify({
+            error: "Se requiere una fecha valida (YYYY-MM-DD)",
+          }),
           {
             status: 400,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -222,7 +269,6 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      // Fetch norms from El Peruano
       const norms = await fetchNormsFromElPeruano(date);
 
       if (norms.length === 0) {
@@ -231,7 +277,7 @@ Deno.serve(async (req: Request) => {
             success: true,
             imported: 0,
             skipped: 0,
-            message: `No se encontraron normas para el ${date}. Es posible que El Peruano no haya publicado ese dia o que el formato de su pagina haya cambiado.`,
+            message: `No se encontraron normas para el ${date}. Es posible que El Peruano no haya publicado ese dia o que su pagina haya cambiado.`,
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -239,7 +285,6 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      // Check which norms already exist (by title + date to avoid duplicates)
       const { data: existingNorms } = await supabase
         .from("repository_norms")
         .select("title, published_date")
@@ -260,7 +305,7 @@ Deno.serve(async (req: Request) => {
       const errors: string[] = [];
 
       for (const norm of norms) {
-        const title = norm.nombre.trim();
+        const title = norm.titulo || norm.tipo_dispositivo || "";
         if (!title || title.length < 5) {
           skipped++;
           continue;
@@ -280,25 +325,21 @@ Deno.serve(async (req: Request) => {
         const { norm_type, norm_number } = parseNormType(title);
 
         const baseSlug = slugify(title);
-        const uniqueSlug = `${baseSlug}-${norm.edicionId || Date.now()}`;
-
-        const pdfUrl = norm.urlPdf
-          ? norm.urlPdf.startsWith("http")
-            ? norm.urlPdf
-            : `https://busquedas.elperuano.pe${norm.urlPdf}`
-          : null;
+        const uniqueSlug = `${baseSlug}-${norm.op || Date.now()}`;
 
         const { error: insertError } = await supabase
           .from("repository_norms")
           .insert({
             slug: uniqueSlug.slice(0, 120),
             title,
-            norm_type,
-            norm_number,
+            norm_type: norm_type || norm.tipo_dispositivo || "",
+            norm_number: norm_number || norm.numero || "",
             published_date: date,
             content: "",
-            summary: `Norma importada automaticamente desde El Peruano (${date}).`,
-            pdf_url: pdfUrl,
+            summary: norm.sector
+              ? `${norm.sector} — Importado de El Peruano (${date}).`
+              : `Importado automaticamente de El Peruano (${date}).`,
+            pdf_url: norm.url || null,
             is_hidden: true,
           });
 
@@ -306,7 +347,9 @@ Deno.serve(async (req: Request) => {
           if (insertError.code === "23505") {
             skipped++;
           } else {
-            errors.push(`Error al importar "${title.slice(0, 50)}...": ${insertError.message}`);
+            errors.push(
+              `Error "${title.slice(0, 50)}...": ${insertError.message}`
+            );
           }
         } else {
           imported++;
@@ -321,7 +364,7 @@ Deno.serve(async (req: Request) => {
           imported,
           skipped,
           errors: errors.length > 0 ? errors : undefined,
-          message: `Se encontraron ${norms.length} normas. ${imported} importadas, ${skipped} omitidas (ya existian o eran invalidas).`,
+          message: `Se encontraron ${norms.length} normas en El Peruano. ${imported} importadas, ${skipped} omitidas (ya existian o eran muy cortas).`,
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -329,12 +372,13 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // GET /preview — fetch norms without importing (preview)
     if (req.method === "GET" && path === "/preview") {
       const date = url.searchParams.get("date");
       if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
         return new Response(
-          JSON.stringify({ error: "Se requiere una fecha valida (YYYY-MM-DD)" }),
+          JSON.stringify({
+            error: "Se requiere una fecha valida (YYYY-MM-DD)",
+          }),
           {
             status: 400,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -349,10 +393,13 @@ Deno.serve(async (req: Request) => {
           date,
           total: norms.length,
           norms: norms.map((n) => ({
-            title: n.nombre,
-            ...parseNormType(n.nombre),
-            pdf_url: n.urlPdf,
-            edicion_id: n.edicionId,
+            title: n.titulo,
+            tipo_dispositivo: n.tipo_dispositivo,
+            numero: n.numero,
+            sector: n.sector,
+            fecha: n.fecha,
+            url: n.url,
+            op: n.op,
           })),
         }),
         {
