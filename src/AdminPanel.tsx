@@ -114,6 +114,12 @@ export function AdminPanel() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [categorySearch, setCategorySearch] = useState('');
+  const [entitySearch, setEntitySearch] = useState('');
+  const [docTypeSearch, setDocTypeSearch] = useState('');
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newEntityName, setNewEntityName] = useState('');
+  const [newDocTypeName, setNewDocTypeName] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     author: 'Julio Cesar Rojas Cala',
@@ -438,6 +444,37 @@ export function AdminPanel() {
         : [...prev.entity, entityName];
       return { ...prev, entity: newEntities };
     });
+  };
+
+  const addInlineConfigItem = async (type: 'category' | 'entity' | 'document_type', name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const list = type === 'category' ? categories : type === 'entity' ? entities : documentTypes;
+    if (list.some(item => item.toLowerCase() === trimmed.toLowerCase())) {
+      showError(`"${trimmed}" ya existe.`);
+      return;
+    }
+    try {
+      const { error } = await supabase
+        .from('categories_config')
+        .insert({ name: trimmed, type, is_active: true, display_order: list.length });
+      if (error) throw error;
+      if (type === 'category') {
+        setCategories(prev => [...prev, trimmed]);
+        setNewCategoryName('');
+        handleCategoryChange(trimmed);
+      } else if (type === 'entity') {
+        setEntities(prev => [...prev, trimmed]);
+        setNewEntityName('');
+        handleEntityChange(trimmed);
+      } else {
+        setDocumentTypes(prev => [...prev, trimmed]);
+        setNewDocTypeName('');
+        setFormData(prev => ({ ...prev, document_type: trimmed }));
+      }
+    } catch (err: any) {
+      showError('Error al crear: ' + (err.message || 'Intenta de nuevo'));
+    }
   };
 
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1408,17 +1445,53 @@ export function AdminPanel() {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Tipo de Norma *
                         </label>
-                        <select
-                          required
-                          value={formData.document_type}
-                          onChange={(e) => setFormData({ ...formData, document_type: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                        >
-                          <option value="">Seleccionar tipo</option>
-                          {documentTypes.map(type => (
-                            <option key={type} value={type}>{type}</option>
-                          ))}
-                        </select>
+                        <input
+                          type="text"
+                          placeholder="Buscar tipo de norma..."
+                          value={docTypeSearch}
+                          onChange={(e) => setDocTypeSearch(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 mb-2"
+                        />
+                        <div className="border border-gray-300 rounded-md p-2 max-h-40 overflow-y-auto">
+                          {documentTypes
+                            .filter(t => t.toLowerCase().includes(docTypeSearch.toLowerCase()))
+                            .map(type => (
+                              <label key={type} className={`flex items-center space-x-2 cursor-pointer px-2 py-1.5 rounded hover:bg-gray-50 ${formData.document_type === type ? 'bg-red-50' : ''}`}>
+                                <input
+                                  type="radio"
+                                  name="document_type"
+                                  checked={formData.document_type === type}
+                                  onChange={() => setFormData({ ...formData, document_type: type })}
+                                  className="text-red-600 focus:ring-red-500"
+                                />
+                                <span className="text-sm">{type}</span>
+                              </label>
+                            ))}
+                          {docTypeSearch && !documentTypes.some(t => t.toLowerCase() === docTypeSearch.toLowerCase()) && (
+                            <p className="text-xs text-gray-400 px-2 py-1">No se encontraron resultados.</p>
+                          )}
+                        </div>
+                        {formData.document_type && (
+                          <p className="mt-1 text-sm text-gray-600">Seleccionado: <span className="font-medium text-red-800">{formData.document_type}</span></p>
+                        )}
+                        <div className="mt-2 flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Nuevo tipo de norma..."
+                            value={newDocTypeName}
+                            onChange={(e) => setNewDocTypeName(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addInlineConfigItem('document_type', newDocTypeName); }}}
+                            className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => addInlineConfigItem('document_type', newDocTypeName)}
+                            disabled={!newDocTypeName.trim()}
+                            className="px-3 py-1.5 text-sm bg-red-900 text-white rounded-md hover:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            + Crear
+                          </button>
+                        </div>
                       </div>
                     )}
 
@@ -1426,20 +1499,50 @@ export function AdminPanel() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Categorías * (Selecciona una o más)
                       </label>
+                      <input
+                        type="text"
+                        placeholder="Buscar categoría..."
+                        value={categorySearch}
+                        onChange={(e) => setCategorySearch(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 mb-2"
+                      />
                       <div className="border border-gray-300 rounded-md p-3 max-h-48 overflow-y-auto">
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {categories.map(category => (
-                            <label key={category} className="flex items-center space-x-2 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={formData.category.includes(category)}
-                                onChange={() => handleCategoryChange(category)}
-                                className="rounded border-gray-300 text-red-600 focus:ring-red-500"
-                              />
-                              <span className="text-sm">{category}</span>
-                            </label>
-                          ))}
+                          {categories
+                            .filter(c => c.toLowerCase().includes(categorySearch.toLowerCase()))
+                            .map(category => (
+                              <label key={category} className="flex items-center space-x-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={formData.category.includes(category)}
+                                  onChange={() => handleCategoryChange(category)}
+                                  className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                                />
+                                <span className="text-sm">{category}</span>
+                              </label>
+                            ))}
                         </div>
+                        {categorySearch && !categories.some(c => c.toLowerCase().includes(categorySearch.toLowerCase())) && (
+                          <p className="text-xs text-gray-400 py-1">No se encontraron resultados.</p>
+                        )}
+                      </div>
+                      <div className="mt-2 flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Nueva categoría..."
+                          value={newCategoryName}
+                          onChange={(e) => setNewCategoryName(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addInlineConfigItem('category', newCategoryName); }}}
+                          className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => addInlineConfigItem('category', newCategoryName)}
+                          disabled={!newCategoryName.trim()}
+                          className="px-3 py-1.5 text-sm bg-red-900 text-white rounded-md hover:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          + Crear
+                        </button>
                       </div>
                       {formData.category.length > 0 && (
                         <div className="mt-2">
@@ -1459,24 +1562,54 @@ export function AdminPanel() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Entidades involucradas (opcional)
                       </label>
+                      <input
+                        type="text"
+                        placeholder="Buscar entidad..."
+                        value={entitySearch}
+                        onChange={(e) => setEntitySearch(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 mb-2"
+                      />
                       <div className="border border-gray-300 rounded-md p-3 max-h-48 overflow-y-auto">
-                        {entities.length === 0 ? (
-                          <p className="text-sm text-gray-500">Agrega entidades desde la sección de Categorías.</p>
+                        {entities.length === 0 && !entitySearch ? (
+                          <p className="text-sm text-gray-500">Agrega entidades usando el campo de abajo.</p>
                         ) : (
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                            {entities.map(en => (
-                              <label key={en} className="flex items-center space-x-2 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={formData.entity.includes(en)}
-                                  onChange={() => handleEntityChange(en)}
-                                  className="rounded border-gray-300 text-red-600 focus:ring-red-500"
-                                />
-                                <span className="text-sm">{en}</span>
-                              </label>
-                            ))}
+                            {entities
+                              .filter(en => en.toLowerCase().includes(entitySearch.toLowerCase()))
+                              .map(en => (
+                                <label key={en} className="flex items-center space-x-2 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={formData.entity.includes(en)}
+                                    onChange={() => handleEntityChange(en)}
+                                    className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                                  />
+                                  <span className="text-sm">{en}</span>
+                                </label>
+                              ))}
                           </div>
                         )}
+                        {entitySearch && !entities.some(en => en.toLowerCase().includes(entitySearch.toLowerCase())) && (
+                          <p className="text-xs text-gray-400 py-1">No se encontraron resultados.</p>
+                        )}
+                      </div>
+                      <div className="mt-2 flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Nueva entidad..."
+                          value={newEntityName}
+                          onChange={(e) => setNewEntityName(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addInlineConfigItem('entity', newEntityName); }}}
+                          className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => addInlineConfigItem('entity', newEntityName)}
+                          disabled={!newEntityName.trim()}
+                          className="px-3 py-1.5 text-sm bg-red-900 text-white rounded-md hover:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          + Crear
+                        </button>
                       </div>
                       {formData.entity.length > 0 && (
                         <div className="mt-2">
